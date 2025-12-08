@@ -2,12 +2,12 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
-import { Badge } from "@/components/ui/badge"
+// Removed unused Badge import
 import { Icons } from "@/components/icons"
 import { useData } from "@/components/local-data-provider"
 
 export function ProductivityTrends() {
-  const { tasks, pomodoros, stats } = useData()
+  const { tasks, pomodoros, stats, settings } = useData()
 
   // Calculate weekly trends with real data
   const getWeeklyData = () => {
@@ -44,24 +44,24 @@ export function ProductivityTrends() {
   }
 
   const weeklyData = getWeeklyData()
-  const maxTasks = Math.max(...weeklyData.map((d) => d.tasks), 1)
-  const maxPomodoros = Math.max(...weeklyData.map((d) => d.pomodoros), 1)
-  const maxFocusTime = Math.max(...weeklyData.map((d) => d.focusTime), 1)
-
-  // Calculate trends
+  // derived stats for logic
   const totalTasksThisWeek = weeklyData.reduce((sum, day) => sum + day.tasks, 0)
   const totalPomodorosThisWeek = weeklyData.reduce((sum, day) => sum + day.pomodoros, 0)
   const avgTasksPerDay = totalTasksThisWeek / 7
-  const avgPomodorosPerDay = totalPomodorosThisWeek / 7
+  // const avgPomodorosPerDay = totalPomodorosThisWeek / 7 // Unused
+
+  // Dynamic values from settings (fallback to defaults)
+  const dailyGoalTasks = settings?.dailyGoalTasks || 3
+  const dailyGoalPomodoros = settings?.dailyGoalPomodoros || 4
 
   // Get productivity insights
   const getProductivityInsight = () => {
     if (totalTasksThisWeek === 0)
       return { level: "Getting Started", color: "blue", message: "Complete your first task to start tracking!" }
-    if (avgTasksPerDay >= 3)
-      return { level: "Highly Productive", color: "green", message: "Excellent! You're completing tasks consistently." }
-    if (avgTasksPerDay >= 1.5)
-      return { level: "Good Progress", color: "emerald", message: "Good momentum! Try to maintain this pace." }
+    if (avgTasksPerDay >= dailyGoalTasks)
+      return { level: "Highly Productive", color: "green", message: "Excellent! You're consistently hitting your goals." }
+    if (avgTasksPerDay >= dailyGoalTasks * 0.5)
+      return { level: "Good Progress", color: "emerald", message: "Good momentum! You're halfway to your daily targets." }
     if (avgTasksPerDay >= 0.5)
       return {
         level: "Building Habits",
@@ -82,7 +82,9 @@ export function ProductivityTrends() {
     const yesterdayTasks = tasks.filter((t) => t.completedAt && t.completedAt.split("T")[0] === yesterday).length
 
     const todayPomodoros = pomodoros.filter((p) => p.completed && p.startTime.split("T")[0] === today).length
-    const yesterdayPomodoros = pomodoros.filter((p) => p.completed && p.startTime.split("T")[0] === yesterday).length
+
+    // Unused variable
+    // const yesterdayPomodoros = pomodoros.filter((p) => p.completed && p.startTime.split("T")[0] === yesterday).length
 
     const insights = []
 
@@ -102,11 +104,11 @@ export function ProductivityTrends() {
     }
 
     // Focus session insights
-    if (todayPomodoros >= 4) {
+    if (todayPomodoros >= dailyGoalPomodoros) {
       insights.push({
         type: "achievement",
         title: "Focus Master! 🎯",
-        message: `${todayPomodoros} focus sessions today! You're in the zone.`,
+        message: `${todayPomodoros} focus sessions today! You're crushing it.`,
       })
     } else if (todayPomodoros === 0) {
       insights.push({
@@ -120,89 +122,10 @@ export function ProductivityTrends() {
   }
 
   const dailyInsights = getDailyProgressInsights()
+  const weeklyPomodoroGoal = dailyGoalPomodoros * 7
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-      {/* Task Completion Trend */}
-      <Card className="bg-gradient-to-br from-white/90 to-emerald-50/50 backdrop-blur-sm border border-emerald-100 shadow-lg hover:shadow-xl transition-all duration-200 rounded-3xl">
-        <CardHeader>
-          <CardTitle className="flex items-center text-lg">
-            <Icons.target className="w-5 h-5 mr-2 text-emerald-600" />
-            Weekly Task Completion
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            <div className="flex items-center justify-between mb-4">
-              <span className="text-2xl font-bold text-gray-900">{totalTasksThisWeek}</span>
-              <Badge className={`bg-${insight.color}-100 text-${insight.color}-700`}>
-                {avgTasksPerDay.toFixed(1)}/day avg
-              </Badge>
-            </div>
-
-            {weeklyData.map((day, index) => (
-              <div key={index} className="flex items-center space-x-3">
-                <span className={`text-sm font-medium w-8 ${day.isToday ? "text-emerald-600" : "text-gray-600"}`}>
-                  {day.day}
-                </span>
-                <div className="flex-1 bg-gray-200 rounded-full h-3">
-                  <div
-                    className={`h-3 rounded-full transition-all duration-500 ${
-                      day.isToday
-                        ? "bg-gradient-to-r from-emerald-500 to-green-600"
-                        : "bg-gradient-to-r from-emerald-400 to-green-500"
-                    }`}
-                    style={{ width: `${Math.max((day.tasks / maxTasks) * 100, day.tasks > 0 ? 10 : 0)}%` }}
-                  />
-                </div>
-                <span className={`text-sm font-medium w-6 ${day.isToday ? "text-emerald-600" : "text-gray-900"}`}>
-                  {day.tasks}
-                </span>
-              </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Pomodoro Sessions Trend */}
-      <Card className="bg-gradient-to-br from-white/90 to-blue-50/50 backdrop-blur-sm border border-blue-100 shadow-lg hover:shadow-xl transition-all duration-200 rounded-3xl">
-        <CardHeader>
-          <CardTitle className="flex items-center text-lg">
-            <Icons.timer className="w-5 h-5 mr-2 text-blue-600" />
-            Focus Sessions
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            <div className="flex items-center justify-between mb-4">
-              <span className="text-2xl font-bold text-gray-900">{totalPomodorosThisWeek}</span>
-              <Badge className="bg-blue-100 text-blue-700">{avgPomodorosPerDay.toFixed(1)}/day avg</Badge>
-            </div>
-
-            {weeklyData.map((day, index) => (
-              <div key={index} className="flex items-center space-x-3">
-                <span className={`text-sm font-medium w-8 ${day.isToday ? "text-blue-600" : "text-gray-600"}`}>
-                  {day.day}
-                </span>
-                <div className="flex-1 bg-gray-200 rounded-full h-3">
-                  <div
-                    className={`h-3 rounded-full transition-all duration-500 ${
-                      day.isToday
-                        ? "bg-gradient-to-r from-blue-500 to-cyan-600"
-                        : "bg-gradient-to-r from-blue-400 to-cyan-500"
-                    }`}
-                    style={{ width: `${Math.max((day.pomodoros / maxPomodoros) * 100, day.pomodoros > 0 ? 10 : 0)}%` }}
-                  />
-                </div>
-                <span className={`text-sm font-medium w-6 ${day.isToday ? "text-blue-600" : "text-gray-900"}`}>
-                  {day.pomodoros}
-                </span>
-              </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
-
+    <div className="space-y-6">
       {/* Productivity Insights */}
       <Card className="bg-gradient-to-br from-white/90 to-purple-50/50 backdrop-blur-sm border border-purple-100 shadow-lg hover:shadow-xl transition-all duration-200 rounded-3xl">
         <CardHeader>
@@ -243,11 +166,11 @@ export function ProductivityTrends() {
                 <div className="flex justify-between text-sm mb-2">
                   <span className="text-gray-600">Focus Consistency</span>
                   <span className="font-medium">
-                    {totalPomodorosThisWeek > 0 ? Math.min(Math.round((totalPomodorosThisWeek / 28) * 100), 100) : 0}%
+                    {totalPomodorosThisWeek > 0 ? Math.min(Math.round((totalPomodorosThisWeek / weeklyPomodoroGoal) * 100), 100) : 0}%
                   </span>
                 </div>
                 <Progress
-                  value={totalPomodorosThisWeek > 0 ? Math.min((totalPomodorosThisWeek / 28) * 100, 100) : 0}
+                  value={totalPomodorosThisWeek > 0 ? Math.min((totalPomodorosThisWeek / weeklyPomodoroGoal) * 100, 100) : 0}
                   className="h-2"
                 />
               </div>

@@ -53,13 +53,13 @@ export async function POST(request: NextRequest) {
     const data = await response.json()
 
     if (!response.ok) {
-      console.error("[v0] Spotify API error:", data)
+      console.error("[Planthesia] Spotify API error:", data)
       return NextResponse.json({ error: data.error?.message || "Spotify API error" }, { status: response.status })
     }
 
     return NextResponse.json(data)
   } catch (error) {
-    console.error("[v0] Spotify error:", error)
+    console.error("[Planthesia] Spotify error:", error)
     return NextResponse.json({ error: "Failed to communicate with Spotify" }, { status: 500 })
   }
 }

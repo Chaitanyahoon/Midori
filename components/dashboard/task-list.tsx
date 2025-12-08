@@ -14,6 +14,7 @@ import { Icons } from "@/components/icons"
 import { useData } from "@/components/local-data-provider"
 import getAppreciation from '@/lib/appreciation'
 import { useToast } from "@/hooks/use-toast"
+import { SmartScheduleButton } from "@/components/dashboard/smart-schedule-button"
 
 export function TaskList() {
   const { tasks, addTask, updateTask, userName, userTone } = useData()
@@ -154,10 +155,14 @@ export function TaskList() {
   return (
     <Card className="bg-gradient-to-br from-white/90 to-blue-50/50 backdrop-blur-sm border border-blue-100 shadow-lg hover:shadow-xl transition-all duration-200 rounded-3xl">
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
-        <CardTitle className="text-xl font-semibold flex items-center">
-          <Icons.tasks className="w-5 h-5 mr-2 text-emerald-600" />
-          Quick Tasks
-        </CardTitle>
+        <div className="flex items-center gap-2">
+          <CardTitle className="text-xl font-semibold flex items-center">
+            <Icons.tasks className="w-5 h-5 mr-2 text-emerald-600" />
+            Quick Tasks
+          </CardTitle>
+          <SmartScheduleButton />
+        </div>
+
         <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
           <DialogTrigger asChild>
             <Button

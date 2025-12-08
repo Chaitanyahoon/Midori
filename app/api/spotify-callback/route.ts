@@ -8,8 +8,6 @@ export async function GET(request: NextRequest) {
   const code = request.nextUrl.searchParams.get("code")
   const error = request.nextUrl.searchParams.get("error")
 
-  console.log("[v0] Spotify callback - code:", code ? "received" : "none", "error:", error)
-
   if (error) {
     return NextResponse.redirect(`/dashboard/pomodoro?error=${error}`)
   }
@@ -19,7 +17,6 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    console.log("[v0] Exchanging code for token with client ID:", SPOTIFY_CLIENT_ID)
     const tokenResponse = await fetch("https://accounts.spotify.com/api/token", {
       method: "POST",
       headers: {
@@ -35,7 +32,7 @@ export async function GET(request: NextRequest) {
     })
 
     const tokenData = await tokenResponse.json()
-    console.log("[v0] Token response:", tokenData.access_token ? "received token" : "no token", tokenData.error)
+
 
     if (tokenData.access_token) {
       const response = NextResponse.redirect("/dashboard/pomodoro?spotify_connected=true")
@@ -52,10 +49,10 @@ export async function GET(request: NextRequest) {
       return response
     }
 
-    console.error("[v0] No access token in response:", tokenData)
+    console.error("[Planthesia] No access token in response:", tokenData)
     return NextResponse.redirect("/dashboard/pomodoro?error=token_failed")
   } catch (error) {
-    console.error("[v0] Spotify callback error:", error)
+    console.error("[Planthesia] Spotify callback error:", error)
     return NextResponse.redirect("/dashboard/pomodoro?error=callback_error")
   }
 }

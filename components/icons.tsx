@@ -36,6 +36,15 @@ import {
   Music,
   Volume2,
   Square,
+  Check,
+  Stars,
+  X,
+  Maximize2,
+  Minimize2,
+  Layout,
+  Type,
+  AlignLeft,
+  Tag,
 } from "lucide-react"
 
 export const Icons = {
@@ -78,4 +87,14 @@ export const Icons = {
   music: Music,
   volume: Volume2,
   stop: Square,
+  check: Check,
+  stars: Stars,
+  // UI icons
+  close: X,
+  maximize: Maximize2,
+  minimize: Minimize2,
+  layout: Layout,
+  type: Type,
+  alignLeft: AlignLeft,
+  tag: Tag,
 }

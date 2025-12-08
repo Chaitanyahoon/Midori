@@ -10,7 +10,7 @@ import { ChartContainer } from "@/components/ui/chart"
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Tooltip } from "recharts"
 
 export function WeeklyStats() {
-  const { tasks, pomodoros } = useData()
+  const { tasks, pomodoros, settings } = useData()
 
   // Calculate weekly data with real insights
   const getWeeklyData = () => {
@@ -87,11 +87,11 @@ export function WeeklyStats() {
   const taskChange = calculateChange(totalTasks, prevWeekTasks)
   const hoursChange = calculateChange(totalHours, prevWeekHours)
 
-  // Calculate progress towards weekly goals
+  // Calculate progress towards weekly goals (Dynamic based on settings)
   const weeklyGoals = {
-    pomodoros: 28, // 4 per day
-    tasks: 21, // 3 per day
-    hours: 14, // 2 hours per day
+    pomodoros: (settings?.dailyGoalPomodoros || 4) * 7,
+    tasks: (settings?.dailyGoalTasks || 3) * 7,
+    hours: (settings?.dailyGoalHours || 2) * 7,
   }
 
   // Calculate streak (consecutive days with at least 1 completed task)
@@ -126,7 +126,7 @@ export function WeeklyStats() {
     }, {} as Record<string, number>)
 
   // State for dialog
-  const [selectedDay, setSelectedDay] = useState<{date: string, day: string} | null>(null)
+  const [selectedDay, setSelectedDay] = useState<{ date: string, day: string } | null>(null)
 
   // Animated progress ring (SVG)
   function ProgressRing({ value, color, label }: { value: number, color: string, label: string }) {
@@ -205,75 +205,7 @@ export function WeeklyStats() {
   return (
     <div>
       {weeklyGrowth}
-      {/* Streak bar remains below for habit tracking */}
-  {/* streakBar removed, now using streakCounter above */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card className="bg-gradient-to-br from-white/90 to-blue-50/50 backdrop-blur-sm border border-blue-100 shadow-lg hover:shadow-xl transition-all duration-200 rounded-3xl">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Weekly Pomodoros</CardTitle>
-            <Icons.timer className="h-4 w-4 text-blue-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{totalPomodoros}</div>
-            <p
-              className={`text-xs ${pomodoroChange.startsWith("+") ? "text-emerald-600" : pomodoroChange.startsWith("-") ? "text-red-600" : "text-gray-600"}`}
-            >
-              {pomodoroChange} from last week
-            </p>
-            <div className="mt-4">
-              <div className="flex justify-between text-xs text-gray-600 mb-1">
-                <span>Goal: {weeklyGoals.pomodoros}</span>
-                <span>{Math.round((totalPomodoros / weeklyGoals.pomodoros) * 100)}%</span>
-              </div>
-              <Progress value={(totalPomodoros / weeklyGoals.pomodoros) * 100} className="h-2" />
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-gradient-to-br from-white/90 to-emerald-50/50 backdrop-blur-sm border border-emerald-100 shadow-lg hover:shadow-xl transition-all duration-200 rounded-3xl">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Tasks Completed</CardTitle>
-            <Icons.target className="h-4 w-4 text-green-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{totalTasks}</div>
-            <p
-              className={`text-xs ${taskChange.startsWith("+") ? "text-emerald-600" : taskChange.startsWith("-") ? "text-red-600" : "text-gray-600"}`}
-            >
-              {taskChange} from last week
-            </p>
-            <div className="mt-4">
-              <div className="flex justify-between text-xs text-gray-600 mb-1">
-                <span>Goal: {weeklyGoals.tasks}</span>
-                <span>{Math.round((totalTasks / weeklyGoals.tasks) * 100)}%</span>
-              </div>
-              <Progress value={(totalTasks / weeklyGoals.tasks) * 100} className="h-2" />
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-gradient-to-br from-white/90 to-purple-50/50 backdrop-blur-sm border border-purple-100 shadow-lg hover:shadow-xl transition-all duration-200 rounded-3xl">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Focus Hours</CardTitle>
-            <Icons.clock className="h-4 w-4 text-purple-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{totalHours.toFixed(1)}h</div>
-            <p
-              className={`text-xs ${hoursChange.startsWith("+") ? "text-emerald-600" : hoursChange.startsWith("-") ? "text-red-600" : "text-gray-600"}`}
-            >
-              {hoursChange} from last week
-            </p>
-            <div className="mt-4">
-              <div className="flex justify-between text-xs text-gray-600 mb-1">
-                <span>Goal: {weeklyGoals.hours}h</span>
-                <span>{Math.round((totalHours / weeklyGoals.hours) * 100)}%</span>
-              </div>
-              <Progress value={(totalHours / weeklyGoals.hours) * 100} className="h-2" />
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+      {/* Cards removed - consolidated into ProductivityCharts */}
     </div>
   );
 }

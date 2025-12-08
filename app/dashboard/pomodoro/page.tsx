@@ -63,6 +63,30 @@ export default function PomodoroPage() {
     )
   }, [settings, autoStartBreaks, autoStartPomodoros, soundEnabled, focusGoal])
 
+  const [isZenMode, setIsZenMode] = useState(false)
+
+  // Toggle Zen Mode on/off
+  const toggleZenMode = () => {
+    setIsZenMode(!isZenMode)
+    if (!isZenMode && !document.fullscreenElement) {
+      document.documentElement.requestFullscreen().catch(() => { })
+    } else if (document.fullscreenElement) {
+      document.exitFullscreen().catch(() => { })
+    }
+  }
+
+  // Handle ESC key to exit Zen Mode
+  useEffect(() => {
+    const handleEsc = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && isZenMode) {
+        setIsZenMode(false)
+        if (document.fullscreenElement) document.exitFullscreen().catch(() => { })
+      }
+    }
+    window.addEventListener("keydown", handleEsc)
+    return () => window.removeEventListener("keydown", handleEsc)
+  }, [isZenMode])
+
   const { tasks, pomodoros, addPomodoro } = useData()
   const { toast } = useToast()
 
@@ -156,7 +180,7 @@ export default function PomodoroPage() {
       if (soundEnabled) {
         const audio = new Audio("data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBTGH0fPTgjMGHm7A7+OZVA4PVK3l77FbGAg+ltryy3kpBSl+zfLZiTYIG2m98OScTgwOUKjk8LZjGwY4kdfyzHksBSR3x/DdkEAKFF606euoVRQKRp/g8r5sIQUxh9Hz04IzBh5uwO/jmVQOD1St5e+xWxgIPpba8st5KQUpfs3y2Yk2CBtpvfDknE4MDlCo5PC2YxsGOJHX8sx5LAUkd8fw3ZBACg==")
         audio.volume = 0.3
-        audio.play().catch(() => {})
+        audio.play().catch(() => { })
       }
 
       const newSessionCount = completedSessionsToday + 1
@@ -169,7 +193,7 @@ export default function PomodoroPage() {
       const breakDuration = isLongBreakTime ? settings.longBreak : settings.shortBreak
       setTimeLeft(breakDuration * 60)
       setSessionNote("")
-      
+
       // Auto-start break if enabled
       if (autoStartBreaks) {
         setTimeout(() => {
@@ -181,7 +205,7 @@ export default function PomodoroPage() {
       if (soundEnabled) {
         const audio = new Audio("data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBTGH0fPTgjMGHm7A7+OZVA4PVK3l77FbGAg+ltryy3kpBSl+zfLZiTYIG2m98OScTgwOUKjk8LZjGwY4kdfyzHksBSR3x/DdkEAKFF606euoVRQKRp/g8r5sIQUxh9Hz04IzBh5uwO/jmVQOD1St5e+xWxgIPpba8st5KQUpfs3y2Yk2CBtpvfDknE4MDlCo5PC2YxsGOJHX8sx5LAUkd8fw3ZBACg==")
         audio.volume = 0.3
-        audio.play().catch(() => {})
+        audio.play().catch(() => { })
       }
 
       const breakCompliments = [
@@ -197,7 +221,7 @@ export default function PomodoroPage() {
 
       setIsBreak(false)
       setTimeLeft(settings.focusTime * 60)
-      
+
       // Auto-start next pomodoro if enabled
       if (autoStartPomodoros) {
         setTimeout(() => {
@@ -235,7 +259,7 @@ export default function PomodoroPage() {
     if (soundEnabled && !isBreak) {
       const audio = new Audio("data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBTGH0fPTgjMGHm7A7+OZVA4PVK3l77FbGAg+ltryy3kpBSl+zfLZiTYIG2m98OScTgwOUKjk8LZjGwY4kdfyzHksBSR3x/DdkEAKFF606euoVRQKRp/g8r5sIQUxh9Hz04IzBh5uwO/jmVQOD1St5e+xWxgIPpba8st5KQUpfs3y2Yk2CBtpvfDknE4MDlCo5PC2YxsGOJHX8sx5LAUkd8fw3ZBACg==")
       audio.volume = 0.2
-      audio.play().catch(() => {})
+      audio.play().catch(() => { })
     }
   }
 
@@ -305,6 +329,15 @@ export default function PomodoroPage() {
           <p className="text-gray-600 dark:text-gray-400 mt-2 text-sm sm:text-base">Deep work sessions with guided focus and study music</p>
         </div>
         <div className="flex items-center gap-2">
+          <Button
+            onClick={toggleZenMode}
+            variant="outline"
+            size="sm"
+            className="hidden sm:flex items-center gap-2 border-emerald-200 dark:border-emerald-700 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-50 dark:hover:bg-emerald-900/50"
+          >
+            <Icons.layout className="w-4 h-4" />
+            Zen Mode
+          </Button>
           <Badge className="bg-gradient-to-r from-emerald-100 to-teal-100 dark:from-emerald-900/30 dark:to-teal-900/30 text-emerald-700 dark:text-emerald-300 px-4 py-1.5 text-sm font-semibold border border-emerald-200 dark:border-emerald-700">
             <Icons.target className="w-3.5 h-3.5 mr-1.5" />
             {completedSessionsToday} Sessions Today
@@ -324,7 +357,7 @@ export default function PomodoroPage() {
           <Card className="bg-gradient-to-br from-white via-emerald-50/30 to-blue-50/30 dark:from-slate-800 dark:via-slate-800/90 dark:to-slate-900/90 backdrop-blur-sm border border-emerald-100/50 dark:border-slate-700 shadow-xl rounded-3xl overflow-hidden">
             {/* Header with status indicator */}
             <div className={`h-2 ${isBreak ? "bg-gradient-to-r from-green-400 to-emerald-500" : "bg-gradient-to-r from-blue-500 to-indigo-600"}`}></div>
-            
+
             <CardHeader className="text-center pb-6 pt-6">
               <div className="flex items-center justify-center gap-3 mb-2">
                 <div className={`p-3 rounded-2xl ${isBreak ? "bg-green-100 dark:bg-green-900/30" : "bg-blue-100 dark:bg-blue-900/30"}`}>
@@ -347,16 +380,15 @@ export default function PomodoroPage() {
                 <div className="relative w-56 h-56 mx-auto mb-8">
                   {/* Outer glow effect */}
                   <div className={`absolute inset-0 rounded-full blur-xl opacity-30 ${isBreak ? "bg-emerald-400" : "bg-blue-500"}`}></div>
-                  
+
                   {/* Background circle */}
                   <div
-                    className={`absolute inset-0 rounded-full ${
-                      isBreak
-                        ? "bg-gradient-to-br from-green-50 to-emerald-100 dark:from-green-900/20 dark:to-emerald-900/30"
-                        : "bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-blue-900/20 dark:to-indigo-900/30"
-                    }`}
+                    className={`absolute inset-0 rounded-full ${isBreak
+                      ? "bg-gradient-to-br from-green-50 to-emerald-100 dark:from-green-900/20 dark:to-emerald-900/30"
+                      : "bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-blue-900/20 dark:to-indigo-900/30"
+                      }`}
                   ></div>
-                  
+
                   {/* Timer display */}
                   <div className="absolute inset-6 bg-white dark:bg-slate-800 rounded-full flex items-center justify-center shadow-xl border-4 border-white/50 dark:border-slate-700/50">
                     <div className="text-center">
@@ -366,7 +398,7 @@ export default function PomodoroPage() {
                       </span>
                     </div>
                   </div>
-                  
+
                   {/* Progress Ring */}
                   <svg className="absolute inset-0 w-full h-full transform -rotate-90" viewBox="0 0 100 100">
                     <circle
@@ -446,7 +478,7 @@ export default function PomodoroPage() {
                       Focus Configuration
                     </label>
                   </div>
-                  
+
                   <div>
                     <Label className="text-xs text-gray-600 dark:text-gray-400 mb-2 block">
                       Select Task (Optional)
@@ -465,7 +497,7 @@ export default function PomodoroPage() {
                       </SelectContent>
                     </Select>
                   </div>
-                  
+
                   {/* Session Note */}
                   <div>
                     <Label htmlFor="sessionNote" className="text-xs text-gray-600 dark:text-gray-400 mb-2 block">
@@ -541,11 +573,10 @@ export default function PomodoroPage() {
                   {[...Array(settings.sessionsUntilLongBreak)].map((_, i) => (
                     <div
                       key={i}
-                      className={`flex-1 h-2 rounded-full transition-all ${
-                        i < (completedSessionsToday % settings.sessionsUntilLongBreak)
-                          ? "bg-emerald-500 dark:bg-emerald-400"
-                          : "bg-gray-200 dark:bg-gray-700"
-                      }`}
+                      className={`flex-1 h-2 rounded-full transition-all ${i < (completedSessionsToday % settings.sessionsUntilLongBreak)
+                        ? "bg-emerald-500 dark:bg-emerald-400"
+                        : "bg-gray-200 dark:bg-gray-700"
+                        }`}
                     />
                   ))}
                 </div>
@@ -636,7 +667,7 @@ export default function PomodoroPage() {
                   <Icons.timer className="w-4 h-4 text-purple-600 dark:text-purple-400" />
                   <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300">Timer Durations</h4>
                 </div>
-                
+
                 <div className="grid grid-cols-1 gap-2.5">
                   <div>
                     <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1.5">Focus Time</label>
@@ -736,7 +767,7 @@ export default function PomodoroPage() {
                   <Icons.settings className="w-4 h-4 text-purple-600 dark:text-purple-400" />
                   <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300">Preferences</h4>
                 </div>
-                
+
                 <div className="space-y-2.5">
                   <div className="flex items-center justify-between p-2.5 bg-white/50 dark:bg-slate-800/50 rounded-xl border border-purple-100/50 dark:border-purple-800/50">
                     <div className="space-y-0.5 flex-1">
@@ -910,6 +941,84 @@ export default function PomodoroPage() {
           </Tabs>
         </CardContent>
       </Card>
+      {/* Zen Mode Overlay */}
+      {isZenMode && (
+        <div className="fixed inset-0 z-50 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-emerald-900 via-slate-950 to-black flex flex-col items-center justify-center p-4 animate-in fade-in duration-500">
+          {/* Animated Background Elements */}
+          <div className="absolute inset-0 overflow-hidden pointer-events-none">
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-emerald-500/5 rounded-full blur-3xl animate-pulse delay-700" />
+          </div>
+
+          <Button
+            onClick={toggleZenMode}
+            variant="ghost"
+            className="absolute top-6 right-6 text-white/40 hover:text-white hover:bg-white/5 transition-colors"
+          >
+            <Icons.close className="w-6 h-6 mr-2" />
+            Exit Zen Mode
+          </Button>
+
+          <div className="relative z-10 flex flex-col items-center gap-16 max-w-4xl w-full">
+
+            {/* Main Timer Display */}
+            <div className="relative group cursor-default">
+              {/* Breathing Glow */}
+              <div className={`absolute inset-0 rounded-full blur-[100px] transition-all duration-[4000ms] ${isActive ? "bg-emerald-500/20 scale-125 opacity-100" : "bg-blue-500/10 scale-100 opacity-50"
+                }`} />
+
+              <div className="relative flex flex-col items-center justify-center">
+                <span className={`text-[12rem] md:text-[14rem] font-thin text-white/90 tabular-nums tracking-tighter leading-none transition-all duration-300 ${isActive ? "scale-105" : "scale-100"}`}>
+                  {formatTime(timeLeft)}
+                </span>
+                <p className="text-xl text-emerald-400/60 font-medium tracking-[0.2em] uppercase mt-4 animate-pulse">
+                  {isBreak ? "Rest Phase" : isActive ? "Focusing..." : "Ready"}
+                </p>
+              </div>
+            </div>
+
+            {/* Controls are moved inside the minimal player or kept minimal here? 
+                Actually, the minimal player HAS play/pause. We should hide duplicate controls here 
+                if we want the player to be the main controller, BUT the main timer logic is here.
+                Let's KEEP the timer controls minimal below the timer, and let the music player handle music.
+             */}
+
+            {/* Minimal Timer Controls */}
+            <div className="flex items-center gap-8">
+              {!isActive ? (
+                <Button
+                  onClick={handleStart}
+                  variant="ghost"
+                  className="text-white/80 hover:text-white hover:bg-white/10 rounded-full w-20 h-20 p-0 flex items-center justify-center border border-white/10 hover:border-emerald-500/50 hover:scale-105 transition-all"
+                >
+                  <Icons.play className="w-10 h-10 ml-1" />
+                </Button>
+              ) : (
+                <Button
+                  onClick={handlePause}
+                  variant="ghost"
+                  className="text-white/80 hover:text-white hover:bg-white/10 rounded-full w-20 h-20 p-0 flex items-center justify-center border border-white/10 hover:border-amber-500/50 hover:scale-105 transition-all"
+                >
+                  <Icons.pause className="w-10 h-10" />
+                </Button>
+              )}
+
+              <Button
+                onClick={handleReset}
+                variant="ghost"
+                className="text-white/40 hover:text-white hover:bg-white/10 rounded-full w-14 h-14 p-0 border border-transparent hover:border-white/10"
+              >
+                <Icons.reset className="w-6 h-6" />
+              </Button>
+            </div>
+
+            {/* Minimal Music Player */}
+            <div className="w-full max-w-md mt-8">
+              <FocusMusicPlayer isActive={isActive} isBreak={isBreak} variant="zen" className="animate-in slide-in-from-bottom-4 duration-700 delay-200" />
+            </div>
+
+          </div>
+        </div>
+      )}
     </div>
   )
 }

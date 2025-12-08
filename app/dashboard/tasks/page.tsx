@@ -16,7 +16,8 @@ import getAppreciation from '@/lib/appreciation'
 import { useToast } from "@/hooks/use-toast"
 
 export default function TasksPage() {
-  const { tasks, addTask, updateTask, deleteTask, userName, userTone } = useData()
+  const { tasks, addTask, updateTask, deleteTask, settings } = useData()
+  const { userName, userTone } = settings
   const { toast } = useToast()
   const [filter, setFilter] = useState<"all" | "pending" | "completed">("all")
   const [priorityFilter, setPriorityFilter] = useState<"all" | "low" | "medium" | "high">("all")
@@ -34,6 +35,7 @@ export default function TasksPage() {
     recurrence: "none" as "none" | "daily" | "weekly" | "monthly",
   })
 
+  // Filter Tasks
   const filteredTasks = tasks.filter((task) => {
     const matchesFilter =
       filter === "all" || (filter === "pending" && !task.completed) || (filter === "completed" && task.completed)
@@ -62,40 +64,40 @@ export default function TasksPage() {
   })
 
   // Group tasks
-  const groupedTasks = groupBy === "none" 
-    ? { "All Tasks": sortedTasks }
+  const groupedTasks = groupBy === "none"
+    ? { "All Seeds": sortedTasks }
     : groupBy === "priority"
-    ? sortedTasks.reduce((acc, task) => {
+      ? sortedTasks.reduce((acc, task) => {
         const key = task.priority.charAt(0).toUpperCase() + task.priority.slice(1) + " Priority"
         if (!acc[key]) acc[key] = []
         acc[key].push(task)
         return acc
       }, {} as Record<string, typeof sortedTasks>)
-    : groupBy === "category"
-    ? sortedTasks.reduce((acc, task) => {
-        const key = task.category.charAt(0).toUpperCase() + task.category.slice(1)
-        if (!acc[key]) acc[key] = []
-        acc[key].push(task)
-        return acc
-      }, {} as Record<string, typeof sortedTasks>)
-    : sortedTasks.reduce((acc, task) => {
-        const today = new Date().toISOString().split("T")[0]
-        let key = "No Due Date"
-        if (task.dueDate) {
-          if (task.dueDate < today) key = "Overdue"
-          else if (task.dueDate === today) key = "Due Today"
-          else {
-            const dueDate = new Date(task.dueDate)
-            const daysDiff = Math.ceil((dueDate.getTime() - new Date(today).getTime()) / (1000 * 60 * 60 * 24))
-            if (daysDiff <= 7) key = "This Week"
-            else if (daysDiff <= 30) key = "This Month"
-            else key = "Later"
+      : groupBy === "category"
+        ? sortedTasks.reduce((acc, task) => {
+          const key = task.category.charAt(0).toUpperCase() + task.category.slice(1)
+          if (!acc[key]) acc[key] = []
+          acc[key].push(task)
+          return acc
+        }, {} as Record<string, typeof sortedTasks>)
+        : sortedTasks.reduce((acc, task) => {
+          const today = new Date().toISOString().split("T")[0]
+          let key = "No Due Date"
+          if (task.dueDate) {
+            if (task.dueDate < today) key = "Wilting (Overdue)"
+            else if (task.dueDate === today) key = "Bloom Today"
+            else {
+              const dueDate = new Date(task.dueDate)
+              const daysDiff = Math.ceil((dueDate.getTime() - new Date(today).getTime()) / (1000 * 60 * 60 * 24))
+              if (daysDiff <= 7) key = "Sprouting Soon"
+              else if (daysDiff <= 30) key = "Growing"
+              else key = "Future Harvest"
+            }
           }
-        }
-        if (!acc[key]) acc[key] = []
-        acc[key].push(task)
-        return acc
-      }, {} as Record<string, typeof sortedTasks>)
+          if (!acc[key]) acc[key] = []
+          acc[key].push(task)
+          return acc
+        }, {} as Record<string, typeof sortedTasks>)
 
   const handleQuickAdd = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter" && quickAddValue.trim()) {
@@ -108,8 +110,8 @@ export default function TasksPage() {
       })
       setQuickAddValue("")
       toast({
-        title: "Task added!",
-        description: "Quick task created successfully.",
+        title: "Seed Planted! 🌱",
+        description: "Your task has been added to the garden.",
       })
     }
   }
@@ -138,8 +140,8 @@ export default function TasksPage() {
     setIsAddDialogOpen(false)
 
     toast({
-      title: "Task added!",
-      description: "Your new task has been created successfully.",
+      title: "Seed Planted! 🌱",
+      description: "Your new task is ready to grow.",
     })
   }
 
@@ -154,8 +156,8 @@ export default function TasksPage() {
       })
     } else {
       toast({
-        title: completed ? 'Task completed! 🎉' : 'Task reopened',
-        description: completed ? 'Great job! Keep up the momentum.' : 'Task marked as pending.',
+        title: completed ? 'Harvested! 🌸' : 'Replanted',
+        description: completed ? 'Great job! Keep growing.' : 'Task returned to the garden.',
       })
     }
   }
@@ -163,13 +165,13 @@ export default function TasksPage() {
   const getPriorityColor = (priority: string) => {
     switch (priority) {
       case "high":
-        return "bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 border-red-200 dark:border-red-800"
+        return "bg-rose-100 dark:bg-rose-900/30 text-rose-700 dark:text-rose-300 border-rose-200 dark:border-rose-800"
       case "medium":
-        return "bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300 border-yellow-200 dark:border-yellow-800"
+        return "bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800"
       case "low":
-        return "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 border-green-200 dark:border-green-800"
+        return "bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800"
       default:
-        return "bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-700"
+        return "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700"
     }
   }
 
@@ -178,168 +180,137 @@ export default function TasksPage() {
       case "work":
         return "bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300"
       case "personal":
-        return "bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300"
+        return "bg-violet-100 dark:bg-violet-900/30 text-violet-700 dark:text-violet-300"
       case "learning":
-        return "bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300"
+        return "bg-teal-100 dark:bg-teal-900/30 text-teal-700 dark:text-teal-300"
       case "health":
-        return "bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300"
+        return "bg-pink-100 dark:bg-pink-900/30 text-pink-700 dark:text-pink-300"
       default:
-        return "bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300"
+        return "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300"
     }
   }
 
   return (
-    <div className="space-y-4 sm:space-y-6 px-4 sm:px-6 lg:px-8 py-4 sm:py-6">
-      <div className="space-y-3 sm:space-y-4">
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
-          <div>
-            <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-gray-900 to-gray-600 dark:from-gray-100 dark:to-gray-300 bg-clip-text text-transparent">
-              Tasks
-            </h1>
-            <p className="text-gray-600 dark:text-gray-400 mt-1">Manage and track your tasks efficiently.</p>
-          </div>
+    <div className="space-y-6 px-4 sm:px-6 lg:px-8 py-6 w-full max-w-7xl mx-auto">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 animate-in fade-in slide-in-from-top-4 duration-500">
+        <div>
+          <h1 className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-emerald-800 to-teal-600 dark:from-emerald-200 dark:to-teal-200 bg-clip-text text-transparent flex items-center gap-3">
+            Garden Log
+          </h1>
+          <p className="text-slate-600 dark:text-slate-400 mt-1 font-medium">Nurture your tasks and watch them bloom.</p>
+        </div>
 
-          <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-            <DialogTrigger asChild>
-              <Button className="bg-gradient-to-r from-emerald-600 to-blue-600 hover:from-emerald-700 hover:to-blue-700 text-white">
-                <Icons.plus className="w-4 h-4 mr-2" />
-                Add Task
-              </Button>
-            </DialogTrigger>
-          <DialogContent className="max-w-lg bg-gradient-to-br from-white via-slate-50/50 to-blue-50/30 dark:from-slate-900 dark:via-slate-800/50 dark:to-slate-800/30 border-0 shadow-xl rounded-2xl">
-            <DialogHeader className="space-y-3 pb-4 border-b border-slate-200 dark:border-slate-700">
+        <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+          <DialogTrigger asChild>
+            <Button className="btn-organic h-11 px-6 text-base shadow-lg hover:shadow-emerald-500/20">
+              <Icons.plus className="w-5 h-5 mr-2" />
+              Plant Seed
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="max-w-lg bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border border-emerald-100 dark:border-emerald-900 shadow-2xl rounded-3xl p-0 overflow-hidden">
+            <DialogHeader className="bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-emerald-900/20 dark:to-teal-900/20 p-6 border-b border-emerald-100/50 dark:border-emerald-900/50">
               <DialogTitle className="flex items-center space-x-3 text-2xl">
-                <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-md">
+                <div className="w-12 h-12 bg-gradient-to-br from-emerald-400 to-teal-500 rounded-2xl flex items-center justify-center shadow-lg transform rotate-3">
                   <Icons.seedling className="w-6 h-6 text-white" />
                 </div>
                 <div>
-                  <span className="bg-gradient-to-r from-slate-800 to-blue-600 dark:from-slate-100 dark:to-blue-400 bg-clip-text text-transparent block">
-                    Create New Task
+                  <span className="text-emerald-900 dark:text-emerald-100 font-bold block">
+                    Plant New Seed
                   </span>
-                  <p className="text-xs text-slate-600 dark:text-slate-400 font-normal mt-0.5">
-                    Add details to organize your work
+                  <p className="text-sm text-emerald-600/80 dark:text-emerald-300/80 font-medium mt-0.5">
+                    What would you like to grow?
                   </p>
                 </div>
               </DialogTitle>
             </DialogHeader>
-            <div className="space-y-5 pt-6">
+            <div className="p-6 space-y-5">
               <div className="space-y-2">
                 <Label htmlFor="title" className="text-sm font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-2">
-                  <Icons.tasks className="w-4 h-4" />
-                  Task Title <span className="text-red-500">*</span>
+                  <Icons.type className="w-4 h-4 text-emerald-500" />
+                  Task Name <span className="text-rose-500">*</span>
                 </Label>
                 <Input
                   id="title"
                   value={newTask.title}
                   onChange={(e) => setNewTask({ ...newTask, title: e.target.value })}
-                  placeholder="What needs to be done?"
-                  className="bg-white/80 dark:bg-slate-800/80 border-slate-200 dark:border-slate-700 focus:border-blue-400 dark:focus:border-blue-500 focus:ring-blue-400/20 dark:focus:ring-blue-500/20 h-11"
+                  placeholder="E.g., Water the plants..."
+                  className="bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 focus:border-emerald-400 focus:ring-emerald-400/20 h-12 text-lg rounded-xl transition-all"
                   autoFocus
                 />
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="description" className="text-sm font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-2">
-                  <Icons.book className="w-4 h-4" />
-                  Description
-                </Label>
-                <Textarea
-                  id="description"
-                  value={newTask.description}
-                  onChange={(e) => setNewTask({ ...newTask, description: e.target.value })}
-                  placeholder="Add more details about this task (optional)"
-                  className="bg-white/80 dark:bg-slate-800/80 border-slate-200 dark:border-slate-700 focus:border-blue-400 dark:focus:border-blue-500 focus:ring-blue-400/20 dark:focus:ring-blue-500/20 resize-none"
-                  rows={3}
-                />
-              </div>
-              <div className="grid grid-cols-3 gap-4">
+
+              <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label className="text-sm font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-2">
-                    <Icons.target className="w-4 h-4" />
+                    <Icons.target className="w-4 h-4 text-amber-500" />
                     Priority
                   </Label>
                   <Select
                     value={newTask.priority}
                     onValueChange={(value: any) => setNewTask({ ...newTask, priority: value })}
                   >
-                    <SelectTrigger className="bg-white/80 dark:bg-slate-800/80 border-slate-200 dark:border-slate-700 focus:border-blue-400 dark:focus:border-blue-500 h-11">
+                    <SelectTrigger className="bg-slate-50/50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 focus:border-emerald-400 h-11 rounded-xl">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="low">🟢 Low</SelectItem>
-                      <SelectItem value="medium">🟡 Medium</SelectItem>
-                      <SelectItem value="high">🔴 High</SelectItem>
+                      <SelectItem value="low">🌱 Low</SelectItem>
+                      <SelectItem value="medium">🌿 Medium</SelectItem>
+                      <SelectItem value="high">🔥 High</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
                 <div className="space-y-2">
                   <Label className="text-sm font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-2">
-                    <Icons.briefcase className="w-4 h-4" />
+                    <Icons.tag className="w-4 h-4 text-blue-500" />
                     Category
                   </Label>
                   <Select
                     value={newTask.category}
                     onValueChange={(value: any) => setNewTask({ ...newTask, category: value })}
                   >
-                    <SelectTrigger className="bg-white/80 dark:bg-slate-800/80 border-slate-200 dark:border-slate-700 focus:border-blue-400 dark:focus:border-blue-500 h-11">
+                    <SelectTrigger className="bg-slate-50/50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 focus:border-emerald-400 h-11 rounded-xl">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="work">💼 Work</SelectItem>
                       <SelectItem value="personal">👤 Personal</SelectItem>
                       <SelectItem value="learning">📚 Learning</SelectItem>
-                      <SelectItem value="health">❤️ Health</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label className="text-sm font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-2">
-                    <Icons.reset className="w-4 h-4" />
-                    Repeat
-                  </Label>
-                  <Select
-                    value={newTask.recurrence}
-                    onValueChange={(value: any) => setNewTask({ ...newTask, recurrence: value })}
-                  >
-                    <SelectTrigger className="bg-white/80 dark:bg-slate-800/80 border-slate-200 dark:border-slate-700 focus:border-blue-400 dark:focus:border-blue-500 h-11">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="none">None</SelectItem>
-                      <SelectItem value="daily">Daily</SelectItem>
-                      <SelectItem value="weekly">Weekly</SelectItem>
-                      <SelectItem value="monthly">Monthly</SelectItem>
+                      <SelectItem value="health">🧘‍♀️ Health</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
               </div>
+
               <div className="space-y-2">
-                <Label htmlFor="dueDate" className="text-sm font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-2">
-                  <Icons.calendar className="w-4 h-4" />
-                  Due Date
+                <Label htmlFor="description" className="text-sm font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-2">
+                  <Icons.alignLeft className="w-4 h-4 text-slate-400" />
+                  Notes
                 </Label>
-                <Input
-                  id="dueDate"
-                  type="date"
-                  value={newTask.dueDate}
-                  onChange={(e) => setNewTask({ ...newTask, dueDate: e.target.value })}
-                  className="bg-white/80 dark:bg-slate-800/80 border-slate-200 dark:border-slate-700 focus:border-blue-400 dark:focus:border-blue-500 focus:ring-blue-400/20 dark:focus:ring-blue-500/20 h-11"
+                <Textarea
+                  id="description"
+                  value={newTask.description}
+                  onChange={(e) => setNewTask({ ...newTask, description: e.target.value })}
+                  placeholder="Add details..."
+                  className="bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 focus:border-emerald-400 focus:ring-emerald-400/20 resize-none rounded-xl"
+                  rows={2}
                 />
               </div>
-              <div className="flex gap-3 pt-2">
+
+              <div className="pt-2 flex gap-3">
                 <Button
-                  variant="outline"
+                  variant="ghost"
                   onClick={() => setIsAddDialogOpen(false)}
-                  className="flex-1 border-slate-200 dark:border-slate-700"
+                  className="flex-1 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400"
                 >
                   Cancel
                 </Button>
                 <Button
                   onClick={handleAddTask}
                   disabled={!newTask.title.trim()}
-                  className="flex-1 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-lg hover:shadow-xl transition-all duration-200 disabled:opacity-50"
+                  className="flex-1 btn-organic h-11 rounded-xl text-base shadow-lg disabled:opacity-50 disabled:shadow-none"
                 >
-                  <Icons.seedling className="w-4 h-4 mr-2" />
-                  Create Task
+                  Plant It
                 </Button>
               </div>
             </div>
@@ -347,18 +318,23 @@ export default function TasksPage() {
         </Dialog>
       </div>
 
-        {/* Quick Add Section */}
-        <Card className="bg-gradient-to-br from-emerald-50/50 to-blue-50/30 dark:from-emerald-900/20 dark:to-blue-900/20 border border-emerald-200/50 dark:border-emerald-800/50 shadow-sm">
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <Icons.plus className="w-5 h-5 text-emerald-600 dark:text-emerald-400 flex-shrink-0" />
-              <Input
-                placeholder="Quick add task (Press Enter to add)..."
-                value={quickAddValue}
-                onChange={(e) => setQuickAddValue(e.target.value)}
-                onKeyDown={handleQuickAdd}
-                className="flex-1 border-emerald-200 dark:border-emerald-700 focus:border-emerald-400 dark:focus:border-emerald-500 focus:ring-emerald-400/20 dark:focus:ring-emerald-500/20 bg-white/80 dark:bg-slate-800/80"
-              />
+      {/* Quick Add Section */}
+      <Card className="card-premium border-l-4 border-l-emerald-500 overflow-hidden">
+        <CardContent className="p-0">
+          <div className="flex items-center h-16">
+            <div className="pl-6 pr-4">
+              <div className="w-8 h-8 rounded-full bg-emerald-100 dark:bg-emerald-900/50 flex items-center justify-center">
+                <Icons.plus className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+              </div>
+            </div>
+            <Input
+              placeholder="Plant a quick seed (Press Enter)..."
+              value={quickAddValue}
+              onChange={(e) => setQuickAddValue(e.target.value)}
+              onKeyDown={handleQuickAdd}
+              className="flex-1 border-none focus-visible:ring-0 bg-transparent h-full text-lg placeholder:text-slate-400 dark:placeholder:text-slate-500"
+            />
+            <div className="pr-4">
               <Button
                 onClick={() => {
                   if (quickAddValue.trim()) {
@@ -371,169 +347,162 @@ export default function TasksPage() {
                     })
                     setQuickAddValue("")
                     toast({
-                      title: "Task added!",
-                      description: "Quick task created successfully.",
+                      title: "Seed Planted! 🌱",
+                      description: "Your task has been added to the garden.",
                     })
                   }
                 }}
                 disabled={!quickAddValue.trim()}
                 size="sm"
-                className="bg-emerald-600 hover:bg-emerald-700 text-white"
+                className={`rounded-lg transition-all ${quickAddValue.trim() ? 'bg-emerald-500 hover:bg-emerald-600 text-white shadow-md' : 'bg-slate-100 text-slate-400 dark:bg-slate-800'}`}
               >
                 Add
               </Button>
             </div>
-            <p className="text-xs text-gray-500 dark:text-gray-400 mt-2 ml-8">Or click "Add Task" for detailed options</p>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Filters */}
-      <Card className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm border-0 shadow-lg">
-        <CardContent className="p-4">
-          <div className="flex flex-wrap gap-4 items-center">
-            <div className="flex-1 min-w-[200px]">
-              <Input
-                placeholder="Search tasks..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="bg-white/50 dark:bg-slate-700/50 border-slate-200 dark:border-slate-700"
-              />
-            </div>
-            <Select value={filter} onValueChange={(value: any) => setFilter(value)}>
-              <SelectTrigger className="w-[140px]">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Tasks</SelectItem>
-                <SelectItem value="pending">Pending</SelectItem>
-                <SelectItem value="completed">Completed</SelectItem>
-              </SelectContent>
-            </Select>
-            <Select value={priorityFilter} onValueChange={(value: any) => setPriorityFilter(value)}>
-              <SelectTrigger className="w-[140px]">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Priorities</SelectItem>
-                <SelectItem value="high">High</SelectItem>
-                <SelectItem value="medium">Medium</SelectItem>
-                <SelectItem value="low">Low</SelectItem>
-              </SelectContent>
-            </Select>
-            <Select value={groupBy} onValueChange={(value: any) => setGroupBy(value)}>
-              <SelectTrigger className="w-[150px]">
-                <SelectValue placeholder="Group by" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="none">No Grouping</SelectItem>
-                <SelectItem value="priority">By Priority</SelectItem>
-                <SelectItem value="category">By Category</SelectItem>
-                <SelectItem value="dueDate">By Due Date</SelectItem>
-              </SelectContent>
-            </Select>
-            <Select value={sortBy} onValueChange={(value: any) => setSortBy(value)}>
-              <SelectTrigger className="w-[140px]">
-                <SelectValue placeholder="Sort by" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="priority">Priority</SelectItem>
-                <SelectItem value="dueDate">Due Date</SelectItem>
-                <SelectItem value="category">Category</SelectItem>
-                <SelectItem value="title">Title</SelectItem>
-              </SelectContent>
-            </Select>
           </div>
         </CardContent>
       </Card>
 
+      {/* Filters (Glass Bar) */}
+      <div className="card-premium rounded-2xl p-2 flex flex-wrap gap-2 items-center bg-white/60 dark:bg-slate-900/60 sticky top-4 z-30 transition-all duration-300">
+        <div className="flex-1 min-w-[200px] relative group">
+          <Icons.search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-emerald-500 transition-colors" />
+          <Input
+            placeholder="Find a seed..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="pl-9 bg-transparent border-none focus-visible:ring-0 placeholder:text-slate-400"
+          />
+        </div>
+        <div className="h-6 w-px bg-slate-200 dark:bg-slate-700 mx-2 hidden sm:block"></div>
+
+        <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-1 sm:pb-0 w-full sm:w-auto">
+          <Select value={filter} onValueChange={(value: any) => setFilter(value)}>
+            <SelectTrigger className="w-[110px] h-9 rounded-lg border-0 bg-slate-100/50 dark:bg-slate-800/50 hover:bg-slate-200/50 dark:hover:bg-slate-700/50 transition-colors text-sm font-medium">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Items</SelectItem>
+              <SelectItem value="pending">Growing</SelectItem>
+              <SelectItem value="completed">Harvested</SelectItem>
+            </SelectContent>
+          </Select>
+          <Select value={priorityFilter} onValueChange={(value: any) => setPriorityFilter(value)}>
+            <SelectTrigger className="w-[110px] h-9 rounded-lg border-0 bg-slate-100/50 dark:bg-slate-800/50 hover:bg-slate-200/50 dark:hover:bg-slate-700/50 transition-colors text-sm font-medium">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Priority</SelectItem>
+              <SelectItem value="high">🔥 High</SelectItem>
+              <SelectItem value="medium">🌿 Medium</SelectItem>
+              <SelectItem value="low">🌱 Low</SelectItem>
+            </SelectContent>
+          </Select>
+          <Select value={groupBy} onValueChange={(value: any) => setGroupBy(value)}>
+            <SelectTrigger className="w-[120px] h-9 rounded-lg border-0 bg-slate-100/50 dark:bg-slate-800/50 hover:bg-slate-200/50 dark:hover:bg-slate-700/50 transition-colors text-sm font-medium">
+              <SelectValue placeholder="Group" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="none">No Groups</SelectItem>
+              <SelectItem value="priority">By Priority</SelectItem>
+              <SelectItem value="category">By Category</SelectItem>
+              <SelectItem value="dueDate">By Harvest Date</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+
       {/* Tasks List */}
-      <div className="space-y-6">
+      <div className="space-y-8 pb-10">
         {Object.keys(groupedTasks).length === 0 || sortedTasks.length === 0 ? (
-          <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg dark:bg-slate-800/80">
-            <CardContent className="p-8 text-center">
-              <Icons.tasks className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">No tasks found</h3>
-              <p className="text-gray-600 dark:text-gray-400">
-                {tasks.length === 0
-                  ? "Create your first task to get started!"
-                  : "Try adjusting your filters or search term."}
-              </p>
-            </CardContent>
-          </Card>
+          <div className="text-center py-20 opacity-0 animate-in fade-in zoom-in-95 duration-700 fill-mode-forwards">
+            <div className="w-24 h-24 bg-emerald-50 dark:bg-emerald-900/20 rounded-full flex items-center justify-center mx-auto mb-6 shadow-xl animate-float">
+              <Icons.seedling className="w-12 h-12 text-emerald-300 dark:text-emerald-700" />
+            </div>
+            <h3 className="text-xl font-bold text-slate-700 dark:text-slate-200 mb-2">The garden is empty</h3>
+            <p className="text-slate-500 dark:text-slate-400 max-w-sm mx-auto">
+              {tasks.length === 0
+                ? "Plant your first seed to start your productivity journey!"
+                : "No matching seeds found. Try adjusting your filters."}
+            </p>
+          </div>
         ) : (
-          Object.entries(groupedTasks).map(([groupName, groupTasks]) => (
-            <div key={groupName} className="space-y-3">
+          Object.entries(groupedTasks).map(([groupName, groupTasks], groupIndex) => (
+            <div key={groupName} className="space-y-4 animate-in fade-in slide-in-from-bottom-8 duration-700" style={{ animationDelay: `${groupIndex * 100}ms` }}>
               {groupBy !== "none" && (
-                <div className="flex items-center gap-2 px-2">
-                  <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200 flex items-center gap-2">
-                    {groupName === "Overdue" && <Icons.droplets className="w-5 h-5 text-red-500" />}
-                    {groupName === "Due Today" && <Icons.sun className="w-5 h-5 text-yellow-500" />}
-                    {groupName === "This Week" && <Icons.calendar className="w-5 h-5 text-blue-500" />}
-                    {groupName === "High Priority" && <Icons.target className="w-5 h-5 text-red-500" />}
-                    {groupName === "Medium Priority" && <Icons.target className="w-5 h-5 text-yellow-500" />}
-                    {groupName === "Low Priority" && <Icons.target className="w-5 h-5 text-green-500" />}
+                <div className="flex items-center gap-3 px-1 mb-2">
+                  <h3 className="text-lg font-bold bg-gradient-to-r from-slate-800 to-slate-600 dark:from-slate-200 dark:to-slate-400 bg-clip-text text-transparent flex items-center gap-2">
                     {groupName}
-                    <Badge variant="secondary" className="ml-2">
-                      {groupTasks.length}
-                    </Badge>
                   </h3>
+                  <div className="h-px bg-gradient-to-r from-slate-200 to-transparent dark:from-slate-700 flex-1"></div>
+                  <Badge variant="secondary" className="rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-mono text-xs">
+                    {groupTasks.length}
+                  </Badge>
                 </div>
               )}
               <div className="grid gap-4">
                 {groupTasks.map((task) => (
                   <Card
                     key={task.id}
-                    className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm border-0 shadow-lg hover:shadow-xl transition-all duration-200"
+                    className={`card-premium group hover:scale-[1.01] transition-all duration-300 border-l-4 ${task.completed ? 'border-l-slate-300 dark:border-l-slate-700 opacity-60' : 'border-l-emerald-500'}`}
                   >
-                    <CardContent className="p-4">
-                      <div className="flex items-start space-x-4">
-                        <Checkbox
-                          checked={task.completed}
-                          onCheckedChange={(checked) => handleToggleTask(task.id, checked as boolean)}
-                          className="mt-1"
-                        />
+                    <CardContent className="p-4 sm:p-5">
+                      <div className="flex items-start gap-4">
+                        <div className="pt-1">
+                          <Checkbox
+                            checked={task.completed}
+                            onCheckedChange={(checked) => handleToggleTask(task.id, checked as boolean)}
+                            className="w-6 h-6 rounded-full border-2 border-slate-300 data-[state=checked]:bg-emerald-500 data-[state=checked]:border-emerald-500 transition-all"
+                          />
+                        </div>
                         <div className="flex-1 min-w-0">
-                          <div className="flex items-start justify-between">
-                            <div className="flex-1">
+                          <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-2">
+                            <div className="space-y-1">
                               <h3
-                                className={`font-medium ${task.completed ? "line-through text-gray-500 dark:text-gray-500" : "text-gray-900 dark:text-gray-100"}`}
+                                className={`text-base sm:text-lg font-bold leading-tight transition-colors ${task.completed ? "line-through text-slate-400 dark:text-slate-500" : "text-slate-800 dark:text-slate-100"}`}
                               >
                                 {task.title}
                               </h3>
                               {task.description && (
                                 <p
-                                  className={`text-sm mt-1 ${task.completed ? "line-through text-gray-400" : "text-gray-600 dark:text-gray-400"}`}
+                                  className={`text-sm ${task.completed ? "line-through text-slate-400" : "text-slate-600 dark:text-slate-400"}`}
                                 >
                                   {task.description}
                                 </p>
                               )}
-                              <div className="flex items-center space-x-2 mt-2 flex-wrap gap-2">
-                                <Badge className={getPriorityColor(task.priority)}>{task.priority}</Badge>
-                                <Badge className={getCategoryColor(task.category)}>{task.category}</Badge>
+
+                              <div className="flex flex-wrap items-center gap-2 mt-3">
+                                <Badge className={`rounded-md px-2 py-0.5 text-xs font-semibold ${getPriorityColor(task.priority)} scale-95 origin-left`}>
+                                  {task.priority}
+                                </Badge>
+                                <Badge className={`rounded-md px-2 py-0.5 text-xs font-semibold ${getCategoryColor(task.category)} scale-95 origin-left`}>
+                                  {task.category}
+                                </Badge>
                                 {task.dueDate && (
-                                  <Badge 
-                                    variant="outline" 
-                                    className={`text-xs ${
-                                      task.dueDate < new Date().toISOString().split("T")[0] && !task.completed
-                                        ? "border-red-500 text-red-600 dark:text-red-400"
-                                        : ""
-                                    }`}
+                                  <Badge
+                                    variant="outline"
+                                    className={`rounded-md px-2 py-0.5 text-xs border bg-transparent ${task.dueDate < new Date().toISOString().split("T")[0] && !task.completed
+                                        ? "border-rose-200 text-rose-600 dark:border-rose-900/50 dark:text-rose-400"
+                                        : "border-slate-200 text-slate-500 dark:border-slate-700 dark:text-slate-400"
+                                      }`}
                                   >
-                                    <Icons.calendar className="w-3 h-3 mr-1" />
-                                    Due: {new Date(task.dueDate).toLocaleDateString()}
+                                    <Icons.calendar className="w-3 h-3 mr-1.5" />
+                                    {new Date(task.dueDate).toLocaleDateString()}
                                   </Badge>
                                 )}
                               </div>
                             </div>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => deleteTask(task.id)}
-                              className="text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20"
-                            >
-                              <Icons.trash className="w-4 h-4" />
-                            </Button>
+
+                            <div className="flex items-center self-end sm:self-start opacity-0 group-hover:opacity-100 transition-opacity">
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => deleteTask(task.id)}
+                                className="text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-900/20 rounded-full h-8 w-8 p-0"
+                              >
+                                <Icons.trash className="w-4 h-4" />
+                              </Button>
+                            </div>
                           </div>
                         </div>
                       </div>

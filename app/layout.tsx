@@ -1,16 +1,16 @@
 import type React from "react"
 import type { Metadata } from "next"
-import { Inter } from "next/font/google"
+import { Outfit } from "next/font/google"
 import "./globals.css"
 import { ThemeProvider } from "@/components/theme-provider"
 import { Toaster } from "@/components/ui/toaster"
 
-const inter = Inter({ subsets: ["latin"] })
+const outfit = Outfit({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
-  title: "Planthesia - Smart Productivity Planning",
-  description: "AI-powered task management and productivity tracking",
-  generator: 'v0.app',
+  title: "Planthesia - Your Productive Garden",
+  description: "Grow your tasks, cultivate your focus.",
+  generator: 'Planthesia',
   icons: {
     icon: '/icon.svg',
     apple: '/icon.svg',
@@ -24,8 +24,8 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={inter.className}>
-        <ThemeProvider attribute="class" defaultTheme="light" enableSystem disableTransitionOnChange>
+      <body className={outfit.className}>
+        <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
           {children}
           <Toaster />
         </ThemeProvider>

@@ -395,12 +395,12 @@ export function FocusMusicPlayer({
               playerRef.current = event.target
             },
             onError: () => {
-              // console.log("YouTube player error")
+              // YouTube player error
             },
           },
         })
       } catch (e) {
-        // console.log("Failed to initialize YouTube player:", e)
+        // Failed to initialize YouTube player
       }
     }
 
@@ -485,7 +485,7 @@ export function FocusMusicPlayer({
           },
         })
       } catch (e) {
-        // console.log("Failed to initialize Ambient player:", e)
+        // Failed to initialize Ambient player
       }
     }
 

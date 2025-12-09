@@ -108,7 +108,7 @@ export function VisualGarden({ onAddPlant }: { onAddPlant?: () => void }) {
         else if (visualSeason === 'autumn') { treeType = "maple"; treeColor = "#EA580C" } // Orange Maple
         else if (visualSeason === 'winter') { treeType = "pine"; treeColor = "#CBD5E1" }
 
-        // FIXED: Y=0.82 to sit on ground (prev 0.72 was floating)
+
         newPlants.push({
             x: 0.85, y: 0.82, type: "tree", subtype: treeType, color: treeColor,
             scale: 1.0, growth: 1, delay: 0, swayOffset: 0, swaySpeed: 0.005, seed: 9999

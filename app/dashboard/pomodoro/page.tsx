@@ -963,7 +963,7 @@ export default function PomodoroPage() {
             {/* Main Timer Display */}
             <div className="relative group cursor-default">
               {/* Breathing Glow */}
-              <div className={`absolute inset-0 rounded-full blur-[100px] transition-all duration-[4000ms] ${isActive ? "bg-emerald-500/20 scale-125 opacity-100" : "bg-blue-500/10 scale-100 opacity-50"
+              <div className={`absolute inset-0 rounded-full blur-[100px] transition-all duration-1000 ${isActive ? "bg-emerald-500/20 scale-125 opacity-100" : "bg-blue-500/10 scale-100 opacity-50"
                 }`} />
 
               <div className="relative flex flex-col items-center justify-center">

@@ -1,5 +1,6 @@
 {
     "chat.agent.enabled": true,
     "chat.setup.signInDialogVariant": "default",
-    "github.copilot.advanced": {}
+    "github.copilot.advanced": {},
+    "css.lint.unknownAtRules": "ignore"
 }

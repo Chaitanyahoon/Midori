@@ -86,8 +86,21 @@ export function useWeather() {
                 }
             },
             (error) => {
-                console.error("Geolocation error:", error)
-                setData(prev => ({ ...prev, loading: false, error: "Location access denied" }))
+                console.warn("Geolocation access denied/failed, using defaults:", error)
+                // Fallback to seasonal default based on date only (assuming Northern Hemisphere default)
+                const month = new Date().getMonth()
+                let season: "spring" | "summer" | "autumn" | "winter" = "spring"
+                if (month >= 2 && month <= 4) season = "spring"
+                else if (month >= 5 && month <= 7) season = "summer"
+                else if (month >= 8 && month <= 10) season = "autumn"
+                else season = "winter"
+
+                setData(prev => ({
+                    ...prev,
+                    season,
+                    loading: false,
+                    error: null // Clear error to show default UI
+                }))
             }
         )
     }, [])

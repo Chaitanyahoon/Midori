@@ -5,6 +5,7 @@ import { cn } from "@/lib/utils"
 import { Icons } from "@/components/icons"
 import { Button } from "@/components/ui/button"
 import { SettingsDialog } from "@/components/dashboard/settings-dialog"
+import { PlanthesiaLogo } from "@/components/dashboard/planthesia-logo"
 
 const navigation = [
   { name: "Growth Hub", href: "/dashboard", icon: Icons.seedling, description: "Your productivity overview" },
@@ -30,17 +31,7 @@ export function Sidebar({ onClose }: SidebarProps) {
           <div className="absolute top-0 left-0 w-full h-32 bg-gradient-to-br from-emerald-500/10 to-amber-500/10 rounded-b-[3rem] -z-10" />
 
           <div className="flex items-center space-x-3 mb-6 animate-bloom">
-            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-emerald-400 to-teal-600 flex items-center justify-center shadow-lg transform rotate-3">
-              <Icons.leaf className="w-6 h-6 text-white" />
-            </div>
-            <div>
-              <h1 className="text-xl font-bold bg-gradient-to-r from-emerald-700 to-teal-700 dark:from-emerald-300 dark:to-teal-300 bg-clip-text text-transparent">
-                Planthesia
-              </h1>
-              <p className="text-xs text-emerald-600/70 dark:text-emerald-400/70 font-medium tracking-wide">
-                Grow Your Focus
-              </p>
-            </div>
+            <PlanthesiaLogo size="lg" />
           </div>
 
           {/* User Profile Tiny or Search could go here */}

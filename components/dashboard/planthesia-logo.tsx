@@ -18,18 +18,18 @@ export function PlanthesiaLogo({ size = "md", showText = true, className = "" }:
   const sizes = sizeClasses[size]
 
   return (
-    <div className={`flex items-center gap-2.5 ${className}`}>
-      <div className={`${sizes.container} bg-emerald-500 dark:bg-emerald-600 rounded-xl flex items-center justify-center shadow-sm`}>
-        <Icons.leaf className={`${sizes.icon} text-white`} />
+    <div className={`flex items-center gap-3 ${className}`}>
+      <div className={`${sizes.container} bg-gradient-to-br from-emerald-500 to-teal-600 dark:from-emerald-500 dark:to-teal-500 rounded-2xl flex items-center justify-center shadow-lg transform hover:rotate-6 transition-all duration-300`}>
+        <Icons.leaf className={`${sizes.icon} text-white drop-shadow-sm`} />
       </div>
-      
+
       {showText && (
         <div className="flex flex-col">
-          <h1 className={`${sizes.text} font-semibold text-gray-900 dark:text-gray-100 leading-tight`}>
+          <h1 className={`${sizes.text} font-bold bg-gradient-to-r from-emerald-700 to-teal-700 dark:from-emerald-300 dark:to-teal-300 bg-clip-text text-transparent leading-tight`}>
             Planthesia
           </h1>
-          <p className="text-[10px] text-gray-500 dark:text-gray-400 -mt-0.5">
-            Grow Your Productivity
+          <p className="text-[10px] text-emerald-600/70 dark:text-emerald-400/70 font-medium tracking-wide uppercase">
+            Grow Your Focus
           </p>
         </div>
       )}

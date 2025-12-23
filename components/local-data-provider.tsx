@@ -1,7 +1,7 @@
 "use client"
 
 import type React from "react"
-import { createContext, useContext, useEffect, useState, useCallback } from "react"
+import { createContext, useContext, useEffect, useState, useCallback, useMemo } from "react"
 
 export interface Task {
   id: string
@@ -277,25 +277,40 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     loadLocalData()
   }, [loadLocalData])
 
+  const value = useMemo(() => ({
+    tasks,
+    pomodoros,
+    stats,
+    settings,
+    customTracks,
+    loading,
+    addTask,
+    updateTask,
+    deleteTask,
+    addPomodoro,
+    updateSettings,
+    addCustomTrack,
+    removeCustomTrack,
+    refreshData,
+  }), [
+    tasks,
+    pomodoros,
+    stats,
+    settings,
+    customTracks,
+    loading,
+    addTask,
+    updateTask,
+    deleteTask,
+    addPomodoro,
+    updateSettings,
+    addCustomTrack,
+    removeCustomTrack,
+    refreshData,
+  ])
+
   return (
-    <DataContext.Provider
-      value={{
-        tasks,
-        pomodoros,
-        stats,
-        settings,
-        customTracks,
-        loading,
-        addTask,
-        updateTask,
-        deleteTask,
-        addPomodoro,
-        updateSettings,
-        addCustomTrack,
-        removeCustomTrack,
-        refreshData,
-      }}
-    >
+    <DataContext.Provider value={value}>
       {children}
     </DataContext.Provider>
   )

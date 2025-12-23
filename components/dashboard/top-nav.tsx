@@ -10,6 +10,7 @@ import getAppreciation from '@/lib/appreciation'
 import { useState, useEffect } from "react"
 import { DataInfoModal } from "@/components/data-info-modal"
 import { SettingsModal } from "@/components/dashboard/settings-modal"
+import { ModeToggle } from "@/components/mode-toggle"
 
 interface TopNavProps {
   onAIAssistantClick?: () => void
@@ -177,7 +178,7 @@ export function TopNav({ onAIAssistantClick, onMenuClick }: TopNavProps) {
             </svg>
           </Button>
         )}
-        
+
         <div className="flex items-center space-x-2 lg:space-x-6 flex-1 min-w-0">
           {/* Greeting removed, name now shown in main header */}
           {/* Status Badges */}
@@ -223,8 +224,8 @@ export function TopNav({ onAIAssistantClick, onMenuClick }: TopNavProps) {
           >
             <div className="relative w-6 h-6 bg-white/20 rounded-full flex items-center justify-center">
               <svg className="w-3.5 h-3.5 text-white transform -rotate-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" 
-                  d="M12 19c-2.8 2-5 2.5-7 2.5.5-3 1-5.5 3-7.5-2-3.5-2-7.5-2-9.5 4.5 2 6 4 7 7 1-3 2.5-5 7-7 0 2-.5 6-2 9.5 2 2 2.5 4.5 3 7.5-2 0-4.2-.5-7-2.5"/>
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"
+                  d="M12 19c-2.8 2-5 2.5-7 2.5.5-3 1-5.5 3-7.5-2-3.5-2-7.5-2-9.5 4.5 2 6 4 7 7 1-3 2.5-5 7-7 0 2-.5 6-2 9.5 2 2 2.5 4.5 3 7.5-2 0-4.2-.5-7-2.5" />
               </svg>
             </div>
             <span className="hidden md:inline">BloomMind AI</span>
@@ -295,40 +296,38 @@ export function TopNav({ onAIAssistantClick, onMenuClick }: TopNavProps) {
                     {notifications.map((notification, index) => {
                       const isRead = readNotifications.has(notification.id)
                       return (
-                      <div
-                        key={notification.id}
-                        className={`p-4 rounded-3xl border ${getNotificationBg(notification.type)} hover:shadow-organic transition-all duration-200 animate-grow-in ${
-                          isRead ? "opacity-60" : ""
-                        }`}
-                        style={{ animationDelay: `${index * 0.1}s` }}
-                        onClick={() => setReadNotifications((prev) => new Set([...prev, notification.id]))}
-                      >
-                        <div className="flex items-start space-x-3">
-                          <div className="flex-shrink-0 mt-1">{getNotificationIcon(notification.type)}</div>
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center justify-between mb-1">
-                              <p className="text-sm font-semibold text-gray-900">{notification.title}</p>
-                              <span className="text-xs text-gray-500 font-medium">
-                                {formatNotificationTime(notification.time)}
-                              </span>
-                            </div>
-                            <p className="text-sm text-gray-700 leading-relaxed">{notification.message}</p>
-                            {notification.priority && (
-                              <Badge
-                                className={`mt-3 text-xs rounded-xl ${
-                                  notification.priority === "high"
+                        <div
+                          key={notification.id}
+                          className={`p-4 rounded-3xl border ${getNotificationBg(notification.type)} hover:shadow-organic transition-all duration-200 animate-grow-in ${isRead ? "opacity-60" : ""
+                            }`}
+                          style={{ animationDelay: `${index * 0.1}s` }}
+                          onClick={() => setReadNotifications((prev) => new Set([...prev, notification.id]))}
+                        >
+                          <div className="flex items-start space-x-3">
+                            <div className="flex-shrink-0 mt-1">{getNotificationIcon(notification.type)}</div>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center justify-between mb-1">
+                                <p className="text-sm font-semibold text-gray-900">{notification.title}</p>
+                                <span className="text-xs text-gray-500 font-medium">
+                                  {formatNotificationTime(notification.time)}
+                                </span>
+                              </div>
+                              <p className="text-sm text-gray-700 leading-relaxed">{notification.message}</p>
+                              {notification.priority && (
+                                <Badge
+                                  className={`mt-3 text-xs rounded-xl ${notification.priority === "high"
                                     ? "bg-red-50 border-red-200 text-red-700"
                                     : notification.priority === "medium"
                                       ? "bg-yellow-50 border-yellow-200 text-yellow-700"
                                       : "bg-green-50 border-green-200 text-green-700"
-                                }`}
-                              >
-                                {notification.priority} priority
-                              </Badge>
-                            )}
+                                    }`}
+                                >
+                                  {notification.priority} priority
+                                </Badge>
+                              )}
+                            </div>
                           </div>
                         </div>
-                      </div>
                       )
                     })}
                   </div>
@@ -350,6 +349,11 @@ export function TopNav({ onAIAssistantClick, onMenuClick }: TopNavProps) {
             </PopoverContent>
           </Popover>
 
+          {/* Theme Toggle */}
+          <div className="hidden sm:block">
+            <ModeToggle />
+          </div>
+
           {/* Settings */}
           <Button
             variant="ghost"
@@ -365,7 +369,7 @@ export function TopNav({ onAIAssistantClick, onMenuClick }: TopNavProps) {
         </div>
 
         <DataInfoModal isOpen={isDataInfoOpen} onClose={() => setIsDataInfoOpen(false)} />
-  <SettingsModal isOpen={isSettingsOpen} onCloseAction={() => setIsSettingsOpen(false)} />
+        <SettingsModal isOpen={isSettingsOpen} onCloseAction={() => setIsSettingsOpen(false)} />
       </div>
     </header>
   )

@@ -183,6 +183,9 @@ export function VisualGarden({ onAddPlant }: { onAddPlant?: () => void }) {
             addPlant(x, "tree", treeType, treeColor, 1.2, 800 + index * 200)
         })
 
+        // Sort by Y for depth rendering (Paint lower plants last so they are "in front")
+        newPlants.sort((a, b) => a.y - b.y)
+
         setPlants(newPlants)
     }, [tasks, pomodoros, season, visualSeason])
 
@@ -306,13 +309,13 @@ export function VisualGarden({ onAddPlant }: { onAddPlant?: () => void }) {
                 // Celestial Positions
                 let sunX = 0, sunY = 0
                 if (timeOfDay === 'morning') {
-                    sunX = width * 0.15; sunY = height * 0.35 // Rising Left
+                    sunX = width * 0.35; sunY = height * 0.3 // Rising Left-Center
                 } else if (timeOfDay === 'afternoon') {
-                    sunX = width * 0.7; sunY = height * 0.1 // High Noon
+                    sunX = width * 0.65; sunY = height * 0.15 // High Right-Center
                 } else if (timeOfDay === 'evening') {
-                    sunX = width * 0.85; sunY = height * 0.4 // Setting Right
+                    sunX = width * 0.8; sunY = height * 0.45 // Setting Right (Lower to avoid buttons)
                 } else {
-                    sunX = width * 0.1; sunY = height * 0.15 // Moon Top Left
+                    sunX = width * 0.55; sunY = height * 0.2 // Moon Top Center-Right
                 }
 
                 ctx.save(); ctx.translate(sunX, sunY)
@@ -423,8 +426,8 @@ export function VisualGarden({ onAddPlant }: { onAddPlant?: () => void }) {
                 })
             }
 
-            // 3. Render Plants (From Ref)
-            plantsRef.current.sort((a, b) => a.y - b.y).forEach((plant: Plant) => {
+            // 3. Render Plants (From Ref - already sorted)
+            plantsRef.current.forEach((plant: Plant) => {
                 if (time > plant.delay && plant.growth < 1) plant.growth += 0.01
                 if (plant.growth <= 0) return
 
@@ -500,7 +503,7 @@ export function VisualGarden({ onAddPlant }: { onAddPlant?: () => void }) {
 
     return (
         <Card className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-sm rounded-3xl overflow-hidden h-full flex flex-col relative group">
-            <CardHeader className="pb-2 absolute top-0 left-0 z-50 w-full bg-transparent p-6 flex flex-row items-center justify-between pointer-events-none">
+            <CardHeader className="pb-2 absolute top-0 left-0 z-10 w-full bg-transparent p-6 flex flex-row items-center justify-between pointer-events-none">
                 <div className="flex items-center gap-3 pointer-events-auto">
                     <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-white/30 dark:bg-slate-900/30 shadow-sm border border-slate-400/20 backdrop-blur-md">
                         <Icons.tree className="w-5 h-5 text-slate-700 dark:text-slate-300" />

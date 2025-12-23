@@ -1,18 +1,26 @@
 "use client"
+
+import { useState, useEffect } from "react"
+import { useRouter } from "next/navigation"
+import dynamic from 'next/dynamic'
+
 import { TaskCalendar } from "@/components/dashboard/task-calendar"
 import { TaskList } from "@/components/dashboard/task-list"
 import { PomodoroTimer } from "@/components/dashboard/pomodoro-timer"
 import { QuickStats } from "@/components/dashboard/quick-stats"
 import { RecentActivity } from "@/components/dashboard/recent-activity"
 import { MotivationalQuote } from "@/components/dashboard/motivational-quote"
-
-import { VisualGarden } from "@/components/garden/visual-garden"
 import { Icons } from "@/components/icons"
-import { useState, useEffect } from "react"
 import { useData } from "@/components/local-data-provider"
 import { Badge } from "@/components/ui/badge"
 
+const VisualGarden = dynamic(() => import('@/components/garden/visual-garden').then(mod => mod.VisualGarden), {
+  ssr: false,
+  loading: () => <div className="w-full h-72 sm:h-96 bg-slate-100 dark:bg-slate-800 rounded-3xl animate-pulse" />
+})
+
 export default function DashboardPage() {
+  const router = useRouter()
   const [currentDate, setCurrentDate] = useState(new Date())
   const [isQuickActionsOpen, setIsQuickActionsOpen] = useState(false)
   const { tasks, pomodoros, stats, settings } = useData()
@@ -123,19 +131,19 @@ export default function DashboardPage() {
         {/* Main Content Grid */}
         <div className="grid grid-cols-1 xl:grid-cols-3 gap-4 sm:gap-6">
           {/* Top Row: Visual Garden (New) */}
-          <div className="xl:col-span-3">
-            <VisualGarden onAddPlant={() => window.location.href = "/dashboard/tasks"} />
+          <div className="xl:col-span-3 min-w-0">
+            <VisualGarden onAddPlant={() => router.push("/dashboard/tasks")} />
           </div>
 
           {/* Left Column */}
-          <div className="xl:col-span-2 space-y-4 sm:space-y-6">
+          <div className="xl:col-span-2 space-y-4 sm:space-y-6 min-w-0">
 
             <TaskCalendar />
             <RecentActivity />
           </div>
 
           {/* Right Column */}
-          <div className="space-y-4 sm:space-y-6">
+          <div className="space-y-4 sm:space-y-6 min-w-0">
             <PomodoroTimer />
             <TaskList />
           </div>

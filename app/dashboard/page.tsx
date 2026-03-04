@@ -81,37 +81,34 @@ export default function DashboardPage() {
             </div>
 
             {/* Quick Stats Badges */}
-            <div className="flex flex-wrap items-center gap-2">
-              <Badge className="badge-organic bg-emerald-100/50 text-emerald-700 border-emerald-200">
-                <Icons.seedling className="w-4 h-4 mr-1.5" />
-                <span className="hidden sm:inline">{todayTasks} Tasks Today</span>
-                <span className="sm:hidden">{todayTasks}</span>
+            <div className="flex flex-wrap items-center gap-3 mt-4">
+              <Badge className="badge-organic bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border border-emerald-500/30 backdrop-blur-md px-3 py-1.5 shadow-sm shadow-emerald-500/5 transition-all w-fit">
+                <Icons.seedling className="w-4 h-4 mr-2" />
+                <span className="font-semibold">{todayTasks} Tasks Today</span>
               </Badge>
-              <Badge className="badge-organic bg-amber-100/50 text-amber-700 border-amber-200">
-                <Icons.timer className="w-4 h-4 mr-1.5" />
-                <span className="hidden sm:inline">{todayPomodoros} Sessions</span>
-                <span className="sm:hidden">{todayPomodoros}</span>
+              <Badge className="badge-organic bg-amber-500/10 hover:bg-amber-500/20 text-amber-700 dark:text-amber-300 border border-amber-500/30 backdrop-blur-md px-3 py-1.5 shadow-sm shadow-amber-500/5 transition-all w-fit">
+                <Icons.timer className="w-4 h-4 mr-2" />
+                <span className="font-semibold">{todayPomodoros} Sessions</span>
               </Badge>
               {stats.streak > 0 && (
-                <Badge className="badge-organic bg-orange-100/50 text-orange-700 border-orange-200">
-                  <span className="hidden sm:inline">🔥 {stats.streak} Day Streak</span>
-                  <span className="sm:hidden">🔥 {stats.streak}</span>
+                <Badge className="badge-organic bg-orange-500/10 hover:bg-orange-500/20 text-orange-700 dark:text-orange-300 border border-orange-500/30 backdrop-blur-md px-3 py-1.5 shadow-sm shadow-orange-500/5 transition-all w-fit pulse-subtle">
+                  <span className="font-semibold">🔥 {stats.streak} Day Streak</span>
                 </Badge>
               )}
             </div>
           </div>
 
           {/* Time Widget (Glass) */}
-          <div className="glass-light px-6 py-4 rounded-2xl shadow-sm border border-white/40 dark:border-white/10 w-full sm:w-auto hover:scale-105 transition-transform duration-300">
+          <div className="glass-light bg-white/40 dark:bg-slate-900/40 backdrop-blur-xl px-6 py-4 rounded-3xl shadow-xl shadow-slate-200/50 dark:shadow-slate-900/50 border border-white/60 dark:border-slate-700/50 w-full lg:w-auto hover:scale-105 transition-transform duration-300 group">
             <div className="flex items-center space-x-4">
-              <div className="w-12 h-12 bg-gradient-to-br from-amber-300 to-orange-400 rounded-full flex items-center justify-center shadow-md animate-pulse-slow">
+              <div className="w-12 h-12 bg-gradient-to-br from-amber-300 to-orange-400 rounded-2xl flex items-center justify-center shadow-lg shadow-amber-500/30 group-hover:shadow-amber-500/50 transition-shadow animate-pulse-slow rotate-3 group-hover:rotate-6">
                 <Icons.sun className="w-6 h-6 text-white" />
               </div>
               <div className="min-w-0">
-                <p className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                <p className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-0.5">
                   {currentDate.toLocaleDateString("en-US", { weekday: "long", month: "short", day: "numeric" })}
                 </p>
-                <p className="text-xl font-bold text-slate-800 dark:text-slate-100">
+                <p className="text-2xl font-black text-slate-800 dark:text-slate-100 tracking-tight">
                   {currentDate.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })}
                 </p>
               </div>

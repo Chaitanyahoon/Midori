@@ -1,7 +1,5 @@
 "use client"
 
-import { Icons } from "@/components/icons"
-
 interface PlanthesiaLogoProps {
   size?: "sm" | "md" | "lg"
   showText?: boolean
@@ -10,18 +8,20 @@ interface PlanthesiaLogoProps {
 
 export function PlanthesiaLogo({ size = "md", showText = true, className = "" }: PlanthesiaLogoProps) {
   const sizeClasses = {
-    sm: { icon: "w-6 h-6", text: "text-lg", container: "w-8 h-8" },
-    md: { icon: "w-8 h-8", text: "text-xl", container: "w-10 h-10" },
-    lg: { icon: "w-10 h-10", text: "text-2xl", container: "w-12 h-12" },
+    sm: { img: "w-8 h-8", text: "text-lg" },
+    md: { img: "w-10 h-10", text: "text-xl" },
+    lg: { img: "w-12 h-12", text: "text-2xl" },
   }
 
   const sizes = sizeClasses[size]
 
   return (
     <div className={`flex items-center gap-3 ${className}`}>
-      <div className={`${sizes.container} bg-gradient-to-br from-emerald-500 to-teal-600 dark:from-emerald-500 dark:to-teal-500 rounded-2xl flex items-center justify-center shadow-lg transform hover:rotate-6 transition-all duration-300`}>
-        <Icons.leaf className={`${sizes.icon} text-white drop-shadow-sm`} />
-      </div>
+      <img
+        src="/icon.svg"
+        alt="Planthesia logo"
+        className={`${sizes.img} drop-shadow-lg hover:rotate-6 hover:scale-110 transition-all duration-300 cursor-pointer`}
+      />
 
       {showText && (
         <div className="flex flex-col">

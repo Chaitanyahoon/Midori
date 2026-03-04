@@ -40,6 +40,8 @@ interface UserContext {
   totalTasks: number
   totalPomodoros: number
   streak: number
+  userName: string
+  userTone: string
 }
 const ChatMessageComponent = memo(
   ({ message, onAddSuggestedTask }: { message: ChatMessage; onAddSuggestedTask: (suggestion: any) => void }) => {
@@ -165,7 +167,7 @@ export function PlantAIAssistant({ isOpen, onClose, onCloseAction }: PlantAIAssi
   const [prompt, setPrompt] = useState("")
   const [isLoading, setIsLoading] = useState(false)
   const [chatHistory, setChatHistory] = useState<ChatMessage[]>([])
-  const { tasks, pomodoros, stats, addTask } = useData()
+  const { tasks, pomodoros, stats, addTask, settings } = useData()
 
   const userContext = useMemo((): UserContext => {
     const today = new Date().toISOString().split("T")[0]
@@ -187,8 +189,10 @@ export function PlantAIAssistant({ isOpen, onClose, onCloseAction }: PlantAIAssi
       totalTasks: stats.totalTasks,
       totalPomodoros: stats.totalPomodoros,
       streak: stats.streak,
+      userName: settings?.userName || "User",
+      userTone: settings?.userTone || "balanced"
     }
-  }, [tasks, pomodoros, stats])
+  }, [tasks, pomodoros, stats, settings])
 
 
   const { toast } = useToast()

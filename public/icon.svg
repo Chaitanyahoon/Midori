@@ -1,11 +1,48 @@
-<svg width="512" height="512" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="none">
   <defs>
-    <linearGradient id="leafGradient" x1="2" y1="2" x2="22" y2="22" gradientUnits="userSpaceOnUse">
-      <stop offset="0%" stop-color="#10b981"/>
+    <linearGradient id="bg" x1="0" y1="0" x2="100" y2="100" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#059669"/>
       <stop offset="100%" stop-color="#0d9488"/>
     </linearGradient>
+    <linearGradient id="shine" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.15"/>
+      <stop offset="100%" stop-color="#ffffff" stop-opacity="0"/>
+    </linearGradient>
   </defs>
-  <rect x="2" y="2" width="20" height="20" rx="6" fill="url(#leafGradient)"/>
-  <path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z" fill="white" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-  <path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <!-- Background rounded square -->
+  <rect width="100" height="100" rx="24" fill="url(#bg)"/>
+  <!-- Subtle shine overlay -->
+  <rect width="100" height="100" rx="24" fill="url(#shine)"/>
+
+  <!-- Leaf shape: a single smooth teardrop leaf tilted 30deg -->
+  <path
+    d="M50 18 C64 18, 78 30, 78 46 C78 62, 64 74, 50 80 C50 80, 22 66, 22 46 C22 30, 36 18, 50 18 Z"
+    fill="white"
+    fill-opacity="0.18"
+  />
+  <!-- Leaf midrib -->
+  <line x1="50" y1="20" x2="50" y2="78" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-opacity="0.5"/>
+
+  <!-- Growth arrow / sprout stem -->
+  <path
+    d="M50 76 L50 56"
+    stroke="white" stroke-width="3" stroke-linecap="round"
+  />
+  <!-- Left leaf of sprout -->
+  <path
+    d="M50 65 C44 62, 36 56, 38 48 C42 52, 46 58, 50 65 Z"
+    fill="white"
+  />
+  <!-- Right leaf of sprout -->
+  <path
+    d="M50 65 C56 62, 64 56, 62 48 C58 52, 54 58, 50 65 Z"
+    fill="white"
+    fill-opacity="0.85"
+  />
+
+  <!-- Upward growth sparkle dots -->
+  <circle cx="50" cy="43" r="2.2" fill="white" fill-opacity="0.9"/>
+  <circle cx="43" cy="34" r="1.5" fill="white" fill-opacity="0.6"/>
+  <circle cx="57" cy="31" r="1.5" fill="white" fill-opacity="0.6"/>
 </svg>

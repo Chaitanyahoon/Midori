@@ -28,7 +28,7 @@ Organize your life with an intuitive task board. Categorize, prioritize, and tra
 Stay in the flow with our built-in Pomodoro timer. Customize your focus sessions and breaks to maximize efficiency without burnout.
 
 ### 🤖 Growth AI
-Your personal productivity botanist! Powered by the latest AI models (via Groq), Growth AI analyzes your habits and provides personalized tips to optimize your workflow.
+Your personal productivity botanist! Powered by the latest AI models (via Google Gemini), Growth AI analyzes your habits and provides personalized tips to optimize your workflow.
 
 ### 📊 Analytics & Insights
 Visualise your productivity patterns. Track your completion rates, focus hours, and more with beautiful, interactive charts.
@@ -45,7 +45,7 @@ Built with modern, robust technologies for accuracy and performance:
 - **Styling**: [Tailwind CSS](https://tailwindcss.com/) & [Radix UI](https://www.radix-ui.com/)
 - **Charts**: [Recharts](https://recharts.org/)
 - **Icons**: [Lucide React](https://lucide.dev/)
-- **AI Integration**: [Groq SDK](https://console.groq.com/)
+- **AI Integration**: [Google Gemini](https://ai.google.dev/)
 
 ## 🚀 Getting Started
 
@@ -72,9 +72,9 @@ Follow these steps to set up Planthesia locally on your machine.
     ```
 
 3.  **Set up environment variables**
-    Create a `.env.local` file in the root directory and add your Groq API key:
+    Create a `.env.local` file in the root directory and add your Google Gemini API key:
     ```env
-    GROQ_API_KEY=your_groq_api_key_here
+    GEMINI_API_KEY=your_gemini_api_key_here
     ```
 
 4.  **Run the development server**

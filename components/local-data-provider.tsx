@@ -2,6 +2,12 @@
 
 import type React from "react"
 import { createContext, useContext, useEffect, useState, useCallback, useMemo } from "react"
+import {
+  collection, doc, setDoc, updateDoc, deleteDoc,
+  onSnapshot, query, addDoc, getDoc
+} from "firebase/firestore"
+import { db } from "@/lib/firebase/client"
+import { useAuth } from "@/components/auth-provider"
 
 export interface Task {
   id: string
@@ -13,14 +19,13 @@ export interface Task {
   createdAt: string
   completedAt?: string
   dueDate?: string
-  recurrence?: "none" | "daily" | "weekly" | "monthly"
 }
 
 export interface PomodoroSession {
   id: string
   startTime: string
   endTime?: string
-  duration: number // in minutes
+  duration: number
   taskId?: string
   completed: boolean
 }
@@ -29,14 +34,14 @@ export interface UserStats {
   totalTasks: number
   completedTasks: number
   totalPomodoros: number
-  totalFocusTime: number // in minutes
+  totalFocusTime: number
   streak: number
   lastActiveDate: string
 }
 
 export interface UserSettings {
   userName: string | null
-  userTone: string | null // 'casual', 'formal', 'energetic', 'calm'
+  userTone: string | null
   dailyGoalTasks: number
   dailyGoalPomodoros: number
   dailyGoalHours: number
@@ -57,25 +62,17 @@ interface DataContextType {
   settings: UserSettings
   customTracks: CustomTrack[]
   loading: boolean
-
-  // Actions
-  addTask: (task: Omit<Task, "id" | "createdAt">) => void
-  updateTask: (id: string, updates: Partial<Task>) => void
-  deleteTask: (id: string) => void
-
-  addPomodoro: (pomodoro: Omit<PomodoroSession, "id">) => void
-
-  updateSettings: (updates: Partial<UserSettings>) => void
-  addCustomTrack: (track: Omit<CustomTrack, "id" | "addedAt">) => void
-  removeCustomTrack: (id: string) => void
-
+  addTask: (task: Omit<Task, "id" | "createdAt">) => Promise<void>
+  updateTask: (id: string, updates: Partial<Task>) => Promise<void>
+  deleteTask: (id: string) => Promise<void>
+  addPomodoro: (pomodoro: Omit<PomodoroSession, "id">) => Promise<void>
+  updateSettings: (updates: Partial<UserSettings>) => Promise<void>
+  addCustomTrack: (track: Omit<CustomTrack, "id" | "addedAt">) => Promise<void>
+  removeCustomTrack: (id: string) => Promise<void>
   refreshData: () => void
 }
 
 const DataContext = createContext<DataContextType | undefined>(undefined)
-
-// Generate a simple ID
-const generateId = () => Math.random().toString(36).substr(2, 9)
 
 const DEFAULT_SETTINGS: UserSettings = {
   userName: null,
@@ -86,240 +83,141 @@ const DEFAULT_SETTINGS: UserSettings = {
 }
 
 export function DataProvider({ children }: { children: React.ReactNode }) {
+  const { user } = useAuth()
+  const uid = user?.uid
+
   const [tasks, setTasks] = useState<Task[]>([])
   const [pomodoros, setPomodoros] = useState<PomodoroSession[]>([])
-  const [stats, setStats] = useState<UserStats>({
-    totalTasks: 0,
-    completedTasks: 0,
-    totalPomodoros: 0,
-    totalFocusTime: 0,
-    streak: 0,
-    lastActiveDate: new Date().toISOString().split("T")[0],
-  })
   const [settings, setSettings] = useState<UserSettings>(DEFAULT_SETTINGS)
   const [customTracks, setCustomTracks] = useState<CustomTrack[]>([])
   const [loading, setLoading] = useState(true)
 
-  // Load data from localStorage on mount (client-side only)
+  // Real-time listeners for Firestore collections
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      loadLocalData()
-      setLoading(false)
-    }
-  }, [])
+    if (!uid) { setLoading(false); return }
+    setLoading(true)
 
-  // Save data to localStorage whenever state changes
-  useEffect(() => {
-    if (!loading) {
-      saveLocalData()
-      updateStats()
-    }
-  }, [tasks, pomodoros, settings, customTracks, loading])
+    const unsubs: (() => void)[] = []
 
-  const loadLocalData = useCallback(() => {
-    if (typeof window === 'undefined') return
+    // Tasks
+    unsubs.push(onSnapshot(collection(db, "users", uid, "tasks"), (snap) => {
+      setTasks(snap.docs.map(d => ({ id: d.id, ...d.data() } as Task)))
+    }))
 
-    try {
-      const savedTasks = localStorage.getItem("planthesia_tasks")
-      const savedPomodoros = localStorage.getItem("planthesia_pomodoros")
-      const savedStats = localStorage.getItem("planthesia_stats")
-      const savedSettings = localStorage.getItem("planthesia_settings")
-      const savedCustomTracks = localStorage.getItem("planthesia_custom_tracks")
+    // Pomodoros
+    unsubs.push(onSnapshot(collection(db, "users", uid, "pomodoros"), (snap) => {
+      setPomodoros(snap.docs.map(d => ({ id: d.id, ...d.data() } as PomodoroSession)))
+    }))
 
-      if (savedTasks) {
-        const parsedTasks = JSON.parse(savedTasks)
-        setTasks(Array.isArray(parsedTasks) ? parsedTasks : [])
+    // Settings (single doc)
+    unsubs.push(onSnapshot(doc(db, "users", uid, "meta", "settings"), (snap) => {
+      if (snap.exists()) {
+        setSettings({ ...DEFAULT_SETTINGS, ...snap.data() as UserSettings })
       }
-      if (savedPomodoros) {
-        const parsedPomodoros = JSON.parse(savedPomodoros)
-        setPomodoros(Array.isArray(parsedPomodoros) ? parsedPomodoros : [])
-      }
-      if (savedStats) {
-        setStats(JSON.parse(savedStats))
-      }
-      if (savedSettings) {
-        setSettings({ ...DEFAULT_SETTINGS, ...JSON.parse(savedSettings) })
-      } else {
-        // Migration for legacy user/tone
-        const legacyUser = localStorage.getItem("planthesia_user")
-        const legacyTone = localStorage.getItem("planthesia_userTone")
-        if (legacyUser || legacyTone) {
-          setSettings(prev => ({
-            ...prev,
-            userName: legacyUser || prev.userName,
-            userTone: legacyTone || prev.userTone
-          }))
-        }
-      }
+    }))
 
-      if (savedCustomTracks) {
-        setCustomTracks(JSON.parse(savedCustomTracks))
-      }
+    // Custom tracks
+    unsubs.push(onSnapshot(collection(db, "users", uid, "customTracks"), (snap) => {
+      setCustomTracks(snap.docs.map(d => ({ id: d.id, ...d.data() } as CustomTrack)))
+    }))
 
-    } catch (error) {
-      console.error("Error loading local data:", error)
-      // Reset to defaults/empty if corrupted
-      setTasks([])
-      setPomodoros([])
-    }
-  }, [])
+    setLoading(false)
+    return () => unsubs.forEach(u => u())
+  }, [uid])
 
-  const saveLocalData = useCallback(() => {
-    if (typeof window === 'undefined') return
-
-    try {
-      localStorage.setItem("planthesia_tasks", JSON.stringify(tasks))
-      localStorage.setItem("planthesia_pomodoros", JSON.stringify(pomodoros))
-      localStorage.setItem("planthesia_stats", JSON.stringify(stats))
-      localStorage.setItem("planthesia_settings", JSON.stringify(settings))
-      localStorage.setItem("planthesia_custom_tracks", JSON.stringify(customTracks))
-    } catch (error) {
-      console.error("Error saving local data:", error)
-    }
-  }, [tasks, pomodoros, stats, settings, customTracks])
-
-  const addTask = useCallback((taskData: Omit<Task, "id" | "createdAt">) => {
-    const newTask: Task = {
-      ...taskData,
-      id: generateId(),
-      createdAt: new Date().toISOString(),
-    }
-    setTasks((prev) => [newTask, ...prev])
-  }, [])
-
-  const updateTask = useCallback((id: string, updates: Partial<Task>) => {
-    setTasks((prev) =>
-      prev.map((task) => {
-        if (task.id === id) {
-          const updatedTask = { ...task, ...updates }
-          if (updates.completed && !task.completed) {
-            updatedTask.completedAt = new Date().toISOString()
-          } else if (updates.completed === false && task.completed) {
-            updatedTask.completedAt = undefined
-          }
-          return updatedTask
-        }
-        return task
-      }),
-    )
-  }, [])
-
-  const deleteTask = useCallback((id: string) => {
-    setTasks((prev) => prev.filter((task) => task.id !== id))
-  }, [])
-
-  const addPomodoro = useCallback((pomodoroData: Omit<PomodoroSession, "id">) => {
-    const newPomodoro: PomodoroSession = {
-      ...pomodoroData,
-      id: generateId(),
-    }
-    setPomodoros((prev) => [newPomodoro, ...prev])
-  }, [])
-
-  const updateSettings = useCallback((updates: Partial<UserSettings>) => {
-    setSettings((prev) => ({ ...prev, ...updates }))
-  }, [])
-
-  const addCustomTrack = useCallback((trackData: Omit<CustomTrack, "id" | "addedAt">) => {
-    const newTrack: CustomTrack = {
-      ...trackData,
-      id: generateId(),
-      addedAt: new Date().toISOString(),
-    }
-    setCustomTracks((prev) => [newTrack, ...prev])
-  }, [])
-
-  const removeCustomTrack = useCallback((id: string) => {
-    setCustomTracks((prev) => prev.filter(t => t.id !== id))
-  }, [])
-
-  const updateStats = useCallback(() => {
+  // Derived stats
+  const stats = useMemo((): UserStats => {
     const totalTasks = tasks.length
-    const completedTasks = tasks.filter((task) => task.completed).length
-    const totalPomodoros = pomodoros.filter((p) => p.completed).length
-    const totalFocusTime = pomodoros.reduce((sum, p) => sum + (p.completed ? p.duration : 0), 0)
+    const completedTasks = tasks.filter(t => t.completed).length
+    const totalPomodoros = pomodoros.filter(p => p.completed).length
+    const totalFocusTime = pomodoros.reduce((s, p) => s + (p.completed ? p.duration : 0), 0)
 
     const today = new Date().toISOString().split("T")[0]
-
-    // Calculate streak
-    let currentStreak = 0
-    const currentDate = new Date()
-
+    let streak = 0
+    const now = new Date()
     for (let i = 0; i < 30; i++) {
-      // Check last 30 days
-      const checkDate = new Date(currentDate)
-      checkDate.setDate(currentDate.getDate() - i)
-      const dateString = checkDate.toISOString().split("T")[0]
-
-      const dayTasks = tasks.filter((t) => t.completedAt && t.completedAt.split("T")[0] === dateString).length
-      const dayPomodoros = pomodoros.filter((p) => p.completed && p.startTime.split("T")[0] === dateString).length
-
-      if (dayTasks > 0 || dayPomodoros > 0) {
-        currentStreak++
-      } else {
-        break
-      }
+      const d = new Date(now)
+      d.setDate(now.getDate() - i)
+      const dateStr = d.toISOString().split("T")[0]
+      const hasActivity =
+        tasks.some(t => t.completedAt?.startsWith(dateStr)) ||
+        pomodoros.some(p => p.completed && p.startTime.startsWith(dateStr))
+      if (hasActivity) streak++
+      else break
     }
 
-    const newStats: UserStats = {
-      totalTasks,
-      completedTasks,
-      totalPomodoros,
-      totalFocusTime,
-      streak: currentStreak,
-      lastActiveDate: today,
-    }
-
-    setStats(newStats)
+    return { totalTasks, completedTasks, totalPomodoros, totalFocusTime, streak, lastActiveDate: today }
   }, [tasks, pomodoros])
 
+  const addTask = useCallback(async (taskData: Omit<Task, "id" | "createdAt">) => {
+    if (!uid) return
+    await addDoc(collection(db, "users", uid, "tasks"), {
+      ...taskData,
+      createdAt: new Date().toISOString(),
+    })
+  }, [uid])
+
+  const updateTask = useCallback(async (id: string, updates: Partial<Task>) => {
+    if (!uid) return
+    const ref = doc(db, "users", uid, "tasks", id)
+    const extra: Partial<Task> = {}
+    if (updates.completed === true) extra.completedAt = new Date().toISOString()
+    if (updates.completed === false) extra.completedAt = undefined
+    await updateDoc(ref, { ...updates, ...extra })
+  }, [uid])
+
+  const deleteTask = useCallback(async (id: string) => {
+    if (!uid) return
+    await deleteDoc(doc(db, "users", uid, "tasks", id))
+  }, [uid])
+
+  const addPomodoro = useCallback(async (pomodoroData: Omit<PomodoroSession, "id">) => {
+    if (!uid) return
+    await addDoc(collection(db, "users", uid, "pomodoros"), pomodoroData)
+  }, [uid])
+
+  const updateSettings = useCallback(async (updates: Partial<UserSettings>) => {
+    if (!uid) return
+    const ref = doc(db, "users", uid, "meta", "settings")
+    const snap = await getDoc(ref)
+    if (snap.exists()) {
+      await updateDoc(ref, updates)
+    } else {
+      await setDoc(ref, { ...DEFAULT_SETTINGS, ...updates })
+    }
+    setSettings(prev => ({ ...prev, ...updates }))
+  }, [uid])
+
+  const addCustomTrack = useCallback(async (trackData: Omit<CustomTrack, "id" | "addedAt">) => {
+    if (!uid) return
+    await addDoc(collection(db, "users", uid, "customTracks"), {
+      ...trackData,
+      addedAt: new Date().toISOString(),
+    })
+  }, [uid])
+
+  const removeCustomTrack = useCallback(async (id: string) => {
+    if (!uid) return
+    await deleteDoc(doc(db, "users", uid, "customTracks", id))
+  }, [uid])
+
   const refreshData = useCallback(() => {
-    loadLocalData()
-  }, [loadLocalData])
+    // Real-time listeners handle updates automatically
+  }, [])
 
   const value = useMemo(() => ({
-    tasks,
-    pomodoros,
-    stats,
-    settings,
-    customTracks,
-    loading,
-    addTask,
-    updateTask,
-    deleteTask,
-    addPomodoro,
-    updateSettings,
-    addCustomTrack,
-    removeCustomTrack,
-    refreshData,
-  }), [
-    tasks,
-    pomodoros,
-    stats,
-    settings,
-    customTracks,
-    loading,
-    addTask,
-    updateTask,
-    deleteTask,
-    addPomodoro,
-    updateSettings,
-    addCustomTrack,
-    removeCustomTrack,
-    refreshData,
-  ])
+    tasks, pomodoros, stats, settings, customTracks, loading,
+    addTask, updateTask, deleteTask, addPomodoro,
+    updateSettings, addCustomTrack, removeCustomTrack, refreshData,
+  }), [tasks, pomodoros, stats, settings, customTracks, loading,
+    addTask, updateTask, deleteTask, addPomodoro,
+    updateSettings, addCustomTrack, removeCustomTrack, refreshData])
 
-  return (
-    <DataContext.Provider value={value}>
-      {children}
-    </DataContext.Provider>
-  )
+  return <DataContext.Provider value={value}>{children}</DataContext.Provider>
 }
 
 export function useData() {
-  const context = useContext(DataContext)
-  if (context === undefined) {
-    throw new Error("useData must be used within a DataProvider")
-  }
-  return context
+  const ctx = useContext(DataContext)
+  if (!ctx) throw new Error("useData must be used within a DataProvider")
+  return ctx
 }

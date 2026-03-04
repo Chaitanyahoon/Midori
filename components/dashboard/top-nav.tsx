@@ -9,8 +9,9 @@ import { useData } from "@/components/local-data-provider"
 import getAppreciation from '@/lib/appreciation'
 import { useState, useEffect } from "react"
 import { DataInfoModal } from "@/components/data-info-modal"
-import { SettingsModal } from "@/components/dashboard/settings-modal"
+import { SettingsDialog } from "@/components/dashboard/settings-dialog"
 import { ModeToggle } from "@/components/mode-toggle"
+import { useAuth } from "@/components/auth-provider"
 
 interface TopNavProps {
   onAIAssistantClick?: () => void
@@ -18,9 +19,9 @@ interface TopNavProps {
 }
 
 export function TopNav({ onAIAssistantClick, onMenuClick }: TopNavProps) {
-  const { tasks, pomodoros, userName, userTone } = useData()
+  const { tasks, pomodoros } = useData()
+  const { user, signOut } = useAuth()
   const [isDataInfoOpen, setIsDataInfoOpen] = useState(false)
-  const [isSettingsOpen, setIsSettingsOpen] = useState(false)
   const [readNotifications, setReadNotifications] = useState<Set<string>>(new Set())
 
   // Load read notifications from localStorage
@@ -355,21 +356,34 @@ export function TopNav({ onAIAssistantClick, onMenuClick }: TopNavProps) {
           </div>
 
           {/* Settings */}
+          <SettingsDialog>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="w-10 h-10 rounded-full hover:bg-emerald-50 transition-all duration-300 border border-transparent hover:border-emerald-200"
+              title="Settings"
+            >
+              <div className="w-5 h-5 text-emerald-600">
+                <Icons.settings className="w-full h-full" />
+              </div>
+            </Button>
+          </SettingsDialog>
+
+          {/* Sign Out */}
           <Button
             variant="ghost"
             size="icon"
-            onClick={() => setIsSettingsOpen(true)}
-            className="w-10 h-10 rounded-full hover:bg-emerald-50 transition-all duration-300 border border-transparent hover:border-emerald-200"
-            title="Settings"
+            onClick={signOut}
+            className="w-10 h-10 rounded-full hover:bg-red-50 dark:hover:bg-red-950/30 transition-all duration-300 border border-transparent hover:border-red-200 dark:hover:border-red-800"
+            title={`Sign out (${user?.email})`}
           >
-            <div className="w-5 h-5 text-emerald-600">
-              <Icons.settings className="w-full h-full" />
-            </div>
+            <svg className="w-4 h-4 text-red-400 hover:text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+            </svg>
           </Button>
         </div>
 
         <DataInfoModal isOpen={isDataInfoOpen} onClose={() => setIsDataInfoOpen(false)} />
-        <SettingsModal isOpen={isSettingsOpen} onCloseAction={() => setIsSettingsOpen(false)} />
       </div>
     </header>
   )

@@ -7,12 +7,14 @@ import {
     createUserWithEmailAndPassword,
     signInWithPopup,
     GoogleAuthProvider,
+    updateProfile,
 } from "firebase/auth"
 import { auth } from "@/lib/firebase/client"
 
 export default function LoginPage() {
     const router = useRouter()
     const [isSignUp, setIsSignUp] = useState(false)
+    const [name, setName] = useState("")
     const [email, setEmail] = useState("")
     const [password, setPassword] = useState("")
     const [error, setError] = useState("")
@@ -24,7 +26,10 @@ export default function LoginPage() {
         setLoading(true)
         try {
             if (isSignUp) {
-                await createUserWithEmailAndPassword(auth, email, password)
+                const userCredential = await createUserWithEmailAndPassword(auth, email, password)
+                if (name.trim() && userCredential.user) {
+                    await updateProfile(userCredential.user, { displayName: name.trim() })
+                }
             } else {
                 await signInWithEmailAndPassword(auth, email, password)
             }
@@ -109,6 +114,16 @@ export default function LoginPage() {
 
                     {/* Email form */}
                     <form onSubmit={handleEmailAuth} className="space-y-3">
+                        {isSignUp && (
+                            <input
+                                type="text"
+                                placeholder="Display Name (e.g. Chaitanya)"
+                                value={name}
+                                onChange={(e) => setName(e.target.value)}
+                                required
+                                className="w-full px-4 py-2.5 rounded-xl border-2 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm text-slate-800 dark:text-slate-100 placeholder:text-slate-400 focus:outline-none focus:border-emerald-400 dark:focus:border-emerald-500 transition-colors"
+                            />
+                        )}
                         <input
                             type="email"
                             placeholder="Email address"

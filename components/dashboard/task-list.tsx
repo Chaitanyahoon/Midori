@@ -12,12 +12,16 @@ import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Icons } from "@/components/icons"
 import { useData } from "@/components/local-data-provider"
+import { useAuth } from "@/components/auth-provider"
 import getAppreciation from '@/lib/appreciation'
 import { useToast } from "@/hooks/use-toast"
 import { SmartScheduleButton } from "@/components/dashboard/smart-schedule-button"
 
 export function TaskList() {
-  const { tasks, addTask, updateTask, userName, userTone } = useData()
+  const { tasks, addTask, updateTask, settings } = useData()
+  const { user } = useAuth()
+  const userName = settings.userName || user?.displayName || user?.email?.split('@')[0] || ""
+  const userTone = settings.userTone || "balanced"
   const { toast } = useToast()
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
   const [newTask, setNewTask] = useState({
@@ -107,7 +111,7 @@ export function TaskList() {
     const CategoryIcon = getCategoryIcon(task.category)
 
     return (
-      <div className="group flex items-start space-x-3 p-4 bg-white/60 backdrop-blur-sm rounded-2xl border border-gray-100 hover:border-gray-200 hover:shadow-md transition-all duration-200 cursor-pointer">
+      <div className="group flex items-start space-x-3 p-4 bg-white/50 dark:bg-slate-900/40 backdrop-blur-md rounded-2xl border border-white/60 dark:border-slate-700/50 hover:bg-white/80 dark:hover:bg-slate-800/80 shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer">
         <Checkbox
           checked={task.completed}
           onCheckedChange={(checked) => toggleTask(task.id, checked as boolean)}
@@ -153,12 +157,15 @@ export function TaskList() {
   }
 
   return (
-    <Card className="bg-gradient-to-br from-white/90 to-blue-50/50 backdrop-blur-sm border border-blue-100 shadow-lg hover:shadow-xl transition-all duration-200 rounded-3xl">
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
+    <Card className="flex flex-col h-[500px] sm:h-[600px] bg-white/60 dark:bg-slate-900/60 backdrop-blur-xl border border-white/40 dark:border-slate-700/50 shadow-xl shadow-slate-200/40 dark:shadow-slate-950/40 rounded-3xl overflow-hidden relative group">
+      {/* Subtle background glow */}
+      <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-400/10 dark:bg-emerald-500/10 rounded-full blur-3xl -z-10 pointer-events-none group-hover:bg-emerald-400/20 transition-colors duration-1000" />
+
+      <CardHeader className="flex flex-row items-center justify-between pb-3 bg-white/40 dark:bg-slate-900/40 backdrop-blur-md border-b border-white/20 dark:border-slate-700/50 z-10 px-6 pt-6">
         <div className="flex items-center gap-2">
-          <CardTitle className="text-xl font-semibold flex items-center">
-            <Icons.tasks className="w-5 h-5 mr-2 text-emerald-600" />
-            Quick Tasks
+          <CardTitle className="text-xl font-bold bg-gradient-to-r from-emerald-800 to-teal-600 dark:from-emerald-300 dark:to-teal-300 bg-clip-text text-transparent flex items-center">
+            <Icons.tasks className="w-5 h-5 mr-2 text-emerald-600 dark:text-emerald-400" />
+            Active Tasks
           </CardTitle>
           <SmartScheduleButton />
         </div>
@@ -167,10 +174,10 @@ export function TaskList() {
           <DialogTrigger asChild>
             <Button
               size="sm"
-              className="rounded-full bg-gradient-to-r from-emerald-600 to-blue-600 hover:from-emerald-700 hover:to-blue-700 text-white shadow-md hover:shadow-lg transition-all duration-200"
+              className="rounded-xl px-4 py-5 bg-gradient-to-br from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white shadow-lg shadow-emerald-500/20 hover:shadow-emerald-500/40 transition-all hover:scale-105 active:scale-95 border-0"
             >
-              <Icons.plus className="w-4 h-4 mr-1" />
-              Add Task
+              <Icons.plus className="w-4 h-4 mr-1.5" />
+              <span className="font-semibold">Add Task</span>
             </Button>
           </DialogTrigger>
           <DialogContent className="max-w-md">
@@ -254,21 +261,23 @@ export function TaskList() {
           </DialogContent>
         </Dialog>
       </CardHeader>
-      <CardContent>
-        <Tabs defaultValue="today" className="w-full">
-          <TabsList className="grid w-full grid-cols-3 bg-gray-100/80 backdrop-blur-sm rounded-2xl p-1">
-            <TabsTrigger value="today" className="rounded-xl text-sm font-medium">
-              Today ({todayTasks.length})
-            </TabsTrigger>
-            <TabsTrigger value="upcoming" className="rounded-xl text-sm font-medium">
-              Upcoming ({upcomingTasks.length})
-            </TabsTrigger>
-            <TabsTrigger value="completed" className="rounded-xl text-sm font-medium">
-              Done ({completedTasks.length})
-            </TabsTrigger>
-          </TabsList>
+      <CardContent className="flex-1 p-0 overflow-hidden flex flex-col z-10">
+        <Tabs defaultValue="today" className="w-full h-full flex flex-col">
+          <div className="px-6 pt-4 pb-2">
+            <TabsList className="grid w-full grid-cols-3 bg-slate-100/80 dark:bg-slate-800/80 backdrop-blur-md rounded-2xl p-1.5 shadow-inner">
+              <TabsTrigger value="today" className="rounded-xl py-2 text-sm font-semibold data-[state=active]:bg-white dark:data-[state=active]:bg-slate-700 data-[state=active]:text-emerald-700 dark:data-[state=active]:text-emerald-300 data-[state=active]:shadow-sm transition-all">
+                Today ({todayTasks.length})
+              </TabsTrigger>
+              <TabsTrigger value="upcoming" className="rounded-xl py-2 text-sm font-semibold data-[state=active]:bg-white dark:data-[state=active]:bg-slate-700 data-[state=active]:text-blue-700 dark:data-[state=active]:text-blue-300 data-[state=active]:shadow-sm transition-all">
+                Later ({upcomingTasks.length})
+              </TabsTrigger>
+              <TabsTrigger value="completed" className="rounded-xl py-2 text-sm font-semibold data-[state=active]:bg-white dark:data-[state=active]:bg-slate-700 data-[state=active]:text-slate-800 dark:data-[state=active]:text-slate-200 data-[state=active]:shadow-sm transition-all">
+                Done ({completedTasks.length})
+              </TabsTrigger>
+            </TabsList>
+          </div>
 
-          <TabsContent value="today" className="mt-4 space-y-3">
+          <TabsContent value="today" className="flex-1 overflow-y-auto px-6 py-2 pb-6 space-y-3 m-0 data-[state=inactive]:hidden focus-visible:outline-none">
             {todayTasks.length === 0 ? (
               <div className="text-center py-8 bg-gradient-to-br from-emerald-50 to-blue-50 rounded-2xl border border-emerald-100">
                 <Icons.calendar className="w-12 h-12 text-emerald-400 mx-auto mb-3" />
@@ -287,7 +296,7 @@ export function TaskList() {
             )}
           </TabsContent>
 
-          <TabsContent value="upcoming" className="mt-4 space-y-3">
+          <TabsContent value="upcoming" className="flex-1 overflow-y-auto px-6 py-2 pb-6 space-y-3 m-0 data-[state=inactive]:hidden focus-visible:outline-none">
             {upcomingTasks.length === 0 ? (
               <div className="text-center py-8 bg-gradient-to-br from-blue-50 to-violet-50 rounded-2xl border border-blue-100">
                 <Icons.clock className="w-12 h-12 text-blue-400 mx-auto mb-3" />
@@ -299,7 +308,7 @@ export function TaskList() {
             )}
           </TabsContent>
 
-          <TabsContent value="completed" className="mt-4 space-y-3">
+          <TabsContent value="completed" className="flex-1 overflow-y-auto px-6 py-2 pb-6 space-y-3 m-0 data-[state=inactive]:hidden focus-visible:outline-none">
             {completedTasks.length === 0 ? (
               <div className="text-center py-8 bg-gradient-to-br from-green-50 to-emerald-50 rounded-2xl border border-green-100">
                 <Icons.target className="w-12 h-12 text-green-400 mx-auto mb-3" />

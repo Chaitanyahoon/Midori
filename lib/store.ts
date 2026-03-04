@@ -8,6 +8,8 @@ interface Notification {
     message: string
     time: string
     isRead: boolean
+    type?: "warning" | "info" | "success"
+    priority?: "low" | "medium" | "high" | string
 }
 
 interface UIStore {

@@ -12,11 +12,12 @@ import { DataInfoModal } from "@/components/data-info-modal"
 import { SettingsDialog } from "@/components/dashboard/settings-dialog"
 import { ModeToggle } from "@/components/mode-toggle"
 import { useUIStore } from "@/lib/store"
+import { useAuth } from "@/components/auth-provider"
 
 export function TopNav() {
   const { tasks, pomodoros, settings } = useData()
   const { user, signOut } = useAuth()
-  const { setAIModalOpen, setSidebarOpen, notifications, markAllNotificationsAsRead, addNotification } = useUIStore()
+  const { setAIModalOpen, setSidebarOpen, notifications, markAllNotificationsAsRead, addNotification, markNotificationAsRead } = useUIStore()
 
   const userName = settings.userName || user?.displayName || user?.email?.split('@')[0] || ""
   const userTone = settings.userTone
@@ -199,7 +200,7 @@ export function TopNav() {
         <div className="flex items-center space-x-1 lg:space-x-4 flex-shrink-0">
           {/* AI Assistant Button */}
           <Button
-            onClick={onAIAssistantClick}
+            onClick={() => setAIModalOpen(true)}
             className="bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 px-4 lg:px-6 py-2.5 lg:py-3 rounded-full font-medium text-white shadow-lg relative overflow-hidden group transition-all duration-300 text-xs lg:text-sm flex items-center gap-2"
           >
             <div className="relative w-6 h-6 bg-white/20 rounded-full flex items-center justify-center">
@@ -274,17 +275,17 @@ export function TopNav() {
                 ) : (
                   <div className="p-4 space-y-3">
                     {notifications.map((notification, index) => {
-                      const isRead = readNotifications.has(notification.id)
+                      const isRead = notification.isRead
                       return (
                         <div
                           key={notification.id}
-                          className={`p-4 rounded-3xl border ${getNotificationBg(notification.type)} hover:shadow-organic transition-all duration-200 animate-grow-in ${isRead ? "opacity-60" : ""
+                          className={`p-4 rounded-3xl border ${getNotificationBg(notification.type || "info")} hover:shadow-organic transition-all duration-200 animate-grow-in ${isRead ? "opacity-60" : ""
                             }`}
                           style={{ animationDelay: `${index * 0.1}s` }}
-                          onClick={() => setReadNotifications((prev) => new Set([...prev, notification.id]))}
+                          onClick={() => markNotificationAsRead(notification.id)}
                         >
                           <div className="flex items-start space-x-3">
-                            <div className="flex-shrink-0 mt-1">{getNotificationIcon(notification.type)}</div>
+                            <div className="flex-shrink-0 mt-1">{getNotificationIcon(notification.type || "info")}</div>
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center justify-between mb-1">
                                 <p className="text-sm font-semibold text-gray-900">{notification.title}</p>
@@ -319,7 +320,7 @@ export function TopNav() {
                 <div className="p-4 border-t border-green-100/50 bg-gradient-to-r from-green-50/30 to-emerald-50/20 rounded-b-3xl">
                   <Button
                     variant="ghost"
-                    onClick={handleMarkAllAsRead}
+                    onClick={() => markAllNotificationsAsRead()}
                     className="w-full text-sm text-green-600 hover:text-green-700 hover:bg-green-50/50 rounded-3xl font-medium py-3 transition-all duration-200"
                   >
                     Mark all as read

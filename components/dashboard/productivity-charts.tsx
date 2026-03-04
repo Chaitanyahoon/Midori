@@ -185,79 +185,79 @@ export function ProductivityCharts() {
   const overallCompletionRate = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0
   const avgFocusPerDay = weeklyData.reduce((sum, day) => sum + day.hours, 0) / 7
   const mostProductiveDay = weeklyData.reduce((max, day) => (day.tasks > max.tasks ? day : max), weeklyData[0])
-  
+
   // Calculate trends
   const totalFocusThisWeek = weeklyData.reduce((sum, day) => sum + day.hours, 0)
   const totalPomodorosThisWeek = weeklyData.reduce((sum, day) => sum + day.pomodoros, 0)
   const totalTasksThisWeek = weeklyData.reduce((sum, day) => sum + day.tasks, 0)
-  
+
   // Week-over-week comparison (if we had last week's data, but for now use first vs last 3 days)
   const firstHalf = weeklyData.slice(0, 3).reduce((sum, day) => sum + day.hours, 0)
   const secondHalf = weeklyData.slice(4).reduce((sum, day) => sum + day.hours, 0)
   const focusTrend = secondHalf > firstHalf ? "up" : secondHalf < firstHalf ? "down" : "stable"
-  
+
   // Best performing day
   const bestDay = weeklyData.reduce((max, day) => {
     const dayScore = day.tasks * 2 + day.pomodoros * 1.5 + day.hours
     const maxScore = max.tasks * 2 + max.pomodoros * 1.5 + max.hours
     return dayScore > maxScore ? day : max
   }, weeklyData[0])
-  
+
   // Calculate category insights
-  const topCategory = focusTimeByCategory.length > 0 
+  const topCategory = focusTimeByCategory.length > 0
     ? focusTimeByCategory.reduce((max, cat) => cat.hours > max.hours ? cat : max, focusTimeByCategory[0])
     : null
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 animate-fade-in">
       {/* Enhanced Insights Summary */}
-      <Card className="bg-gradient-to-br from-emerald-50 via-blue-50 to-violet-50 dark:from-slate-800 dark:via-slate-800/90 dark:to-slate-900/90 border border-emerald-100 dark:border-emerald-800/50 shadow-lg rounded-3xl">
-        <CardHeader>
-          <CardTitle className="flex items-center text-gray-900 dark:text-gray-100">
+      <Card className="bg-white/60 dark:bg-slate-900/60 backdrop-blur-xl border border-white/40 dark:border-slate-700/50 shadow-xl shadow-slate-200/50 dark:shadow-slate-950/50 transition-all duration-300 rounded-3xl overflow-hidden relative group">
+        <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-400/10 dark:bg-emerald-500/10 rounded-full blur-3xl -z-10 pointer-events-none group-hover:bg-emerald-400/20 transition-colors duration-1000" />
+        <CardHeader className="border-b border-white/20 dark:border-slate-700/50 bg-white/40 dark:bg-slate-900/40 backdrop-blur-md z-10 px-6 py-5">
+          <CardTitle className="flex items-center text-xl font-bold bg-gradient-to-r from-emerald-800 to-teal-600 dark:from-emerald-300 dark:to-teal-300 bg-clip-text text-transparent">
             <Icons.sparkles className="w-5 h-5 mr-2 text-emerald-600 dark:text-emerald-400" />
-            Productivity Insights
+            Productivity Summary
           </CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-6 relative z-10">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            <div className="text-center p-4 bg-white/80 dark:bg-slate-700/50 rounded-2xl border border-emerald-100 dark:border-emerald-800/50 hover:shadow-md transition-all">
-              <div className="flex items-center justify-center mb-2">
-                <Icons.target className="w-5 h-5 text-emerald-600 dark:text-emerald-400 mr-1" />
-                <div className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">{overallCompletionRate}%</div>
+            <div className="text-center p-5 bg-white/40 dark:bg-slate-800/40 backdrop-blur-sm rounded-3xl border border-white/60 dark:border-slate-700/50 hover:shadow-md transition-all duration-300 hover:-translate-y-1">
+              <div className="flex items-center justify-center mb-3">
+                <Icons.target className="w-6 h-6 text-emerald-600 dark:text-emerald-400 mr-2" />
+                <div className="text-3xl font-black text-emerald-600 dark:text-emerald-400">{overallCompletionRate}%</div>
               </div>
-              <div className="text-sm text-gray-600 dark:text-gray-400">Completion Rate</div>
-              <Progress value={overallCompletionRate} className="mt-2 h-1.5" />
+              <div className="text-xs font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">Completion Rate</div>
+              <Progress value={overallCompletionRate} className="mt-4 h-2 bg-slate-200 dark:bg-slate-700" />
             </div>
-            <div className="text-center p-4 bg-white/80 dark:bg-slate-700/50 rounded-2xl border border-blue-100 dark:border-blue-800/50 hover:shadow-md transition-all">
-              <div className="flex items-center justify-center mb-2">
-                <Icons.clock className="w-5 h-5 text-blue-600 dark:text-blue-400 mr-1" />
-                <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">{avgFocusPerDay.toFixed(1)}h</div>
+            <div className="text-center p-5 bg-white/40 dark:bg-slate-800/40 backdrop-blur-sm rounded-3xl border border-white/60 dark:border-slate-700/50 hover:shadow-md transition-all duration-300 hover:-translate-y-1">
+              <div className="flex items-center justify-center mb-3">
+                <Icons.clock className="w-6 h-6 text-blue-600 dark:text-blue-400 mr-2" />
+                <div className="text-3xl font-black text-blue-600 dark:text-blue-400">{avgFocusPerDay.toFixed(1)}h</div>
               </div>
-              <div className="text-sm text-gray-600 dark:text-gray-400">Avg Focus/Day</div>
-              <div className="text-xs text-gray-500 dark:text-gray-500 mt-1">{totalFocusThisWeek.toFixed(1)}h this week</div>
+              <div className="text-xs font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">Avg Focus/Day</div>
+              <div className="text-xs font-semibold text-slate-500 dark:text-slate-500 mt-2">{totalFocusThisWeek.toFixed(1)}h this week</div>
             </div>
-            <div className="text-center p-4 bg-white/80 dark:bg-slate-700/50 rounded-2xl border border-purple-100 dark:border-purple-800/50 hover:shadow-md transition-all">
-              <div className="flex items-center justify-center mb-2">
-                <Icons.timer className="w-5 h-5 text-purple-600 dark:text-purple-400 mr-1" />
-                <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">{totalPomodorosThisWeek}</div>
+            <div className="text-center p-5 bg-white/40 dark:bg-slate-800/40 backdrop-blur-sm rounded-3xl border border-white/60 dark:border-slate-700/50 hover:shadow-md transition-all duration-300 hover:-translate-y-1">
+              <div className="flex items-center justify-center mb-3">
+                <Icons.timer className="w-6 h-6 text-purple-600 dark:text-purple-400 mr-2" />
+                <div className="text-3xl font-black text-purple-600 dark:text-purple-400">{totalPomodorosThisWeek}</div>
               </div>
-              <div className="text-sm text-gray-600 dark:text-gray-400">Sessions This Week</div>
-              <div className="text-xs text-gray-500 dark:text-gray-500 mt-1">{(totalPomodorosThisWeek / 7).toFixed(1)}/day avg</div>
+              <div className="text-xs font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">Sessions/Week</div>
+              <div className="text-xs font-semibold text-slate-500 dark:text-slate-500 mt-2">{(totalPomodorosThisWeek / 7).toFixed(1)}/day avg</div>
             </div>
-            <div className="text-center p-4 bg-white/80 dark:bg-slate-700/50 rounded-2xl border border-orange-100 dark:border-orange-800/50 hover:shadow-md transition-all">
-              <div className="flex items-center justify-center mb-2">
-                <Icons.trendingUp className={`w-5 h-5 mr-1 ${
-                  focusTrend === "up" ? "text-green-600 dark:text-green-400" : 
-                  focusTrend === "down" ? "text-red-600 dark:text-red-400" : 
-                  "text-gray-600 dark:text-gray-400"
-                }`} />
-                <div className="text-2xl font-bold text-orange-600 dark:text-orange-400">{bestDay?.day || "N/A"}</div>
+            <div className="text-center p-5 bg-white/40 dark:bg-slate-800/40 backdrop-blur-sm rounded-3xl border border-white/60 dark:border-slate-700/50 hover:shadow-md transition-all duration-300 hover:-translate-y-1">
+              <div className="flex items-center justify-center mb-3">
+                <Icons.trendingUp className={`w-6 h-6 mr-2 ${focusTrend === "up" ? "text-green-600 dark:text-green-400" :
+                    focusTrend === "down" ? "text-red-400 dark:text-red-400" :
+                      "text-slate-400 dark:text-slate-500"
+                  }`} />
+                <div className="text-3xl font-black text-orange-600 dark:text-orange-400">{bestDay?.day || "N/A"}</div>
               </div>
-              <div className="text-sm text-gray-600 dark:text-gray-400">Best Day</div>
-              <div className="text-xs text-gray-500 dark:text-gray-500 mt-1">{bestDay?.tasks || 0} tasks, {bestDay?.pomodoros || 0} sessions</div>
+              <div className="text-xs font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">Best Day</div>
+              <div className="text-xs font-semibold text-slate-500 dark:text-slate-500 mt-2">{bestDay?.tasks || 0} tasks, {bestDay?.pomodoros || 0} sessions</div>
             </div>
           </div>
-          
+
           {/* Additional Insights */}
           {topCategory && (
             <div className="mt-4 p-4 bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-900/20 dark:to-purple-900/20 rounded-2xl border border-indigo-100 dark:border-indigo-800/50">
@@ -276,21 +276,22 @@ export function ProductivityCharts() {
         </CardContent>
       </Card>
 
-  <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Weekly Focus Hours - Enhanced */}
-  <Card className="bg-gradient-to-br from-white/90 to-blue-50/50 dark:from-slate-800/90 dark:to-blue-900/10 backdrop-blur-sm border border-blue-100 dark:border-blue-800/50 shadow-lg hover:shadow-lg transition-all duration-200 rounded-2xl min-h-[370px] flex flex-col">
-          <CardHeader>
+        <Card className="bg-white/60 dark:bg-slate-900/60 backdrop-blur-xl border border-white/40 dark:border-slate-700/50 shadow-xl shadow-slate-200/50 dark:shadow-slate-950/50 transition-all duration-300 rounded-3xl min-h-[370px] flex flex-col group overflow-hidden relative">
+          <div className="absolute top-0 right-0 w-64 h-64 bg-blue-400/10 dark:bg-blue-500/10 rounded-full blur-3xl -z-10 pointer-events-none group-hover:bg-blue-400/20 transition-colors duration-1000" />
+          <CardHeader className="border-b border-white/20 dark:border-slate-700/50 bg-white/40 dark:bg-slate-900/40 backdrop-blur-md z-10 px-6 py-5">
             <div className="flex items-center justify-between">
-              <CardTitle className="flex items-center text-gray-900 dark:text-gray-100">
+              <CardTitle className="flex items-center text-xl font-bold bg-gradient-to-r from-blue-800 to-indigo-600 dark:from-blue-300 dark:to-indigo-300 bg-clip-text text-transparent">
                 <Icons.clock className="w-5 h-5 mr-2 text-blue-600 dark:text-blue-400" />
-                Weekly Focus Hours
+                Weekly Focus Flow
               </CardTitle>
-              <Badge className="bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300">
+              <Badge className="bg-blue-500/10 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800 rounded-full px-3 py-1 font-bold">
                 {totalFocusThisWeek.toFixed(1)}h total
               </Badge>
             </div>
           </CardHeader>
-          <CardContent>
+          <CardContent className="pt-6">
             <div className="h-[300px]">
               <ResponsiveContainer width="100%" height="100%">
                 <AreaChart data={weeklyData}>
@@ -336,19 +337,20 @@ export function ProductivityCharts() {
         </Card>
 
         {/* Daily Pomodoros - Enhanced */}
-  <Card className="bg-gradient-to-br from-white/90 to-emerald-50/50 dark:from-slate-800/90 dark:to-emerald-900/10 backdrop-blur-sm border border-emerald-100 dark:border-emerald-800/50 shadow-lg hover:shadow-lg transition-all duration-200 rounded-2xl min-h-[370px] flex flex-col">
-          <CardHeader>
+        <Card className="bg-white/60 dark:bg-slate-900/60 backdrop-blur-xl border border-white/40 dark:border-slate-700/50 shadow-xl shadow-slate-200/50 dark:shadow-slate-950/50 transition-all duration-300 rounded-3xl min-h-[370px] flex flex-col group overflow-hidden relative">
+          <div className="absolute top-0 right-0 w-64 h-64 bg-green-400/10 dark:bg-green-500/10 rounded-full blur-3xl -z-10 pointer-events-none group-hover:bg-green-400/20 transition-colors duration-1000" />
+          <CardHeader className="border-b border-white/20 dark:border-slate-700/50 bg-white/40 dark:bg-slate-900/40 backdrop-blur-md z-10 px-6 py-5">
             <div className="flex items-center justify-between">
-              <CardTitle className="flex items-center text-gray-900 dark:text-gray-100">
+              <CardTitle className="flex items-center text-xl font-bold bg-gradient-to-r from-green-800 to-emerald-600 dark:from-green-300 dark:to-emerald-300 bg-clip-text text-transparent">
                 <Icons.timer className="w-5 h-5 mr-2 text-green-600 dark:text-green-400" />
-                Daily Pomodoros
+                Daily Focus Sessions
               </CardTitle>
-              <Badge className="bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300">
-                {totalPomodorosThisWeek} this week
+              <Badge className="bg-green-500/10 dark:bg-green-900/30 text-green-700 dark:text-green-300 border border-green-200 dark:border-green-800 rounded-full px-3 py-1 font-bold">
+                {totalPomodorosThisWeek} total
               </Badge>
             </div>
           </CardHeader>
-          <CardContent>
+          <CardContent className="pt-6">
             <div className="h-[300px]">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={weeklyData}>
@@ -378,9 +380,9 @@ export function ProductivityCharts() {
                       return null
                     }}
                   />
-                  <Bar 
-                    dataKey="pomodoros" 
-                    fill="url(#colorPomodoros)" 
+                  <Bar
+                    dataKey="pomodoros"
+                    fill="url(#colorPomodoros)"
                     radius={[8, 8, 0, 0]}
                     stroke="#10B981"
                     strokeWidth={1}
@@ -392,14 +394,15 @@ export function ProductivityCharts() {
         </Card>
 
         {/* Focus Time by Category - Enhanced */}
-  <Card className="bg-gradient-to-br from-white/90 to-purple-50/50 dark:from-slate-800/90 dark:to-purple-900/10 backdrop-blur-sm border border-purple-100 dark:border-purple-800/50 shadow-lg hover:shadow-lg transition-all duration-200 rounded-2xl min-h-[370px] flex flex-col">
-          <CardHeader>
-            <CardTitle className="flex items-center text-gray-900 dark:text-gray-100">
+        <Card className="bg-white/60 dark:bg-slate-900/60 backdrop-blur-xl border border-white/40 dark:border-slate-700/50 shadow-xl shadow-slate-200/50 dark:shadow-slate-950/50 transition-all duration-300 rounded-3xl min-h-[370px] flex flex-col group overflow-hidden relative">
+          <div className="absolute top-0 right-0 w-64 h-64 bg-purple-400/10 dark:bg-purple-500/10 rounded-full blur-3xl -z-10 pointer-events-none group-hover:bg-purple-400/20 transition-colors duration-1000" />
+          <CardHeader className="border-b border-white/20 dark:border-slate-700/50 bg-white/40 dark:bg-slate-900/40 backdrop-blur-md z-10 px-6 py-5">
+            <CardTitle className="flex items-center text-xl font-bold bg-gradient-to-r from-purple-800 to-fuchsia-600 dark:from-purple-300 dark:to-fuchsia-300 bg-clip-text text-transparent">
               <Icons.target className="w-5 h-5 mr-2 text-purple-600 dark:text-purple-400" />
-              Focus Time by Category
+              Focus By Category
             </CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="pt-6">
             <div className="h-[300px]">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
@@ -415,8 +418,8 @@ export function ProductivityCharts() {
                     animationDuration={800}
                   >
                     {focusTimeByCategory.map((entry, index) => (
-                      <Cell 
-                        key={`cell-${index}`} 
+                      <Cell
+                        key={`cell-${index}`}
                         fill={entry.color}
                         stroke={entry.color}
                         strokeWidth={2}
@@ -444,8 +447,8 @@ export function ProductivityCharts() {
             </div>
             <div className="mt-4 grid grid-cols-2 gap-3">
               {focusTimeByCategory.map((item, index) => (
-                <div 
-                  key={index} 
+                <div
+                  key={index}
                   className="flex items-center justify-between p-2 bg-white/50 dark:bg-slate-700/50 rounded-lg border border-purple-100/50 dark:border-purple-800/50"
                 >
                   <div className="flex items-center space-x-2">
@@ -460,14 +463,15 @@ export function ProductivityCharts() {
         </Card>
 
         {/* Task Priority Distribution - Enhanced */}
-  <Card className="bg-gradient-to-br from-white/90 to-orange-50/50 dark:from-slate-800/90 dark:to-orange-900/10 backdrop-blur-sm border border-orange-100 dark:border-orange-800/50 shadow-lg hover:shadow-lg transition-all duration-200 rounded-2xl min-h-[370px] flex flex-col">
-          <CardHeader>
-            <CardTitle className="flex items-center text-gray-900 dark:text-gray-100">
+        <Card className="bg-white/60 dark:bg-slate-900/60 backdrop-blur-xl border border-white/40 dark:border-slate-700/50 shadow-xl shadow-slate-200/50 dark:shadow-slate-950/50 transition-all duration-300 rounded-3xl min-h-[370px] flex flex-col group overflow-hidden relative">
+          <div className="absolute top-0 right-0 w-64 h-64 bg-orange-400/10 dark:bg-orange-500/10 rounded-full blur-3xl -z-10 pointer-events-none group-hover:bg-orange-400/20 transition-colors duration-1000" />
+          <CardHeader className="border-b border-white/20 dark:border-slate-700/50 bg-white/40 dark:bg-slate-900/40 backdrop-blur-md z-10 px-6 py-5">
+            <CardTitle className="flex items-center text-xl font-bold bg-gradient-to-r from-orange-800 to-amber-600 dark:from-orange-300 dark:to-amber-300 bg-clip-text text-transparent">
               <Icons.zap className="w-5 h-5 mr-2 text-orange-600 dark:text-orange-400" />
               Priority Distribution
             </CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="pt-6">
             <div className="h-[300px]">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
@@ -483,8 +487,8 @@ export function ProductivityCharts() {
                     animationDuration={800}
                   >
                     {priorityDistribution.map((entry, index) => (
-                      <Cell 
-                        key={`cell-${index}`} 
+                      <Cell
+                        key={`cell-${index}`}
                         fill={entry.color}
                         stroke={entry.color}
                         strokeWidth={2}
@@ -512,8 +516,8 @@ export function ProductivityCharts() {
             </div>
             <div className="mt-4 grid grid-cols-3 gap-2">
               {priorityDistribution.map((item, index) => (
-                <div 
-                  key={index} 
+                <div
+                  key={index}
                   className="flex flex-col items-center p-2 bg-white/50 dark:bg-slate-700/50 rounded-lg border border-orange-100/50 dark:border-orange-800/50"
                 >
                   <div className="flex items-center space-x-1 mb-1">

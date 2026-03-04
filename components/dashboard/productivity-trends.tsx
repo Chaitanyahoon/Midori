@@ -125,74 +125,75 @@ export function ProductivityTrends() {
   const weeklyPomodoroGoal = dailyGoalPomodoros * 7
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 animate-fade-in">
       {/* Productivity Insights */}
-      <Card className="bg-gradient-to-br from-white/90 to-purple-50/50 backdrop-blur-sm border border-purple-100 shadow-lg hover:shadow-xl transition-all duration-200 rounded-3xl">
-        <CardHeader>
-          <CardTitle className="flex items-center text-lg">
-            <Icons.trendingUp className="w-5 h-5 mr-2 text-purple-600" />
+      <Card className="bg-white/60 dark:bg-slate-900/60 backdrop-blur-xl border border-white/40 dark:border-slate-700/50 shadow-xl shadow-slate-200/50 dark:shadow-slate-950/50 transition-all duration-300 rounded-3xl overflow-hidden relative group">
+        <div className="absolute top-0 right-0 w-64 h-64 bg-purple-400/10 dark:bg-purple-500/10 rounded-full blur-3xl -z-10 pointer-events-none group-hover:bg-purple-400/20 transition-colors duration-1000" />
+        <CardHeader className="border-b border-white/20 dark:border-slate-700/50 bg-white/40 dark:bg-slate-900/40 backdrop-blur-md z-10 p-6">
+          <CardTitle className="flex items-center text-xl font-bold bg-gradient-to-r from-purple-800 to-blue-600 dark:from-purple-300 dark:to-blue-300 bg-clip-text text-transparent">
+            <Icons.trendingUp className="w-5 h-5 mr-2 text-purple-600 dark:text-purple-400" />
             Productivity Insights
           </CardTitle>
         </CardHeader>
-        <CardContent>
-          <div className="space-y-6">
+        <CardContent className="p-6 relative z-10">
+          <div className="space-y-8">
             {/* Current Level */}
-            <div className="text-center p-4 bg-gradient-to-br from-purple-50 to-blue-50 rounded-2xl">
+            <div className="text-center p-6 bg-white/50 dark:bg-slate-800/50 backdrop-blur-md rounded-3xl border border-white/60 dark:border-slate-700/50 shadow-sm transition-transform hover:scale-[1.01] duration-300">
               <div
-                className={`w-16 h-16 mx-auto mb-3 bg-gradient-to-br from-${insight.color}-500 to-${insight.color}-600 rounded-full flex items-center justify-center`}
+                className={`w-20 h-20 mx-auto mb-4 bg-gradient-to-br from-${insight.color}-500 to-${insight.color}-600 rounded-full flex items-center justify-center shadow-lg shadow-${insight.color}-500/30 animate-pulse-slow`}
               >
-                <Icons.zap className="w-8 h-8 text-white" />
+                <Icons.zap className="w-10 h-10 text-white" />
               </div>
-              <h3 className="font-semibold text-gray-900 mb-1">{insight.level}</h3>
-              <p className="text-sm text-gray-600">{insight.message}</p>
+              <h3 className="text-2xl font-black text-slate-800 dark:text-slate-100 mb-2 tracking-tight">{insight.level}</h3>
+              <p className="text-base font-medium text-slate-600 dark:text-slate-400 max-w-sm mx-auto">{insight.message}</p>
             </div>
 
             {/* Key Metrics */}
-            <div className="space-y-4">
+            <div className="space-y-5 bg-white/40 dark:bg-slate-900/30 backdrop-blur-sm p-6 rounded-3xl border border-white/50 dark:border-slate-700/50 shadow-inner">
               <div>
-                <div className="flex justify-between text-sm mb-2">
-                  <span className="text-gray-600">Completion Rate</span>
-                  <span className="font-medium">
+                <div className="flex justify-between text-sm mb-2 font-semibold">
+                  <span className="text-slate-600 dark:text-slate-400">Completion Rate</span>
+                  <span className="text-emerald-600 dark:text-emerald-400">
                     {stats.totalTasks > 0 ? Math.round((stats.completedTasks / stats.totalTasks) * 100) : 0}%
                   </span>
                 </div>
                 <Progress
                   value={stats.totalTasks > 0 ? (stats.completedTasks / stats.totalTasks) * 100 : 0}
-                  className="h-2"
+                  className="h-2.5 bg-slate-200 dark:bg-slate-800"
                 />
               </div>
 
               <div>
-                <div className="flex justify-between text-sm mb-2">
-                  <span className="text-gray-600">Focus Consistency</span>
-                  <span className="font-medium">
+                <div className="flex justify-between text-sm mb-2 font-semibold">
+                  <span className="text-slate-600 dark:text-slate-400">Focus Consistency</span>
+                  <span className="text-blue-600 dark:text-blue-400">
                     {totalPomodorosThisWeek > 0 ? Math.min(Math.round((totalPomodorosThisWeek / weeklyPomodoroGoal) * 100), 100) : 0}%
                   </span>
                 </div>
                 <Progress
                   value={totalPomodorosThisWeek > 0 ? Math.min((totalPomodorosThisWeek / weeklyPomodoroGoal) * 100, 100) : 0}
-                  className="h-2"
+                  className="h-2.5 bg-slate-200 dark:bg-slate-800"
                 />
               </div>
 
               <div>
-                <div className="flex justify-between text-sm mb-2">
-                  <span className="text-gray-600">Current Streak</span>
-                  <span className="font-medium">{stats.streak} days</span>
+                <div className="flex justify-between text-sm mb-2 font-semibold">
+                  <span className="text-slate-600 dark:text-slate-400">Current Streak</span>
+                  <span className="text-amber-600 dark:text-amber-400">{stats.streak} days</span>
                 </div>
-                <Progress value={Math.min((stats.streak / 7) * 100, 100)} className="h-2" />
+                <Progress value={Math.min((stats.streak / 7) * 100, 100)} className="h-2.5 bg-slate-200 dark:bg-slate-800" />
               </div>
             </div>
 
             {/* Quick Stats */}
-            <div className="grid grid-cols-2 gap-3 pt-2">
-              <div className="text-center p-3 bg-white/60 rounded-2xl border border-purple-100">
-                <div className="text-lg font-bold text-gray-900">{(stats.totalFocusTime / 60).toFixed(1)}h</div>
-                <div className="text-xs text-gray-600">Total Focus</div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="flex flex-col items-center p-4 bg-white/60 dark:bg-slate-800/60 backdrop-blur-md rounded-2xl border border-white/60 dark:border-slate-700/50 shadow-sm hover:shadow-md transition-all">
+                <div className="text-3xl font-black text-slate-800 dark:text-slate-100 mb-1">{(stats.totalFocusTime / 60).toFixed(1)}<span className="text-base font-bold text-slate-500">h</span></div>
+                <div className="text-xs font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">Total Focus</div>
               </div>
-              <div className="text-center p-3 bg-white/60 rounded-2xl border border-purple-100">
-                <div className="text-lg font-bold text-gray-900">{stats.totalPomodoros}</div>
-                <div className="text-xs text-gray-600">Sessions</div>
+              <div className="flex flex-col items-center p-4 bg-white/60 dark:bg-slate-800/60 backdrop-blur-md rounded-2xl border border-white/60 dark:border-slate-700/50 shadow-sm hover:shadow-md transition-all">
+                <div className="text-3xl font-black text-slate-800 dark:text-slate-100 mb-1">{stats.totalPomodoros}</div>
+                <div className="text-xs font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">Sessions</div>
               </div>
             </div>
           </div>
@@ -200,30 +201,36 @@ export function ProductivityTrends() {
       </Card>
       {/* Daily Progress Insights */}
       {dailyInsights.length > 0 && (
-        <div className="mt-6">
-          <h4 className="font-semibold text-gray-900 mb-3">Today's Insights</h4>
+        <div className="mt-8">
+          <h4 className="font-bold text-slate-800 dark:text-slate-200 text-lg mb-4 flex items-center">
+            <Icons.sparkles className="w-5 h-5 mr-2 text-emerald-500" /> Today's Insights
+          </h4>
           <div className="flex flex-col gap-3 md:flex-row md:gap-4">
             {dailyInsights.map((insight, index) => (
               <div
                 key={index}
-                className={`flex-1 min-w-[220px] p-4 rounded-2xl border flex items-start gap-3 transition-shadow hover:shadow-md cursor-pointer
+                className={`flex-1 min-w-[220px] p-5 rounded-3xl border flex items-start gap-4 transition-all duration-300 hover:shadow-lg hover:-translate-y-1 cursor-pointer backdrop-blur-md
                   ${insight.type === "positive" || insight.type === "achievement"
-                    ? "bg-green-50 border-green-200"
+                    ? "bg-emerald-500/10 border-emerald-500/30 dark:bg-emerald-500/10 dark:border-emerald-500/20"
                     : insight.type === "suggestion"
-                      ? "bg-yellow-50 border-yellow-200"
-                      : "bg-blue-50 border-blue-200"}
+                      ? "bg-amber-500/10 border-amber-500/30 dark:bg-amber-500/10 dark:border-amber-500/20"
+                      : "bg-blue-500/10 border-blue-500/30 dark:bg-blue-500/10 dark:border-blue-500/20"}
                 `}
               >
-                <span className="mt-1 mr-2 text-xl">
+                <div className="mt-1 text-2xl filter drop-shadow-sm">
                   {insight.type === "positive" || insight.type === "achievement"
-                    ? "✅"
+                    ? "✨"
                     : insight.type === "suggestion"
                       ? "💡"
-                      : "📊"}
-                </span>
+                      : "📈"}
+                </div>
                 <div>
-                  <h5 className="font-medium text-gray-900 mb-1">{insight.title}</h5>
-                  <p className="text-sm text-gray-600">{insight.message}</p>
+                  <h5 className={`font-bold text-base mb-1 
+                    ${insight.type === "positive" || insight.type === "achievement" ? "text-emerald-800 dark:text-emerald-300" :
+                      insight.type === "suggestion" ? "text-amber-800 dark:text-amber-300" :
+                        "text-blue-800 dark:text-blue-300"}
+                  `}>{insight.title}</h5>
+                  <p className="text-sm font-medium text-slate-600 dark:text-slate-400 leading-relaxed">{insight.message}</p>
                 </div>
               </div>
             ))}

@@ -139,7 +139,7 @@ export function WeeklyStats() {
     return (
       <svg width={radius * 2} height={radius * 2} className="block mx-auto">
         <circle
-          stroke="#e5e7eb"
+          className="stroke-slate-200 dark:stroke-slate-800"
           fill="transparent"
           strokeWidth={stroke}
           r={normalizedRadius}
@@ -158,10 +158,10 @@ export function WeeklyStats() {
           cy={radius}
           style={{ transition: 'stroke-dashoffset 1s cubic-bezier(.4,2,.6,1)' }}
         />
-        <text x={radius} y={radius + 6} textAnchor="middle" className="font-bold text-xl fill-emerald-700 dark:fill-emerald-200">
+        <text x={radius} y={radius + 6} textAnchor="middle" className="font-bold text-xl fill-emerald-700 dark:fill-emerald-400">
           {progress}%
         </text>
-        <text x={radius} y={radius + 28} textAnchor="middle" className="text-xs fill-gray-500 dark:fill-gray-400">
+        <text x={radius} y={radius + 28} textAnchor="middle" className="text-[10px] font-medium fill-slate-500 dark:fill-slate-400">
           {label}
         </text>
       </svg>
@@ -173,37 +173,37 @@ export function WeeklyStats() {
 
   // Animated streak counter
   const streakCounter = (
-    <div className="flex flex-col items-center mb-4">
-      <div className="flex items-center gap-2">
-        <Icons.sparkles className="w-6 h-6 text-amber-400 animate-pulse" />
-        <span className="text-2xl font-bold text-emerald-700 dark:text-emerald-300 animate-bounce">{streak}</span>
-        <span className="text-lg font-semibold text-gray-600 dark:text-gray-400">day streak</span>
-        {streak >= 7 && <span className="ml-2 px-2 py-1 rounded-full bg-gradient-to-r from-yellow-300 to-amber-400 text-xs font-bold text-white shadow">🔥 Weekly Master!</span>}
+    <div className="flex flex-col items-center mb-6">
+      <div className="flex items-center gap-3 bg-white/50 dark:bg-slate-900/40 backdrop-blur-md px-6 py-3 rounded-3xl border border-white/60 dark:border-slate-700/50 shadow-sm">
+        <Icons.sparkles className="w-6 h-6 text-amber-500 dark:text-amber-400 animate-pulse" />
+        <span className="text-2xl font-black bg-gradient-to-r from-emerald-600 to-teal-500 dark:from-emerald-400 dark:to-teal-400 bg-clip-text text-transparent animate-pulse-slow">{streak}</span>
+        <span className="text-lg font-bold text-slate-700 dark:text-slate-300">day streak</span>
+        {streak >= 7 && <span className="ml-2 px-3 py-1 rounded-full bg-gradient-to-r from-amber-400 to-orange-500 text-xs font-bold text-white shadow-md shadow-orange-500/20">🔥 Weekly Master!</span>}
       </div>
-      <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">Complete at least 1 task each day to keep your streak alive!</div>
+      <div className="text-xs font-medium text-slate-500 dark:text-slate-400 mt-3 text-center">Complete at least 1 task each day to keep your streak alive!</div>
     </div>
   )
 
   // Redesigned Weekly Growth section with compact layout
   const weeklyGrowth = (
-    <div className="flex flex-col items-center gap-2 mb-4 w-full">
-      <div className="w-full max-w-xs flex flex-col items-center">
+    <div className="flex flex-col items-center gap-4 mb-4 w-full">
+      <div className="w-full max-w-sm flex flex-col items-center bg-white/40 dark:bg-slate-900/30 backdrop-blur-sm p-4 rounded-3xl border border-white/40 dark:border-slate-800/50">
         <ChartContainer config={{}}>
-          <BarChart data={barData} height={70} barSize={18} style={{ width: '100%' }}>
-            <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#10b981' }} />
+          <BarChart data={barData} height={80} barSize={20} style={{ width: '100%' }}>
+            <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#10b981', fontWeight: 600 }} />
             <YAxis hide domain={[0, Math.max(...barData.map(d => d.Tasks), 3)]} />
-            <Tooltip cursor={{ fill: '#d1fae5', opacity: 0.3 }} />
+            <Tooltip cursor={{ fill: '#10b981', opacity: 0.1 }} contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }} />
             <Bar dataKey="Tasks" radius={[6, 6, 0, 0]} fill="#10b981" isAnimationActive />
           </BarChart>
         </ChartContainer>
-        <div className="text-center text-xs text-gray-500 dark:text-gray-400 mt-0.5">Daily completed tasks</div>
+        <div className="text-center text-xs font-bold text-slate-500 dark:text-slate-400 tracking-widest uppercase mt-2">Daily Tasks</div>
       </div>
-      <div className="mt-1">{streakCounter}</div>
+      <div className="mt-2 w-full">{streakCounter}</div>
     </div>
   )
 
   return (
-    <div>
+    <div className="animate-fade-in">
       {weeklyGrowth}
       {/* Cards removed - consolidated into ProductivityCharts */}
     </div>

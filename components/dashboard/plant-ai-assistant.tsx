@@ -10,10 +10,9 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 import { useData } from "@/components/local-data-provider"
 import { useToast } from "@/hooks/use-toast"
 
+import { useUIStore } from "@/lib/store"
+
 interface PlantAIAssistantProps {
-  isOpen: boolean
-  // accept both names for backwards compatibility: parent might pass `onClose`
-  onClose?: () => void
   onCloseAction?: () => void
 }
 
@@ -163,11 +162,12 @@ const ChatMessageComponent = memo(
 
 ChatMessageComponent.displayName = "ChatMessage"
 
-export function PlantAIAssistant({ isOpen, onClose, onCloseAction }: PlantAIAssistantProps) {
+export function PlantAIAssistant({ onCloseAction }: PlantAIAssistantProps) {
   const [prompt, setPrompt] = useState("")
   const [isLoading, setIsLoading] = useState(false)
   const [chatHistory, setChatHistory] = useState<ChatMessage[]>([])
   const { tasks, pomodoros, stats, addTask, settings } = useData()
+  const { isAIModalOpen, setAIModalOpen } = useUIStore()
 
   const userContext = useMemo((): UserContext => {
     const today = new Date().toISOString().split("T")[0]
@@ -338,7 +338,7 @@ export function PlantAIAssistant({ isOpen, onClose, onCloseAction }: PlantAIAssi
   }, [onClose, onCloseAction])
 
   return (
-    <Dialog open={isOpen} onOpenChange={(open) => { if (!open) handleClose() }}>
+    <Dialog open={isAIModalOpen} onOpenChange={(open) => { if (!open) handleClose() }}>
       <DialogContent className="max-w-2xl h-[90vh] flex flex-col p-0 bg-gradient-to-br from-white via-green-50 to-emerald-50 border-2 border-emerald-200 overflow-hidden">
         <DialogHeader className="flex flex-row items-center justify-between gap-4 pb-4 px-6 pt-6 border-b-2 border-emerald-100 flex-shrink-0 bg-gradient-to-r from-emerald-50 to-teal-50">
           <DialogTitle className="flex items-center gap-4 flex-1 min-w-0">

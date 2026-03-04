@@ -11,42 +11,16 @@ import { useState, useEffect } from "react"
 import { DataInfoModal } from "@/components/data-info-modal"
 import { SettingsDialog } from "@/components/dashboard/settings-dialog"
 import { ModeToggle } from "@/components/mode-toggle"
-import { useAuth } from "@/components/auth-provider"
+import { useUIStore } from "@/lib/store"
 
-interface TopNavProps {
-  onAIAssistantClick?: () => void
-  onMenuClick?: () => void
-}
-
-export function TopNav({ onAIAssistantClick, onMenuClick }: TopNavProps) {
+export function TopNav() {
   const { tasks, pomodoros, settings } = useData()
   const { user, signOut } = useAuth()
+  const { setAIModalOpen, setSidebarOpen, notifications, markAllNotificationsAsRead, addNotification } = useUIStore()
+
   const userName = settings.userName || user?.displayName || user?.email?.split('@')[0] || ""
   const userTone = settings.userTone
   const [isDataInfoOpen, setIsDataInfoOpen] = useState(false)
-  const [readNotifications, setReadNotifications] = useState<Set<string>>(new Set())
-
-  // Load read notifications from localStorage
-  useEffect(() => {
-    try {
-      const saved = localStorage.getItem("readNotifications")
-      if (saved) {
-        const parsed = JSON.parse(saved)
-        setReadNotifications(new Set(parsed))
-      }
-    } catch (error) {
-      console.error("Error loading read notifications:", error)
-    }
-  }, [])
-
-  // Save read notifications to localStorage
-  useEffect(() => {
-    try {
-      localStorage.setItem("readNotifications", JSON.stringify(Array.from(readNotifications)))
-    } catch (error) {
-      console.error("Error saving read notifications:", error)
-    }
-  }, [readNotifications])
 
   const pendingTasks = tasks.filter((task) => !task.completed).length
   const todayTasks = tasks.filter((task) => {
@@ -73,55 +47,60 @@ export function TopNav({ onAIAssistantClick, onMenuClick }: TopNavProps) {
     return session.startTime.split("T")[0] === today && session.completed
   }).length
 
-  // Create notifications
-  const notifications = [
-    ...overdueTasks.map((task) => ({
-      id: `overdue-${task.id}`,
-      type: "warning" as const,
-      title: "🍂 Wilting Task",
-      message: `"${task.title}" needs attention - overdue since ${new Date(task.dueDate!).toLocaleDateString()}`,
-      time: task.dueDate!,
-      priority: task.priority,
-    })),
-    ...todayTasks.map((task) => ({
-      id: `due-today-${task.id}`,
-      type: "info" as const,
-      title: "🌱 Ready to Bloom",
-      message: `"${task.title}" is ready for completion today`,
-      time: task.dueDate!,
-      priority: task.priority,
-    })),
-    ...recentCompletions.slice(0, 3).map((task) => {
-      const app = getAppreciation(task.title, { userName, tone: userTone || 'balanced' })
-      return {
-        id: `completed-${task.id}`,
-        type: "success" as const,
-        title: app.title,
-        message: app.message,
-        time: task.completedAt!,
+  // Sync generated notifications with store
+  useEffect(() => {
+    const generatedNotifs = [
+      ...overdueTasks.map((task) => ({
+        type: "warning" as const,
+        title: "🍂 Wilting Task",
+        message: `"${task.title}" needs attention - overdue since ${new Date(task.dueDate!).toLocaleDateString()}`,
+        time: task.dueDate!,
         priority: task.priority,
+      })),
+      ...todayTasks.map((task) => ({
+        type: "info" as const,
+        title: "🌱 Ready to Bloom",
+        message: `"${task.title}" is ready for completion today`,
+        time: task.dueDate!,
+        priority: task.priority,
+      })),
+      ...recentCompletions.slice(0, 3).map((task) => {
+        const app = getAppreciation(task.title, { userName, tone: userTone || 'balanced' })
+        return {
+          type: "success" as const,
+          title: app.title,
+          message: app.message,
+          time: task.completedAt!,
+          priority: task.priority,
+        }
+      }),
+    ]
+
+    // Add Pomodoro milestone notifications
+    if (todayPomodoros >= 4) {
+      generatedNotifs.unshift({
+        type: "success" as const,
+        title: "🌳 Focus Forest Milestone!",
+        message: `You've cultivated ${todayPomodoros} focus sessions today - your productivity forest is thriving!`,
+        time: new Date().toISOString(),
+        priority: "medium" as const,
+      })
+    }
+
+    // In a real app we'd only add new ones, but for now we'll just let the store handle it
+    generatedNotifs.forEach(notif => {
+      // Very basic deduping check
+      const exists = notifications.some(n => n.title === notif.title && n.message === notif.message)
+      if (!exists && notifications.length < 20) {
+        addNotification(notif)
       }
-    }),
-  ]
-
-  // Add Pomodoro milestone notifications
-  if (todayPomodoros >= 4) {
-    notifications.unshift({
-      id: "pomodoro-milestone",
-      type: "success" as const,
-      title: "🌳 Focus Forest Milestone!",
-      message: `You've cultivated ${todayPomodoros} focus sessions today - your productivity forest is thriving!`,
-      time: new Date().toISOString(),
-      priority: "medium" as const,
     })
-  }
+  }, [tasks.length, todayPomodoros, userName, userTone])
 
-  const unreadNotifications = notifications.filter((n) => !readNotifications.has(n.id))
-  const unreadCount = unreadNotifications.length
+  const unreadCount = notifications.filter(n => !n.isRead).length
 
   const handleMarkAllAsRead = () => {
-    const allIds = new Set(notifications.map((n) => n.id))
-    setReadNotifications(allIds)
+    markAllNotificationsAsRead()
   }
 
   const getNotificationIcon = (type: string) => {
@@ -169,18 +148,16 @@ export function TopNav({ onAIAssistantClick, onMenuClick }: TopNavProps) {
     <header className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm border-b border-slate-200/50 dark:border-slate-700/50 px-4 lg:px-8 py-3 lg:py-5 sticky top-0 z-50">
       <div className="flex items-center justify-between gap-2 lg:gap-4">
         {/* Mobile Menu Button */}
-        {onMenuClick && (
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={onMenuClick}
-            className="lg:hidden w-10 h-10 rounded-full"
-          >
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-            </svg>
-          </Button>
-        )}
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => setSidebarOpen(true)}
+          className="lg:hidden w-10 h-10 rounded-full"
+        >
+          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+          </svg>
+        </Button>
 
         <div className="flex items-center space-x-2 lg:space-x-6 flex-1 min-w-0">
           {/* Greeting removed, name now shown in main header */}

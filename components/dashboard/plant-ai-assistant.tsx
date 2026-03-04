@@ -331,11 +331,10 @@ export function PlantAIAssistant({ onCloseAction }: PlantAIAssistantProps) {
     [handleSubmit],
   )
 
-  // Choose whichever close handler the parent provided (support both prop names).
+  // Choose whichever close handler the parent provided.
   const handleClose = useCallback(() => {
     if (typeof onCloseAction === "function") return onCloseAction()
-    if (typeof onClose === "function") return onClose()
-  }, [onClose, onCloseAction])
+  }, [onCloseAction])
 
   return (
     <Dialog open={isAIModalOpen} onOpenChange={(open) => { if (!open) handleClose() }}>

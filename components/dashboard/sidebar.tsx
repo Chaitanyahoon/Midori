@@ -6,6 +6,8 @@ import { Icons } from "@/components/icons"
 import { Button } from "@/components/ui/button"
 import { SettingsDialog } from "@/components/dashboard/settings-dialog"
 import { PlanthesiaLogo } from "@/components/dashboard/planthesia-logo"
+import { useData } from "@/components/local-data-provider"
+import { useAuth } from "@/components/auth-provider"
 
 const navigation = [
   { name: "Growth Hub", href: "/dashboard", icon: Icons.seedling, description: "Your productivity overview" },
@@ -21,6 +23,11 @@ interface SidebarProps {
 
 export function Sidebar({ onClose }: SidebarProps) {
   const pathname = usePathname()
+  const { settings } = useData()
+  const { user } = useAuth()
+
+  const userName = settings.userName || user?.displayName || user?.email?.split('@')[0] || "My Profile"
+  const initials = userName === "My Profile" ? "ME" : userName.toUpperCase().slice(0, 2)
 
   return (
     <div className="w-72 hidden lg:block h-screen sticky top-0 z-40">
@@ -84,11 +91,11 @@ export function Sidebar({ onClose }: SidebarProps) {
           {/* User & Settings */}
           <div className="flex items-center justify-between px-2">
             <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-full bg-emerald-100 dark:bg-emerald-800 flex items-center justify-center text-emerald-700 dark:text-emerald-200 font-bold text-xs">
-                ME
+              <div className="w-8 h-8 rounded-full bg-emerald-100 dark:bg-emerald-800 flex items-center justify-center text-emerald-700 dark:text-emerald-200 font-bold text-xs uppercase">
+                {initials}
               </div>
-              <div className="text-xs font-medium text-slate-600 dark:text-slate-400">
-                My Profile
+              <div className="text-xs font-medium text-slate-600 dark:text-slate-400 capitalize max-w-[100px] truncate">
+                {userName}
               </div>
             </div>
             <SettingsDialog />

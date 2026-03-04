@@ -19,8 +19,10 @@ interface TopNavProps {
 }
 
 export function TopNav({ onAIAssistantClick, onMenuClick }: TopNavProps) {
-  const { tasks, pomodoros } = useData()
+  const { tasks, pomodoros, settings } = useData()
   const { user, signOut } = useAuth()
+  const userName = settings.userName || user?.displayName || user?.email?.split('@')[0] || ""
+  const userTone = settings.userTone
   const [isDataInfoOpen, setIsDataInfoOpen] = useState(false)
   const [readNotifications, setReadNotifications] = useState<Set<string>>(new Set())
 

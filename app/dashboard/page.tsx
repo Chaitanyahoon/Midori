@@ -12,6 +12,7 @@ import { RecentActivity } from "@/components/dashboard/recent-activity"
 import { MotivationalQuote } from "@/components/dashboard/motivational-quote"
 import { Icons } from "@/components/icons"
 import { useData } from "@/components/local-data-provider"
+import { useAuth } from "@/components/auth-provider"
 import { Badge } from "@/components/ui/badge"
 
 const VisualGarden = dynamic(() => import('@/components/garden/visual-garden').then(mod => mod.VisualGarden), {
@@ -24,7 +25,8 @@ export default function DashboardPage() {
   const [currentDate, setCurrentDate] = useState(new Date())
   const [isQuickActionsOpen, setIsQuickActionsOpen] = useState(false)
   const { tasks, pomodoros, stats, settings } = useData()
-  const { userName } = settings
+  const { user } = useAuth()
+  const userName = settings.userName || user?.displayName || user?.email?.split('@')[0] || ""
 
   useEffect(() => {
     const timer = setInterval(() => {

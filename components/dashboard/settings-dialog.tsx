@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label"
 import { Slider } from "@/components/ui/slider"
 import { Icons } from "@/components/icons"
 import { useData } from "@/components/local-data-provider"
+import { useAuth } from "@/components/auth-provider"
 import { useToast } from "@/hooks/use-toast"
 
 const TONES = [
@@ -56,11 +57,13 @@ const SECTIONS = [
 
 export function SettingsDialog({ children }: { children?: React.ReactNode }) {
     const { settings, updateSettings } = useData()
+    const { user } = useAuth()
     const { toast } = useToast()
     const [open, setOpen] = useState(false)
     const [activeSection, setActiveSection] = useState("profile")
 
-    const [name, setName] = useState(settings.userName || "")
+    const defaultName = settings.userName || user?.displayName || user?.email?.split("@")[0] || ""
+    const [name, setName] = useState(defaultName)
     const [tone, setTone] = useState(settings.userTone || "casual")
     const [goalTasks, setGoalTasks] = useState([settings.dailyGoalTasks])
     const [goalPomodoros, setGoalPomodoros] = useState([settings.dailyGoalPomodoros])
@@ -91,7 +94,13 @@ export function SettingsDialog({ children }: { children?: React.ReactNode }) {
     }
 
     return (
-        <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (v) { setName(settings.userName || ""); setTone(settings.userTone || "casual") } }}>
+        <Dialog open={open} onOpenChange={(v) => {
+            setOpen(v);
+            if (v) {
+                setName(settings.userName || user?.displayName || user?.email?.split("@")[0] || "");
+                setTone(settings.userTone || "casual")
+            }
+        }}>
             <DialogTrigger asChild>
                 {children || (
                     <Button variant="ghost" size="icon" className="text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100">

@@ -140,24 +140,26 @@ export function TaskCalendar() {
                   ${day && !isToday(day) ? "text-slate-700 dark:text-slate-300 font-medium" : ""}
                 `}
               >
-                {day && (
+                {day !== null && day !== undefined && (
                   <div className="h-full flex flex-col items-center justify-start pt-1">
-                    <span className="text-center leading-none inline-block">{day}</span>
-                    {dayTasks.length > 0 && (
+                    <span className={`text-center leading-none inline-block font-semibold ${isToday(day) ? "text-white" : "text-slate-700 dark:text-slate-200"}`}>
+                      {day}
+                    </span>
+                    {getTasksForDate(day).length > 0 && (
                       <div className="mt-0.5 sm:mt-1 space-y-0.5 w-full">
-                        {dayTasks.slice(0, 2).map((task, i) => (
+                        {getTasksForDate(day).slice(0, 2).map((task, i) => (
                           <div
                             key={i}
                             className={`w-full h-0.5 sm:h-1 rounded-full ${task.priority === "high"
-                                ? "bg-red-500"
-                                : task.priority === "medium"
-                                  ? "bg-yellow-500"
-                                  : "bg-green-500"
+                              ? "bg-red-500"
+                              : task.priority === "medium"
+                                ? "bg-yellow-500"
+                                : "bg-green-500"
                               }`}
                           />
                         ))}
-                        {dayTasks.length > 2 && (
-                          <div className={`text-[9px] sm:text-[10px] text-center font-bold pb-0.5 ${isToday(day) ? 'text-emerald-100' : 'text-slate-400'}`}>+{dayTasks.length - 2}</div>
+                        {getTasksForDate(day).length > 2 && (
+                          <div className={`text-[9px] sm:text-[10px] text-center font-bold pb-0.5 ${isToday(day) ? 'text-emerald-100' : 'text-slate-400'}`}>+{getTasksForDate(day).length - 2}</div>
                         )}
                       </div>
                     )}
@@ -185,10 +187,10 @@ export function TaskCalendar() {
               <div key={task.id} className="flex items-center space-x-3 sm:space-x-4 p-3 bg-white/70 dark:bg-slate-800/70 backdrop-blur-sm rounded-xl sm:rounded-2xl border border-white dark:border-slate-700 shadow-sm hover:shadow-md hover:bg-white dark:hover:bg-slate-800 transition-all duration-300 group">
                 <div
                   className={`w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full flex-shrink-0 ${task.priority === "high"
-                      ? "bg-red-500"
-                      : task.priority === "medium"
-                        ? "bg-yellow-500"
-                        : "bg-green-500"
+                    ? "bg-red-500"
+                    : task.priority === "medium"
+                      ? "bg-yellow-500"
+                      : "bg-green-500"
                     }`}
                 ></div>
                 <div className="flex-1 min-w-0">

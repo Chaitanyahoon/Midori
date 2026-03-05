@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
-import { Eye, EyeOff, Loader2 } from "lucide-react"
+import { FiEye as Eye, FiEyeOff as EyeOff, FiLoader as Loader2 } from "react-icons/fi"
 import {
     signInWithEmailAndPassword,
     createUserWithEmailAndPassword,

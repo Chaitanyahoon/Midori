@@ -130,41 +130,49 @@ export function TaskCalendar() {
         <div className="grid grid-cols-7 gap-1 sm:gap-1.5 max-h-[280px] sm:max-h-[320px] overflow-y-auto pr-1">
           {days.map((day, index) => {
             const dayTasks = getTasksForDate(day)
+            const todayCell = isToday(day)
+
+            if (!day) {
+              return <div key={index} />
+            }
+
             return (
               <div
                 key={index}
-                className={`
-                  min-h-[48px] sm:aspect-square p-1 sm:p-2 text-xs sm:text-sm rounded-xl sm:rounded-2xl transition-all duration-300 cursor-pointer border border-transparent
-                  ${day ? "bg-slate-50/50 dark:bg-slate-800/30 hover:bg-white dark:hover:bg-slate-800 hover:shadow-sm hover:border-slate-200/60 dark:hover:border-slate-700" : ""}
-                  ${isToday(day) ? "bg-emerald-500 text-white font-bold shadow-md shadow-emerald-500/20" : ""}
-                  ${day && !isToday(day) ? "text-slate-700 dark:text-slate-300 font-medium" : ""}
-                `}
+                className={`min-h-[48px] sm:aspect-square p-1 sm:p-2 rounded-xl sm:rounded-2xl transition-all duration-300 cursor-pointer border border-transparent
+                  ${todayCell
+                    ? "bg-emerald-500 shadow-md shadow-emerald-500/20"
+                    : "bg-slate-50/50 dark:bg-slate-800/30 hover:bg-white dark:hover:bg-slate-800 hover:shadow-sm hover:border-slate-200/60 dark:hover:border-slate-700"
+                  }`}
               >
-                {day !== null && day !== undefined && (
-                  <div className="h-full flex flex-col items-center justify-start pt-1">
-                    <span className={`text-center leading-none inline-block font-semibold ${isToday(day) ? "text-white" : "text-slate-700 dark:text-slate-200"}`}>
-                      {day}
-                    </span>
-                    {getTasksForDate(day).length > 0 && (
-                      <div className="mt-0.5 sm:mt-1 space-y-0.5 w-full">
-                        {getTasksForDate(day).slice(0, 2).map((task, i) => (
-                          <div
-                            key={i}
-                            className={`w-full h-0.5 sm:h-1 rounded-full ${task.priority === "high"
-                              ? "bg-red-500"
-                              : task.priority === "medium"
-                                ? "bg-yellow-500"
-                                : "bg-green-500"
-                              }`}
-                          />
-                        ))}
-                        {getTasksForDate(day).length > 2 && (
-                          <div className={`text-[9px] sm:text-[10px] text-center font-bold pb-0.5 ${isToday(day) ? 'text-emerald-100' : 'text-slate-400'}`}>+{getTasksForDate(day).length - 2}</div>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                )}
+                <div className="h-full flex flex-col items-center justify-start pt-1">
+                  <span
+                    style={{ color: todayCell ? "#ffffff" : undefined }}
+                    className={`text-xs sm:text-sm text-center leading-none inline-block font-semibold ${!todayCell ? "text-slate-700 dark:text-slate-200" : ""}`}
+                  >
+                    {day}
+                  </span>
+                  {dayTasks.length > 0 && (
+                    <div className="mt-0.5 sm:mt-1 space-y-0.5 w-full">
+                      {dayTasks.slice(0, 2).map((task, i) => (
+                        <div
+                          key={i}
+                          className={`w-full h-0.5 sm:h-1 rounded-full ${task.priority === "high"
+                            ? "bg-red-400"
+                            : task.priority === "medium"
+                              ? "bg-yellow-400"
+                              : todayCell ? "bg-emerald-200" : "bg-green-500"
+                            }`}
+                        />
+                      ))}
+                      {dayTasks.length > 2 && (
+                        <div className={`text-[9px] sm:text-[10px] text-center font-bold pb-0.5 ${todayCell ? "text-emerald-100" : "text-slate-400"}`}>
+                          +{dayTasks.length - 2}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
               </div>
             )
           })}

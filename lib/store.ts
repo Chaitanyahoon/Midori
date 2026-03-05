@@ -40,7 +40,7 @@ export const useUIStore = create<UIStore>((set) => ({
             id: "1",
             title: "Welcome to Planthesia!",
             message: "Start by setting up your first task or pomodoro session.",
-            time: "Just now",
+            time: new Date().toISOString(),
             isRead: false,
         },
     ],

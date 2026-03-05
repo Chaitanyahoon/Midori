@@ -251,30 +251,31 @@ export function VisualGarden({ onAddPlant }: { onAddPlant?: () => void }) {
                 mh2.addColorStop(0, "rgba(220,235,255,0.15)"); mh2.addColorStop(1, "rgba(220,235,255,0)")
                 ctx.fillStyle = mh2; ctx.beginPath(); ctx.arc(0, 0, ms * 2.5, 0, Math.PI * 2); ctx.fill()
 
-                // Draw crescent properly using clip (no destination-out which erases stars)
+                // ── CRESCENT MOON (even-odd clip — no destination-out, no sky-color matching needed) ──
                 ctx.save()
-                ctx.beginPath(); ctx.arc(0, 0, ms, 0, Math.PI * 2)
-                ctx.clip()
-                // Fill full moon body
-                const mb = ctx.createRadialGradient(-ms * 0.2, -ms * 0.2, 0, 0, 0, ms)
-                mb.addColorStop(0, "#FEFCE8"); mb.addColorStop(0.55, "#F8FAFC"); mb.addColorStop(1, "#94A3B8")
-                ctx.fillStyle = mb; ctx.fillRect(-ms, -ms, ms * 2, ms * 2)
-                // Paint sky-colored circle over part of moon to create crescent bite
-                const skyColor = skies[tod]?.[vs]?.[1] || "#0D1B3E"
-                ctx.fillStyle = skyColor
-                ctx.beginPath(); ctx.arc(ms * 0.42, -ms * 0.06, ms * 0.84, 0, Math.PI * 2); ctx.fill()
-                // Soft inner edge on the crescent shadow
-                const shadowEdge = ctx.createRadialGradient(ms * 0.42, -ms * 0.06, ms * 0.6, ms * 0.42, -ms * 0.06, ms * 0.84)
-                shadowEdge.addColorStop(0, skyColor); shadowEdge.addColorStop(1, "rgba(0,0,0,0)")
-                ctx.fillStyle = shadowEdge; ctx.beginPath(); ctx.arc(ms * 0.42, -ms * 0.06, ms * 0.84, 0, Math.PI * 2); ctx.fill()
+                // Create crescent clip path: full circle CCW, bite circle CW → even-odd makes the overlap transparent
+                ctx.beginPath()
+                ctx.arc(0, 0, ms, 0, Math.PI * 2, false)        // outer moon circle (CCW)
+                ctx.arc(ms * 0.44, -ms * 0.04, ms * 0.82, 0, Math.PI * 2, true)  // bite circle (CW)
+                ctx.clip("evenodd")
+
+                // Fill the clipped crescent with a warm moon gradient
+                const mb = ctx.createRadialGradient(-ms * 0.3, -ms * 0.3, 0, 0, 0, ms)
+                mb.addColorStop(0, "#FEFCE8")
+                mb.addColorStop(0.4, "#F1F5F9")
+                mb.addColorStop(0.75, "#CBD5E1")
+                mb.addColorStop(1, "#94A3B8")
+                ctx.fillStyle = mb
+                ctx.fillRect(-ms, -ms, ms * 2, ms * 2)
                 ctx.restore()
 
-                // Subtle crater dots on the lit side
-                ctx.save(); ctx.globalAlpha = 0.18
-                ctx.fillStyle = "#94A3B8"
-                ctx.beginPath(); ctx.arc(-ms * 0.3, -ms * 0.25, ms * 0.12, 0, Math.PI * 2); ctx.fill()
-                ctx.beginPath(); ctx.arc(-ms * 0.6, ms * 0.15, ms * 0.09, 0, Math.PI * 2); ctx.fill()
-                ctx.beginPath(); ctx.arc(-ms * 0.15, ms * 0.4, ms * 0.07, 0, Math.PI * 2); ctx.fill()
+                // Subtle craters on the lit crescent side (no clip needed — just small circles)
+                ctx.save(); ctx.globalAlpha = 0.14
+                ctx.fillStyle = "#64748B"
+                // Only draw craters on the lit (left) portion
+                ctx.beginPath(); ctx.arc(-ms * 0.45, -ms * 0.3, ms * 0.1, 0, Math.PI * 2); ctx.fill()
+                ctx.beginPath(); ctx.arc(-ms * 0.65, ms * 0.18, ms * 0.075, 0, Math.PI * 2); ctx.fill()
+                ctx.beginPath(); ctx.arc(-ms * 0.22, ms * 0.48, ms * 0.06, 0, Math.PI * 2); ctx.fill()
                 ctx.restore()
             } else {
                 const ss = Math.min(W, H) * (eve ? 0.065 : 0.052)

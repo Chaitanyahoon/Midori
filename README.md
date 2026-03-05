@@ -9,7 +9,7 @@
 
 Powered by **Next.js** for blistering speeds, **Firebase** for real-time reactivity, and **Google Gemini AI** for intelligent workflow analysis, this project lets you wield the power of elite focus in real-time.
 
-<img src="./public/assets/download.gif" alt="Planthesia Demo Animation" width="100%" style="border-radius: 12px; margin-top: 16px; margin-bottom: 24px; box-shadow: 0 4px 60px rgba(0,255,100,0.1);" />
+![Planthesia Demo Animation](./public/assets/download.gif)
 
 ## 🔥 Features
 
@@ -19,26 +19,7 @@ Powered by **Next.js** for blistering speeds, **Firebase** for real-time reactiv
 - **Gemini AI Coaching:** Your personal productivity botanist continuously analyzes your task history and spits out brilliant, personalized growth tips.
 - **Total Data Control:** 1-click **JSON Data Export** backups so you own your history, plus complete cloud-synced user preferences.
 
-<br />
 
-## 📸 Interface Preview
-
-Take a look at the immersive design crafted for supreme focus and ease-of-use:
-
-<table style="width: 100%; border:none; margin-top:10px;">
-    <tr>
-        <td style="border:none;" width="50%">
-            <strong>Welcoming Landing View</strong><br/><br/>
-            <img src="./public/assets/landing.png" alt="Landing" style="border-radius: 8px; width: 100%; box-shadow: 0 4px 20px rgba(0,0,0,0.1);" />
-        </td>
-        <td style="border:none;" width="50%">
-            <strong>Comprehensive Dashboard Board</strong><br/><br/>
-            <img src="./public/assets/dashboard.png" alt="Dashboard" style="border-radius: 8px; width: 100%; box-shadow: 0 4px 20px rgba(0,0,0,0.1);" />
-        </td>
-    </tr>
-</table>
-
-<br />
 
 ## 🛠️ Technology Stack
 

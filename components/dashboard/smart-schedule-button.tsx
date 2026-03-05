@@ -79,27 +79,34 @@ export function SmartScheduleButton() {
     }
 
     const handleApplySchedule = () => {
-        // Apply the suggestions
-        // For this iterations, we will just add them as new tasks if they don't match existing ones, 
-        // or update existing ones if we could map them (simplified for now to just toast success)
-
+        let updatedCount = 0;
         let addedCount = 0;
+
         suggestions.forEach(suggestion => {
-            // Simple logic: Add as new task with the suggested time in description for now
-            // In a real app, we would update the 'dueDate' or a specific 'scheduledTime' field
-            addTask({
-                title: suggestion.title,
-                category: suggestion.category,
-                priority: suggestion.priority,
-                description: `AI Scheduled for ${suggestion.time} (${suggestion.duration} min)`,
-                dueDate: new Date().toISOString().split("T")[0],
-                completed: false,
-                recurrence: "none"
-            })
-            addedCount++
+            // If the AI mapped it back to an existing task, update it
+            if (suggestion.originalId && tasks.some(t => t.id === suggestion.originalId)) {
+                updateTask(suggestion.originalId, {
+                    description: `AI Scheduled for ${suggestion.time} (${suggestion.duration} min)`,
+                    dueDate: new Date().toISOString().split("T")[0]
+                })
+                updatedCount++
+            } else {
+                // For new injected tasks like "Recharge Break", add them fresh
+                addTask({
+                    title: suggestion.title,
+                    category: suggestion.category,
+                    priority: suggestion.priority,
+                    description: `AI Scheduled for ${suggestion.time} (${suggestion.duration} min)`,
+                    dueDate: new Date().toISOString().split("T")[0],
+                    completed: false
+                })
+                addedCount++
+            }
         })
 
-        toast.success(`Allocated ${addedCount} tasks to your schedule!`)
+        if (updatedCount > 0 || addedCount > 0) {
+            toast.success(`Rescheduled ${updatedCount} existing and added ${addedCount} new tasks!`)
+        }
         setIsOpen(false)
     }
 

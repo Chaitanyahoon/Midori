@@ -44,8 +44,9 @@ The user has the following pending tasks:
 ${tasksStr}
 
 Create a schedule for them starting at 09:00 AM. 
-For each task, assign a realistic duration in minutes (like 30, 45, 60), a start time (like "09:00", "09:45"), and keep the original priority and category. 
-If there are multiple tasks, be sure to inject a 15-minute "Recharge Break" (Category: health, Priority: medium) somewhere in the middle of the schedule to prevent burnout.
+For each task, assign a realistic duration in minutes (like 30, 45, 60), a start time (like "09:00", "09:45"), and keep the original priority and category.
+CRITICAL: You MUST include the exact "id" of the original task in the "originalId" field of the response so we can update it.
+If there are multiple tasks, be sure to inject a 15-minute "Recharge Break" (Category: health, Priority: medium, no originalId) somewhere in the middle of the schedule to prevent burnout.
 
 Respond ONLY with a JSON object in the exact following structure:
 {
@@ -56,7 +57,8 @@ Respond ONLY with a JSON object in the exact following structure:
       "duration": 30,
       "time": "09:00",
       "priority": "high",
-      "category": "work"
+      "category": "work",
+      "originalId": "example-id-from-prompt"
     }
   ]
 }`;
@@ -125,7 +127,8 @@ You MUST suggest at least one actionable task based on their query if it implies
                   duration: { type: Type.INTEGER, description: "Duration in minutes" },
                   time: { type: Type.STRING, description: "Time of day (e.g. '09:00', '14:30', or 'any')" },
                   priority: { type: Type.STRING, enum: ["low", "medium", "high"] },
-                  category: { type: Type.STRING, enum: ["work", "personal", "learning", "health"] }
+                  category: { type: Type.STRING, enum: ["work", "personal", "learning", "health"] },
+                  originalId: { type: Type.STRING, description: "The ID of the existing task being rescheduled, if applicable. Must match exactly." }
                 },
                 required: ["title", "duration", "time", "priority", "category"]
               }

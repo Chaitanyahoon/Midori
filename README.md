@@ -3,51 +3,65 @@
 [![Next.js](https://img.shields.io/badge/Next.js-14-black?style=for-the-badge&logo=next.js&logoColor=white)](https://nextjs.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white)](https://tailwindcss.com/)
-[![Radix UI](https://img.shields.io/badge/Radix_UI-161618?style=for-the-badge&logo=radix-ui&logoColor=white)](https://www.radix-ui.com/)
+[![Firebase](https://img.shields.io/badge/Firebase-FFCA28?style=for-the-badge&logo=firebase&logoColor=black)](https://firebase.google.com/)
 
-**Planthesia** is a unique productivity application that gamifies your daily workflow. Inspired by the tranquility of a garden, it helps you nurture your productivity by turning tasks into growth opportunities.
+**Planthesia** is a web-based productivity sanctuary that brings the tranquility of nature to your workflow, treating your daily tasks like a thriving digital garden.
 
-Powered by **Next.js**, **Tailwind CSS**, and **Google Gemini AI**, this project lets you combine powerful task management with the Pomodoro technique to help you stay focused and clear-minded.
+Powered by **Next.js** for blistering speeds, **Firebase** for real-time reactivity, and **Google Gemini AI** for intelligent workflow analysis, this project lets you wield the power of elite focus in real-time.
 
-<img src="./public/assets/download.gif" alt="Planthesia Demo Animation" width="100%" style="border-radius: 8px; margin-top: 16px; margin-bottom: 24px;" />
+<img src="./public/assets/download.gif" alt="Planthesia Demo Animation" width="100%" style="border-radius: 12px; margin-top: 16px; margin-bottom: 24px; box-shadow: 0 4px 60px rgba(0,255,100,0.1);" />
 
-## ✨ Features
+## 🔥 Features
 
-### 🌱 Smart Task Management
-Organize your life with an intuitive task board. Categorize, prioritize, and track your to-dos with ease. Watch your garden flourish as you check off items!
+- **Real-time Task Tracking:** Instantly synchronize your task completion across the cloud. Categorize, prioritize, and track to-dos effortlessly.
+- **Zen Focus Soundscapes:** Built-in Pomodoro timer seamlessly layered with **Rain, Forest, Ocean, and Fireplace** ambient audio mixers to completely block out external noise.
+- **Precision Time-Blocking:** Assign your tasks into an interactive daily timeline grid (e.g., *9:00 AM - Component Refactor*), ensuring you run an incredibly tight ship.
+- **Gemini AI Coaching:** Your personal productivity botanist continuously analyzes your task history and spits out brilliant, personalized growth tips.
+- **Total Data Control:** 1-click **JSON Data Export** backups so you own your history, plus complete cloud-synced user preferences.
 
-### 🍅 Focus Timer & Zen Mode Soundscapes
-Stay in the flow with our built-in Pomodoro timer. Maximize your focus with beautifully curated ambient sounds, including **Rain, Forest, Ocean Waves, and a cozy Fireplace**. Block out distractions and work in peace.
+<br />
 
-### 📅 Daily Time-Blocking Calendar
-Your schedule, structured perfectly. A fully interactive daily timeline lets you assign specific tasks to precise hours of the day (e.g., *9:00 AM - Research Project*), ensuring you run a tight and effective ship.
+## 📸 Interface Preview
 
-### 🤖 Growth AI
-Your personal productivity botanist! Powered by the latest AI models (via Google Gemini), Growth AI analyzes your habits and provides personalized tips to optimize your workflow.
+Take a look at the immersive design crafted for supreme focus and ease-of-use:
 
-### ⚙️ Advanced Data Control
-Own your data. Planthesia's customized settings page provides cloud-synced preferences tailored for your behavior, plus 1-click **JSON Data Exports** for all tasks, pomodoros, and history!
+<table style="width: 100%; border:none; margin-top:10px;">
+    <tr>
+        <td style="border:none;" width="50%">
+            <strong>Welcoming Landing View</strong><br/><br/>
+            <img src="./public/assets/landing.png" alt="Landing" style="border-radius: 8px; width: 100%; box-shadow: 0 4px 20px rgba(0,0,0,0.1);" />
+        </td>
+        <td style="border:none;" width="50%">
+            <strong>Comprehensive Dashboard Board</strong><br/><br/>
+            <img src="./public/assets/dashboard.png" alt="Dashboard" style="border-radius: 8px; width: 100%; box-shadow: 0 4px 20px rgba(0,0,0,0.1);" />
+        </td>
+    </tr>
+</table>
 
+<br />
 
 ## 🛠️ Technology Stack
 
-Built with modern, robust technologies for accuracy and performance:
+Built with modern, robust technologies for zero-latency performance:
 
-- **Framework**: [Next.js](https://nextjs.org/) (App Router)
+- **Framework**: [Next.js 14](https://nextjs.org/) (App Router)
 - **Language**: [TypeScript](https://www.typescriptlang.org/)
 - **Styling**: [Tailwind CSS](https://tailwindcss.com/) & [Radix UI](https://www.radix-ui.com/)
+- **Database**: [Firebase Cloud Firestore](https://firebase.google.com/)
 - **Charts**: [Recharts](https://recharts.org/)
 - **Icons**: [Lucide React](https://lucide.dev/)
-- **AI Integration**: [Google Gemini](https://ai.google.dev/)
+- **AI Integration**: [Google Gemini Pro / Flash AI](https://ai.google.dev/)
+
+<br />
 
 ## 🚀 Getting Started
 
-Follow these steps to set up Planthesia locally on your machine.
+Follow these steps to set up Planthesia locally and start planting your tasks.
 
 ### Prerequisites
 
 *   Node.js (v18 or higher)
-*   npm or yarn
+*   npm, pnpm, or yarn
 
 ### Installation
 
@@ -60,40 +74,43 @@ Follow these steps to set up Planthesia locally on your machine.
 2.  **Install dependencies**
     ```bash
     npm install
-    # or
-    yarn install
     ```
 
 3.  **Set up environment variables**
-    Create a `.env.local` file in the root directory and add your Google Gemini API key:
+    Create a `.env.local` file in the root directory and add your Firebase credentials and Google Gemini API key:
     ```env
-    GEMINI_API_KEY=your_gemini_api_key_here
+    NEXT_PUBLIC_FIREBASE_API_KEY="..."
+    NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN="..."
+    NEXT_PUBLIC_FIREBASE_PROJECT_ID="..."
+    GEMINI_API_KEY="..."
     ```
 
-4.  **Run the development server**
+4.  **Launch the development server**
     ```bash
     npm run dev
-    # or
-    yarn dev
     ```
 
-5.  Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+5.  Open [http://localhost:3000](http://localhost:3000) with your browser to experience the magic.
+
+<br />
 
 ## 🤝 Contributing
 
-Contributions are what make the open-source community such an amazing place to learn, inspire, and create. Any contributions you make are **greatly appreciated**.
+Contributions are what make the open-source community an amazing place to learn, inspire, and create. Any improvements you make to the garden are **greatly appreciated**.
 
-1.  vFork the Project
-2.  Create your Feature Branch (`git checkout -b feature/AmazingFeature`)
-3.  Commit your Changes (`git commit -m 'Add some AmazingFeature'`)
-4.  Push to the Branch (`git push origin feature/AmazingFeature`)
-5.  Open a Pull Request
+1. Fork the Project
+2. Create your Feature Branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your Changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the Branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
+
+<br />
 
 ## 📄 License
 
 Distributed under the MIT License. See `LICENSE` for more information.
 
----
+<br />
 
 <div align="center">
   <p>Made with ❤️ by the Planthesia Team</p>

@@ -384,48 +384,21 @@ export function VisualGarden({ onAddPlant }: { onAddPlant?: () => void }) {
             ctx.bezierCurveTo(W * 0.3, H * 0.85, W * 0.65, H * 0.89, W, H * 0.86)
             ctx.lineTo(W, H); ctx.closePath(); ctx.fill()
 
-            // Soil / garden bed strip (darkest, front bottom)
-            const soilGrad = ctx.createLinearGradient(0, H * 0.9, 0, H)
-            soilGrad.addColorStop(0, gp[3] + "EE"); soilGrad.addColorStop(1, gp[3])
-            ctx.fillStyle = soilGrad
-            ctx.beginPath(); ctx.moveTo(0, H); ctx.lineTo(0, H * 0.92)
-            ctx.bezierCurveTo(W * 0.25, H * 0.91, W * 0.65, H * 0.93, W, H * 0.91)
-            ctx.lineTo(W, H); ctx.closePath(); ctx.fill()
 
-            // Dirt path (winding from bottom center into mid)
-            const pathCol = dark ? "rgba(60,35,15,0.7)" : (vs === "winter" ? "rgba(160,170,180,0.5)" : "rgba(180,130,80,0.55)")
-            ctx.fillStyle = pathCol
-            ctx.beginPath()
-            ctx.moveTo(W * 0.38, H)
-            ctx.bezierCurveTo(W * 0.4, H * 0.95, W * 0.44, H * 0.88, W * 0.48, H * 0.8)
-            ctx.bezierCurveTo(W * 0.52, H * 0.72, W * 0.5, H * 0.68, W * 0.52, H * 0.62)
-            ctx.bezierCurveTo(W * 0.56, H * 0.62, W * 0.62, H * 0.72, W * 0.64, H * 0.8)
-            ctx.bezierCurveTo(W * 0.66, H * 0.88, W * 0.63, H * 0.95, W * 0.62, H)
-            ctx.closePath(); ctx.fill()
 
-            // Stepping stones along path
-            const stoneCol = dark ? "rgba(100,110,130,0.55)" : (vs === "winter" ? "rgba(200,210,220,0.6)" : "rgba(160,140,110,0.65)")
-            ctx.fillStyle = stoneCol
-            const stones: [number, number, number, number][] = [[0.49, 0.93, 18, 10], [0.5, 0.86, 16, 9], [0.50, 0.79, 15, 8], [0.51, 0.72, 13, 7]]
-            stones.forEach(([sx, sy, rw, rh]) => {
-                ctx.save(); ctx.beginPath()
-                ctx.ellipse(sx * W, sy * H, rw, rh, 0, 0, Math.PI * 2); ctx.fill()
-                ctx.strokeStyle = dark ? "rgba(150,160,180,0.2)" : "rgba(255,255,255,0.25)"; ctx.lineWidth = 1
-                ctx.stroke(); ctx.restore()
-            })
-
-            // Grass blade tufts along soil edge
+            // Grass blade tufts along front ground edge
             const bladeCol = dark ? gp[2] + "99" : gp[2]
             ctx.strokeStyle = bladeCol; ctx.lineWidth = 1.5
             for (let g2 = 0; g2 < 28; g2++) {
                 const gx = (g2 / 28) * W * 0.95 + W * 0.025
-                const gy = H * 0.905 + Math.sin(g2 * 1.7) * H * 0.008
+                const gy = H * 0.885 + Math.sin(g2 * 1.7) * H * 0.006
                 const sway = Math.sin(t * 0.012 + g2 * 0.8) * 4
-                ctx.save(); ctx.globalAlpha = 0.7
+                ctx.save(); ctx.globalAlpha = 0.75
                 ctx.beginPath(); ctx.moveTo(gx, gy); ctx.quadraticCurveTo(gx + sway, gy - 10, gx + sway * 1.5, gy - 18); ctx.stroke()
                 ctx.beginPath(); ctx.moveTo(gx + 5, gy); ctx.quadraticCurveTo(gx + 5 + sway * 0.5, gy - 8, gx + 5 + sway, gy - 14); ctx.stroke()
                 ctx.restore()
             }
+
 
             // Winter snow drift on ground
             if (vs === 'winter') {

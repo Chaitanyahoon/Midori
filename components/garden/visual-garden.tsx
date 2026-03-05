@@ -166,19 +166,43 @@ export function VisualGarden({ onAddPlant }: { onAddPlant?: () => void }) {
                 })
 
                 // ── SHOOTING STARS ──
-                if (night && Math.random() < 0.004) {
-                    shoots.current.push({ x: Math.random() * 0.7, y: Math.random() * 0.3, vx: 0.005 + Math.random() * 0.008, vy: 0.003 + Math.random() * 0.004, life: 0, maxLife: 50 + Math.random() * 30, trail: 30 + Math.random() * 40 })
+                if (night && Math.random() < 0.012) {
+                    const angle = 0.4 + Math.random() * 0.35
+                    const spd = 0.006 + Math.random() * 0.01
+                    shoots.current.push({ x: 0.02 + Math.random() * 0.65, y: 0.02 + Math.random() * 0.28, vx: spd * Math.cos(angle), vy: spd * Math.sin(angle), life: 0, maxLife: 40 + Math.random() * 35, trail: 120 + Math.random() * 80 })
                 }
                 for (let i = shoots.current.length - 1; i >= 0; i--) {
                     const ss = shoots.current[i]; ss.life++; ss.x += ss.vx; ss.y += ss.vy
-                    if (ss.life > ss.maxLife || ss.x > 1.1 || ss.y > 0.7) { shoots.current.splice(i, 1); continue }
-                    const prog = ss.life / ss.maxLife; const alpha = (1 - prog) * 0.9
-                    const tx = ss.x * W; const ty = ss.y * H * 0.7
-                    ctx.save(); ctx.globalAlpha = alpha
-                    const tg = ctx.createLinearGradient(tx, ty, tx - ss.trail * ss.vx * W, ty - ss.trail * ss.vy * H)
-                    tg.addColorStop(0, "rgba(255,255,255,0.9)"); tg.addColorStop(1, "rgba(200,220,255,0)")
-                    ctx.strokeStyle = tg; ctx.lineWidth = 1.5
-                    ctx.beginPath(); ctx.moveTo(tx, ty); ctx.lineTo(tx - ss.trail * ss.vx * W, ty - ss.trail * ss.vy * H); ctx.stroke()
+                    if (ss.life > ss.maxLife || ss.x > 1.1 || ss.y > 0.75) { shoots.current.splice(i, 1); continue }
+                    const prog = ss.life / ss.maxLife
+                    const alpha = prog < 0.15 ? prog / 0.15 : (prog > 0.7 ? (1 - prog) / 0.3 : 1)
+                    const hx = ss.x * W; const hy = ss.y * H * 0.72
+                    const tx2 = hx - ss.trail * ss.vx * W; const ty2 = hy - ss.trail * ss.vy * H * 0.72
+                    ctx.save()
+                    // Glow halo at head
+                    ctx.globalAlpha = alpha * 0.5
+                    const halo = ctx.createRadialGradient(hx, hy, 0, hx, hy, 12)
+                    halo.addColorStop(0, 'rgba(255,255,255,0.9)'); halo.addColorStop(1, 'rgba(200,230,255,0)')
+                    ctx.fillStyle = halo; ctx.beginPath(); ctx.arc(hx, hy, 12, 0, Math.PI * 2); ctx.fill()
+                    // Wide tapered trail
+                    ctx.globalAlpha = alpha
+                    const tg = ctx.createLinearGradient(hx, hy, tx2, ty2)
+                    tg.addColorStop(0, 'rgba(255,255,255,0.95)')
+                    tg.addColorStop(0.15, 'rgba(200,230,255,0.7)')
+                    tg.addColorStop(0.5, 'rgba(180,210,255,0.25)')
+                    tg.addColorStop(1, 'rgba(150,200,255,0)')
+                    ctx.strokeStyle = tg; ctx.lineWidth = 3.5
+                    ctx.lineCap = 'round'
+                    ctx.beginPath(); ctx.moveTo(hx, hy); ctx.lineTo(tx2, ty2); ctx.stroke()
+                    // Bright core line
+                    const tg2 = ctx.createLinearGradient(hx, hy, hx - ss.trail * 0.4 * ss.vx * W, hy - ss.trail * 0.4 * ss.vy * H * 0.72)
+                    tg2.addColorStop(0, 'rgba(255,255,255,1)'); tg2.addColorStop(1, 'rgba(255,255,255,0)')
+                    ctx.strokeStyle = tg2; ctx.lineWidth = 1.2
+                    ctx.beginPath(); ctx.moveTo(hx, hy); ctx.lineTo(hx - ss.trail * 0.4 * ss.vx * W, hy - ss.trail * 0.4 * ss.vy * H * 0.72); ctx.stroke()
+                    // Head dot
+                    ctx.globalAlpha = alpha
+                    ctx.fillStyle = '#fff'
+                    ctx.beginPath(); ctx.arc(hx, hy, 2.5, 0, Math.PI * 2); ctx.fill()
                     ctx.restore()
                 }
 
@@ -262,19 +286,70 @@ export function VisualGarden({ onAddPlant }: { onAddPlant?: () => void }) {
             }
 
             // ── CLOUDS ──
-            if (!night || (vs === 'winter')) {
-                const ca = eve ? 0.3 : morn ? 0.6 : 0.7
+            if (!night || vs === 'winter') {
+                const ca = eve ? 0.28 : morn ? 0.65 : night ? 0.35 : 0.82
                 clouds.current.forEach(cl => {
-                    cl.x += cl.spd; if (cl.x > 1.2) cl.x = -cl.w
-                    const cxc = cl.x * W, cyr = cl.y * H, cw = cl.w * W, ch = cl.h * H
+                    cl.x += cl.spd; if (cl.x > 1.25) cl.x = -cl.w - 0.05
+                    const cx3 = cl.x * W, cy3 = cl.y * H, cw = cl.w * W, ch = cl.h * H
                     ctx.save(); ctx.globalAlpha = cl.op * ca
-                    const bg = dark ? "#2D3748" : "#FFFFFF", sh = dark ? "#1A202C" : "#EDF2F7"
-                    const cg = ctx.createRadialGradient(cxc, cyr - ch * 0.2, ch * 0.1, cxc, cyr, cw * 0.5)
-                    cg.addColorStop(0, bg); cg.addColorStop(1, sh); ctx.fillStyle = cg
-                    const dp = (x: number, y: number, rx: number, ry: number) => { ctx.beginPath(); ctx.ellipse(x, y, rx, ry, 0, 0, Math.PI * 2); ctx.fill() }
-                    dp(cxc, cyr, cw * 0.4, ch * 0.55); dp(cxc - cw * 0.28, cyr + ch * 0.1, cw * 0.3, ch * 0.42)
-                    dp(cxc + cw * 0.28, cyr + ch * 0.1, cw * 0.3, ch * 0.42); dp(cxc - cw * 0.12, cyr - ch * 0.14, cw * 0.28, ch * 0.48)
-                    dp(cxc + cw * 0.12, cyr - ch * 0.08, cw * 0.25, ch * 0.44)
+
+                    // Build cloud silhouette path using bezier bumps
+                    const drawCloudPath = () => {
+                        const bx = cx3 - cw * 0.5, by = cy3 + ch * 0.4
+                        ctx.beginPath()
+                        ctx.moveTo(bx, by)
+                        // bottom flat base
+                        ctx.lineTo(bx + cw, by)
+                        // right side up
+                        ctx.bezierCurveTo(bx + cw * 1.05, by, bx + cw * 1.02, cy3 - ch * 0.1, bx + cw * 0.78, cy3 - ch * 0.1)
+                        // right bump
+                        ctx.bezierCurveTo(bx + cw * 0.85, cy3 - ch * 0.7, bx + cw * 0.62, cy3 - ch * 0.85, bx + cw * 0.52, cy3 - ch * 0.55)
+                        // center peak
+                        ctx.bezierCurveTo(bx + cw * 0.55, cy3 - ch * 1.05, bx + cw * 0.35, cy3 - ch * 1.15, bx + cw * 0.22, cy3 - ch * 0.7)
+                        // left bump
+                        ctx.bezierCurveTo(bx + cw * 0.18, cy3 - ch * 0.9, bx - cw * 0.02, cy3 - ch * 0.8, bx + cw * 0.0, cy3 - ch * 0.3)
+                        // left side down
+                        ctx.bezierCurveTo(bx - cw * 0.05, cy3 - ch * 0.1, bx - cw * 0.05, by, bx, by)
+                        ctx.closePath()
+                    }
+
+                    // Shadow pass (bottom, darker)
+                    ctx.save()
+                    ctx.translate(0, ch * 0.18)
+                    drawCloudPath()
+                    const shadowCol = dark ? 'rgba(15,25,50,0.55)' : (eve ? 'rgba(180,120,80,0.3)' : 'rgba(180,200,230,0.45)')
+                    ctx.fillStyle = shadowCol; ctx.fill()
+                    ctx.restore()
+
+                    // Main body
+                    drawCloudPath()
+                    const bodyGrad = ctx.createLinearGradient(cx3, cy3 - ch, cx3, cy3 + ch * 0.5)
+                    if (dark) {
+                        bodyGrad.addColorStop(0, 'rgba(80,100,140,0.9)')
+                        bodyGrad.addColorStop(1, 'rgba(40,55,90,0.8)')
+                    } else if (eve) {
+                        bodyGrad.addColorStop(0, 'rgba(255,200,160,0.95)')
+                        bodyGrad.addColorStop(0.5, 'rgba(240,160,140,0.9)')
+                        bodyGrad.addColorStop(1, 'rgba(200,120,100,0.8)')
+                    } else if (morn) {
+                        bodyGrad.addColorStop(0, 'rgba(255,245,220,0.95)')
+                        bodyGrad.addColorStop(1, 'rgba(220,210,200,0.85)')
+                    } else {
+                        bodyGrad.addColorStop(0, 'rgba(255,255,255,0.98)')
+                        bodyGrad.addColorStop(0.6, 'rgba(235,242,255,0.92)')
+                        bodyGrad.addColorStop(1, 'rgba(200,215,240,0.85)')
+                    }
+                    ctx.fillStyle = bodyGrad; ctx.fill()
+
+                    // Top highlight rim
+                    drawCloudPath()
+                    ctx.save(); ctx.clip()
+                    const hlGrad = ctx.createLinearGradient(cx3, cy3 - ch * 1.1, cx3, cy3 - ch * 0.3)
+                    hlGrad.addColorStop(0, dark ? 'rgba(150,180,255,0.35)' : 'rgba(255,255,255,0.7)')
+                    hlGrad.addColorStop(1, 'rgba(255,255,255,0)')
+                    ctx.fillStyle = hlGrad; ctx.fillRect(cx3 - cw, cy3 - ch * 1.2, cw * 2, ch * 1.0)
+                    ctx.restore()
+
                     ctx.restore()
                 })
             }
@@ -298,15 +373,16 @@ export function VisualGarden({ onAddPlant }: { onAddPlant?: () => void }) {
                     autumn: ["#431407", "#7C2D12", "#C2410C"], winter: ["#1E1B4B", "#312E81", "#4338CA"]
                 }
             }
-            const mp = mtPalettes[tod]?.[vs] || ["#1E293B", "#334155", "#475569"]
+            const mp: string[] = mtPalettes[tod]?.[vs] || ["#1E293B", "#334155", "#475569"]
             // 3 mountain layers
-            [[0.48, 0.12, mp[0]], [0.44, 0.07, mp[1]], [0.4, 0.05, mp[2]]].forEach(([yBase, roughness, col], li) => {
-                ctx.fillStyle = col as string
+            const mtLayers: [number, number, string][] = [[0.48, 0.12, mp[0]], [0.44, 0.07, mp[1]], [0.4, 0.05, mp[2]]]
+            mtLayers.forEach(([yBase, roughness, col], li) => {
+                ctx.fillStyle = col
                 ctx.beginPath(); ctx.moveTo(0, H)
-                const pts = 12 + li * 3; const yb = (yBase as number) * H
+                const pts = 12 + li * 3; const yb = yBase * H
                 for (let i = 0; i <= pts; i++) {
                     const px = (i / pts) * W
-                    const ph = yb - Math.abs(Math.sin(i * 2.1 + li * 3)) * H * (roughness as number) * 1.8 - Math.abs(Math.sin(i * 0.7 + li)) * H * (roughness as number) * 0.8
+                    const ph = yb - Math.abs(Math.sin(i * 2.1 + li * 3)) * H * roughness * 1.8 - Math.abs(Math.sin(i * 0.7 + li)) * H * roughness * 0.8
                     ctx.lineTo(px, ph)
                 }
                 ctx.lineTo(W, H); ctx.closePath(); ctx.fill()

@@ -19,6 +19,7 @@ export interface Task {
   createdAt: string
   completedAt?: string
   dueDate?: string
+  scheduledTime?: string
 }
 
 export interface PomodoroSession {
@@ -42,6 +43,8 @@ export interface UserStats {
 export interface UserSettings {
   userName: string | null
   userTone: string | null
+  aiStyle: string | null
+  notifications: string | null
   dailyGoalTasks: number
   dailyGoalPomodoros: number
   dailyGoalHours: number
@@ -78,6 +81,8 @@ const DataContext = createContext<DataContextType | undefined>(undefined)
 const DEFAULT_SETTINGS: UserSettings = {
   userName: null,
   userTone: "casual",
+  aiStyle: "balanced",
+  notifications: "frequent",
   dailyGoalTasks: 3,
   dailyGoalPomodoros: 4,
   dailyGoalHours: 2,

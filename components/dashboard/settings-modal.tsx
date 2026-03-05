@@ -16,10 +16,10 @@ interface SettingsModalProps {
 
 export function SettingsModal({ isOpen, onCloseAction }: SettingsModalProps) {
   const { theme: currentTheme, setTheme: setThemeMode } = useTheme()
-  const [aiStyle, setAiStyle] = useState("balanced")
-  const [notifications, setNotifications] = useState("frequent")
-  const [isDarkMode, setIsDarkMode] = useState(false)
   const { settings, updateSettings, exportData } = useData()
+  const [aiStyle, setAiStyle] = useState(settings.aiStyle || "balanced")
+  const [notifications, setNotifications] = useState(settings.notifications || "frequent")
+  const [isDarkMode, setIsDarkMode] = useState(false)
   const [displayName, setDisplayName] = useState<string>(settings.userName || "")
   const [tone, setTone] = useState<string>(settings.userTone || "balanced")
   const [isExporting, setIsExporting] = useState(false)
@@ -61,6 +61,15 @@ export function SettingsModal({ isOpen, onCloseAction }: SettingsModalProps) {
       if (settings.tone) {
         setTone(settings.tone)
       }
+      if (settings.aiStyle) {
+        setAiStyle(settings.aiStyle)
+      }
+      if (settings.notifications) {
+        setNotifications(settings.notifications)
+      }
+      if (settings.tone) {
+        setTone(settings.tone)
+      }
       if (savedTheme !== currentTheme) {
         setThemeMode(savedTheme)
       }
@@ -89,7 +98,9 @@ export function SettingsModal({ isOpen, onCloseAction }: SettingsModalProps) {
     try {
       updateSettings({
         userName: displayName || null,
-        userTone: tone || null
+        userTone: tone || "balanced",
+        aiStyle: aiStyle || "balanced",
+        notifications: notifications || "frequent"
       })
     } catch (e) { }
     onCloseAction()

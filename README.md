@@ -9,6 +9,8 @@
 [![Radix UI](https://img.shields.io/badge/Radix_UI-161618?style=for-the-badge&logo=radix-ui&logoColor=white)](https://www.radix-ui.com/)
 [![License](https://img.shields.io/badge/License-MIT-blue.svg?style=for-the-badge)](LICENSE)
 
+<img src="./public/assets/demo.gif" alt="Planthesia Demo Animation" width="600" style="border-radius: 12px; margin-top: 20px;" />
+
 </div>
 
 ---
@@ -24,17 +26,21 @@ In Planthesia, every completed task helps your digital garden grow. It combines 
 ### 🌱 Smart Task Management
 Organize your life with an intuitive task board. Categorize, prioritize, and track your to-dos with ease. Watch your garden flourish as you check off items!
 
-### 🍅 Focus Timer (Pomodoro)
-Stay in the flow with our built-in Pomodoro timer. Customize your focus sessions and breaks to maximize efficiency without burnout.
+### 🍅 Focus Timer & Zen Mode Soundscapes
+Stay in the flow with our built-in Pomodoro timer. Maximize your focus with beautifully curated ambient sounds, including **Rain, Forest, Ocean Waves, and a cozy Fireplace**. Block out distractions and work in peace.
+
+### 📅 Daily Time-Blocking Calendar
+Your schedule, structured perfectly. A fully interactive daily timeline lets you assign specific tasks to precise hours of the day (e.g., *9:00 AM - Research Project*), ensuring you run a tight and effective ship.
 
 ### 🤖 Growth AI
 Your personal productivity botanist! Powered by the latest AI models (via Google Gemini), Growth AI analyzes your habits and provides personalized tips to optimize your workflow.
 
-### 📊 Analytics & Insights
-Visualise your productivity patterns. Track your completion rates, focus hours, and more with beautiful, interactive charts.
+### ⚙️ Advanced Data Control
+Own your data. Planthesia's customized settings page provides cloud-synced preferences tailored for your behavior, plus 1-click **JSON Data Exports** for all tasks, pomodoros, and history!
 
-### 📅 Calendar Integration
-See your schedule at a glance. Seamlessly plan your day and ensure you never miss a deadline.
+<div align="center">
+  <img src="./public/assets/dashboard.png" alt="Dashboard Interface" width="800" style="border-radius: 12px; margin-top: 15px;" />
+</div>
 
 ## 🛠️ Technology Stack
 

@@ -19,7 +19,7 @@ export default function CalendarPage() {
   const [currentDate, setCurrentDate] = useState(new Date())
   const [selectedDate, setSelectedDate] = useState<string | null>(null)
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
-  const [viewMode, setViewMode] = useState<"month" | "week">("month")
+  const [viewMode, setViewMode] = useState<"month" | "day">("month")
   const { tasks, addTask, updateTask } = useData()
   const { toast } = useToast()
 
@@ -29,8 +29,11 @@ export default function CalendarPage() {
     priority: "medium" as const,
     category: "work" as const,
     dueDate: "",
+    scheduledTime: "none",
     recurrence: "none" as "none" | "daily" | "weekly" | "monthly",
   })
+
+  const HOURS = Array.from({ length: 15 }, (_, i) => i + 7) // 7 AM to 9 PM
 
   const getDaysInMonth = (date: Date) => {
     const year = date.getFullYear()
@@ -70,22 +73,7 @@ export default function CalendarPage() {
     return tasks.filter((task) => task.dueDate === dateString)
   }
 
-  // Helper to get the current week (Sunday-Saturday) for a given date
-  const getWeekDays = (date: Date) => {
-    const startOfWeek = new Date(date)
-    startOfWeek.setDate(date.getDate() - date.getDay())
-    const weekDays = []
-    for (let i = 0; i < 7; i++) {
-      weekDays.push(new Date(startOfWeek.getFullYear(), startOfWeek.getMonth(), startOfWeek.getDate() + i))
-    }
-    return weekDays
-  }
-
-  // For week view, show the actual Date object for each day in the week
-  const weekDays = getWeekDays(currentDate)
-  const days = viewMode === "week"
-    ? weekDays
-    : getDaysInMonth(currentDate)
+  const days = getDaysInMonth(currentDate)
   const monthNames = [
     "January",
     "February",
@@ -153,7 +141,7 @@ export default function CalendarPage() {
       category: newTask.category,
       completed: false,
       dueDate: newTask.dueDate || undefined,
-      recurrence: newTask.recurrence,
+      scheduledTime: newTask.scheduledTime !== "none" ? newTask.scheduledTime : undefined,
     })
 
     setNewTask({
@@ -162,6 +150,7 @@ export default function CalendarPage() {
       priority: "medium",
       category: "work",
       dueDate: "",
+      scheduledTime: "none",
       recurrence: "none",
     })
     setIsAddDialogOpen(false)
@@ -213,12 +202,12 @@ export default function CalendarPage() {
               Month
             </Button>
             <Button
-              variant={viewMode === "week" ? "default" : "ghost"}
+              variant={viewMode === "day" ? "default" : "ghost"}
               size="sm"
-              className={`rounded-md px-3 py-1 text-xs font-medium ${viewMode === "week" ? "bg-blue-600 text-white" : ""}`}
-              onClick={() => setViewMode("week")}
+              className={`rounded-md px-3 py-1 text-xs font-medium ${viewMode === "day" ? "bg-blue-600 text-white" : ""}`}
+              onClick={() => setViewMode("day")}
             >
-              Week
+              Day
             </Button>
           </div>
         </div>
@@ -236,8 +225,8 @@ export default function CalendarPage() {
                 <Label htmlFor="description">Description</Label>
                 <Textarea id="description" value={newTask.description} onChange={e => setNewTask({ ...newTask, description: e.target.value })} />
               </div>
-              <div className="flex gap-2">
-                <div className="flex-1">
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1.5">
                   <Label>Priority</Label>
                   <Select value={newTask.priority} onValueChange={val => setNewTask({ ...newTask, priority: val as any })}>
                     <SelectTrigger><SelectValue /></SelectTrigger>
@@ -248,23 +237,36 @@ export default function CalendarPage() {
                     </SelectContent>
                   </Select>
                 </div>
-                <div className="flex-1">
+                <div className="space-y-1.5">
                   <Label>Category</Label>
                   <Select value={newTask.category} onValueChange={val => setNewTask({ ...newTask, category: val as any })}>
                     <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>
                       <SelectItem value="work">Work</SelectItem>
                       <SelectItem value="personal">Personal</SelectItem>
-                      <SelectItem value="other">Other</SelectItem>
+                      <SelectItem value="learning">Learning</SelectItem>
+                      <SelectItem value="health">Health</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
-                <div className="flex-1">
+                <div className="space-y-1.5">
+                  <Label>Time</Label>
+                  <Select value={newTask.scheduledTime} onValueChange={(val) => setNewTask({ ...newTask, scheduledTime: val })}>
+                    <SelectTrigger><SelectValue placeholder="All Day" /></SelectTrigger>
+                    <SelectContent className="max-h-56">
+                      <SelectItem value="none">All Day</SelectItem>
+                      {HOURS.map(h => {
+                        const timeStr = `${h.toString().padStart(2, '0')}:00`
+                        const label = h > 12 ? `${h - 12}:00 PM` : h === 12 ? `12:00 PM` : `${h}:00 AM`
+                        return <SelectItem key={timeStr} value={timeStr}>{label}</SelectItem>
+                      })}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-1.5">
                   <Label>Repeat</Label>
                   <Select value={newTask.recurrence} onValueChange={val => setNewTask({ ...newTask, recurrence: val as any })}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>
                       <SelectItem value="none">None</SelectItem>
                       <SelectItem value="daily">Daily</SelectItem>
@@ -316,156 +318,174 @@ export default function CalendarPage() {
           <div className="grid grid-cols-7 gap-1">
             {viewMode === "month"
               ? days.map((day, index) => {
-                  if (typeof day !== 'number' || day === null) {
-                    return <div key={index} className="min-h-[64px] sm:min-h-[88px] p-2" />
-                  }
-                  const dayTasks = getTasksForDate(day)
-                  const hasHighPriority = dayTasks.some((task) => task.priority === "high")
-                  const cellDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), day)
-                  const isPast = cellDate < new Date(today.getFullYear(), today.getMonth(), today.getDate())
-                  return (
-                    <div
-                      key={index}
-                      className={`
+                if (typeof day !== 'number' || day === null) {
+                  return <div key={index} className="min-h-[64px] sm:min-h-[88px] p-2" />
+                }
+                const dayTasks = getTasksForDate(day)
+                const hasHighPriority = dayTasks.some((task) => task.priority === "high")
+                const cellDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), day)
+                const isPast = cellDate < new Date(today.getFullYear(), today.getMonth(), today.getDate())
+                return (
+                  <div
+                    key={index}
+                    className={`
                         min-h-[64px] sm:min-h-[88px] p-2 rounded-lg border transition-all duration-200 cursor-pointer
                         hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:border-blue-200 dark:hover:border-blue-700
                         ${isToday(day) ? "bg-gradient-to-br from-emerald-50 to-blue-50 dark:from-emerald-900/30 dark:to-blue-900/30 border-emerald-200 dark:border-emerald-700 shadow-md" : "bg-white dark:bg-slate-800/50 border-gray-100 dark:border-slate-700"}
                         ${hasHighPriority ? "ring-2 ring-red-200 dark:ring-red-800" : ""}
                         ${isPast ? "opacity-60 pointer-events-none" : ""}
                       `}
-                      onClick={() => handleDateClick(day)}
-                    >
-                      <div className="h-full flex flex-col">
-                        <div className="flex items-center justify-between mb-2">
-                          <span className={`text-sm font-medium ${isToday(day) ? "text-emerald-700 dark:text-emerald-400" : "text-gray-900 dark:text-gray-100"}`}>
-                            {day}
-                          </span>
-                          {dayTasks.length > 0 && (
-                            <Badge variant="secondary" className="text-xs h-5 px-1.5">
-                              {dayTasks.length}
-                            </Badge>
-                          )}
-                        </div>
-                        <div className="flex-1 space-y-1">
-                          {dayTasks.slice(0, 3).map((task, i) => (
-                            <TooltipProvider key={i}>
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                  <div
-                                    className={`text-xs p-1.5 rounded truncate flex items-center gap-1.5 transition-all cursor-pointer hover:opacity-80 ${
-                                      task.completed
-                                        ? "bg-gray-400 line-through opacity-60"
-                                        : task.priority === "high"
-                                          ? "bg-red-500 text-white"
-                                          : task.priority === "medium"
-                                            ? "bg-yellow-500 text-white"
-                                            : "bg-green-500 text-white"
+                    onClick={() => handleDateClick(day)}
+                  >
+                    <div className="h-full flex flex-col">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className={`text-sm font-medium ${isToday(day) ? "text-emerald-700 dark:text-emerald-400" : "text-gray-900 dark:text-gray-100"}`}>
+                          {day}
+                        </span>
+                        {dayTasks.length > 0 && (
+                          <Badge variant="secondary" className="text-xs h-5 px-1.5">
+                            {dayTasks.length}
+                          </Badge>
+                        )}
+                      </div>
+                      <div className="flex-1 space-y-1">
+                        {dayTasks.slice(0, 3).map((task, i) => (
+                          <TooltipProvider key={i}>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <div
+                                  className={`text-xs p-1.5 rounded truncate flex items-center gap-1.5 transition-all cursor-pointer hover:opacity-80 ${task.completed
+                                    ? "bg-gray-400 line-through opacity-60"
+                                    : task.priority === "high"
+                                      ? "bg-red-500 text-white"
+                                      : task.priority === "medium"
+                                        ? "bg-yellow-500 text-white"
+                                        : "bg-green-500 text-white"
                                     }`}
+                                  onClick={(e) => e.stopPropagation()}
+                                >
+                                  <Checkbox
+                                    checked={task.completed}
+                                    onCheckedChange={() => {
+                                      updateTask(task.id, { completed: !task.completed })
+                                      toast({
+                                        title: !task.completed ? "Task completed! 🎉" : "Task reopened",
+                                        description: !task.completed ? "Great job! Keep up the momentum." : "Task marked as pending.",
+                                      })
+                                    }}
+                                    className="h-3 w-3 border-white dark:border-slate-700 data-[state=checked]:bg-white dark:data-[state=checked]:bg-slate-600 data-[state=checked]:text-gray-600 dark:data-[state=checked]:text-gray-200"
                                     onClick={(e) => e.stopPropagation()}
-                                  >
-                                    <Checkbox
-                                      checked={task.completed}
-                                      onCheckedChange={() => {
-                                        updateTask(task.id, { completed: !task.completed })
-                                        toast({
-                                          title: !task.completed ? "Task completed! 🎉" : "Task reopened",
-                                          description: !task.completed ? "Great job! Keep up the momentum." : "Task marked as pending.",
-                                        })
-                                      }}
-                                      className="h-3 w-3 border-white dark:border-slate-700 data-[state=checked]:bg-white dark:data-[state=checked]:bg-slate-600 data-[state=checked]:text-gray-600 dark:data-[state=checked]:text-gray-200"
-                                      onClick={(e) => e.stopPropagation()}
-                                    />
-                                    <span className="flex-1 truncate">{task.title}</span>
-                                  </div>
-                                </TooltipTrigger>
-                                <TooltipContent className="bg-slate-800 dark:bg-slate-900 text-white border-slate-700">
-                                  <p className="text-xs">{task.title}</p>
-                                  {task.description && <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">{task.description}</p>}
-                                </TooltipContent>
-                              </Tooltip>
-                            </TooltipProvider>
-                          ))}
-                          {dayTasks.length > 3 && (
-                            <div className="text-xs text-gray-500 dark:text-gray-400 text-center py-1">+{dayTasks.length - 3} more</div>
-                          )}
-                        </div>
+                                  />
+                                  <span className="flex-1 truncate">{task.title}</span>
+                                </div>
+                              </TooltipTrigger>
+                              <TooltipContent className="bg-slate-800 dark:bg-slate-900 text-white border-slate-700">
+                                <p className="text-xs">{task.title}</p>
+                                {task.description && <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">{task.description}</p>}
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+                        ))}
+                        {dayTasks.length > 3 && (
+                          <div className="text-xs text-gray-500 dark:text-gray-400 text-center py-1">+{dayTasks.length - 3} more</div>
+                        )}
                       </div>
                     </div>
-                  )
-                })
-              : weekDays.map((dateObj, index) => {
-                  const dayTasks = getTasksForDate(dateObj.getMonth() === currentDate.getMonth() ? dateObj.getDate() : null)
-                  const isPast = dateObj < new Date(today.getFullYear(), today.getMonth(), today.getDate())
-                  return (
-                    <div
-                      key={index}
-                      className={`
-                        min-h-[64px] sm:min-h-[88px] p-2 rounded-lg border transition-all duration-200 cursor-pointer
-                        hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:border-blue-200 dark:hover:border-blue-700
-                        ${isToday(dateObj.getDate()) ? "bg-gradient-to-br from-emerald-50 to-blue-50 dark:from-emerald-900/30 dark:to-blue-900/30 border-emerald-200 dark:border-emerald-700 shadow-md" : "bg-white dark:bg-slate-800/50 border-gray-100 dark:border-slate-700"}
-                        ${dayTasks.some((task) => task.priority === "high") ? "ring-2 ring-red-200 dark:ring-red-800" : ""}
-                        ${isPast ? "opacity-60 pointer-events-none" : ""}
-                      `}
-                      onClick={() => handleDateClick(dateObj)}
-                    >
-                      <div className="h-full flex flex-col">
-                        <div className="flex items-center justify-between mb-2">
-                          <span className={`text-sm font-medium ${isToday(dateObj.getDate()) ? "text-emerald-700 dark:text-emerald-400" : "text-gray-900 dark:text-gray-100"}`}>
-                            {dateObj.getDate()}
-                          </span>
-                          {dayTasks.length > 0 && (
-                            <Badge variant="secondary" className="text-xs h-5 px-1.5">
-                              {dayTasks.length}
-                            </Badge>
-                          )}
-                        </div>
-                        <div className="flex-1 space-y-1">
-                          {dayTasks.slice(0, 3).map((task, i) => (
-                            <TooltipProvider key={i}>
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                  <div
-                                    className={`text-xs p-1.5 rounded truncate flex items-center gap-1.5 transition-all cursor-pointer hover:opacity-80 ${
-                                      task.completed
-                                        ? "bg-gray-400 line-through opacity-60"
-                                        : task.priority === "high"
-                                          ? "bg-red-500 text-white"
-                                          : task.priority === "medium"
-                                            ? "bg-yellow-500 text-white"
-                                            : "bg-green-500 text-white"
-                                    }`}
-                                    onClick={(e) => e.stopPropagation()}
-                                  >
-                                    <Checkbox
-                                      checked={task.completed}
-                                      onCheckedChange={() => {
-                                        updateTask(task.id, { completed: !task.completed })
-                                        toast({
-                                          title: !task.completed ? "Task completed! 🎉" : "Task reopened",
-                                          description: !task.completed ? "Great job! Keep up the momentum." : "Task marked as pending.",
-                                        })
-                                      }}
-                                      className="h-3 w-3 border-white dark:border-slate-700 data-[state=checked]:bg-white dark:data-[state=checked]:bg-slate-600 data-[state=checked]:text-gray-600 dark:data-[state=checked]:text-gray-200"
-                                      onClick={(e) => e.stopPropagation()}
-                                    />
-                                    <span className="flex-1 truncate">{task.title}</span>
-                                  </div>
-                                </TooltipTrigger>
-                                <TooltipContent className="bg-slate-800 dark:bg-slate-900 text-white border-slate-700">
-                                  <p className="text-xs">{task.title}</p>
-                                  {task.description && <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">{task.description}</p>}
-                                </TooltipContent>
-                              </Tooltip>
-                            </TooltipProvider>
-                          ))}
-                          {dayTasks.length > 3 && (
-                            <div className="text-xs text-gray-500 dark:text-gray-400 text-center py-1">+{dayTasks.length - 3} more</div>
-                          )}
-                        </div>
+                  </div>
+                )
+              })
+              : (
+                <div className="col-span-7 space-y-3 pt-2">
+                  {/* Daily Timeline View */}
+                  <div className="space-y-4">
+                    {/* All day section */}
+                    <div className="flex items-start gap-4 p-3 bg-slate-50 dark:bg-slate-800/30 rounded-xl border border-slate-100 dark:border-slate-800">
+                      <div className="w-16 flex-shrink-0 text-right font-medium text-slate-500 dark:text-slate-400 text-sm py-1 pt-1.5">
+                        All Day
+                      </div>
+                      <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        {getTasksForDate(currentDate.getDate()).filter(t => !t.scheduledTime).map(task => (
+                          <div
+                            key={task.id}
+                            className={`p-3 rounded-lg border flex items-center gap-3 transition-all ${task.completed
+                              ? "bg-slate-100 dark:bg-slate-800 border-slate-200 dark:border-slate-700 opacity-60"
+                              : "bg-white dark:bg-slate-800 border-emerald-200 dark:border-emerald-800 shadow-sm"
+                              }`}
+                          >
+                            <Checkbox
+                              checked={task.completed}
+                              onCheckedChange={() => updateTask(task.id, { completed: !task.completed })}
+                              className="h-4 w-4 border-slate-300 dark:border-slate-600 data-[state=checked]:bg-emerald-500 data-[state=checked]:text-white"
+                            />
+                            <div className="flex-1 min-w-0">
+                              <p className={`text-sm font-medium truncate ${task.completed ? "text-slate-500 line-through" : "text-slate-900 dark:text-slate-100"}`}>
+                                {task.title}
+                              </p>
+                              {task.description && (
+                                <p className="text-xs text-slate-500 dark:text-slate-400 truncate">{task.description}</p>
+                              )}
+                            </div>
+                            {task.priority === "high" && <div className="w-2 h-2 rounded-full bg-red-500 ml-auto flex-shrink-0" />}
+                            {task.priority === "medium" && <div className="w-2 h-2 rounded-full bg-yellow-500 ml-auto flex-shrink-0" />}
+                          </div>
+                        ))}
+                        {getTasksForDate(currentDate.getDate()).filter(t => !t.scheduledTime).length === 0 && (
+                          <div className="text-sm text-slate-400 italic py-2">No unassigned tasks</div>
+                        )}
                       </div>
                     </div>
-                  )
-                })}
+
+                    {/* Hourly Blocks */}
+                    {HOURS.map(hour => {
+                      const timeStr = `${hour.toString().padStart(2, '0')}:00`
+                      const ampmLabel = hour >= 12 ? `${hour === 12 ? 12 : hour - 12} PM` : `${hour === 0 ? 12 : hour} AM`
+                      const hourTasks = getTasksForDate(currentDate.getDate()).filter(t => t.scheduledTime === timeStr)
+
+                      return (
+                        <div key={hour} className="flex min-h-[5rem] group">
+                          <div className="w-16 flex-shrink-0 text-right pr-4 py-2 text-sm text-slate-500 dark:text-slate-400 font-medium border-r border-slate-200 dark:border-slate-700 relative">
+                            <span className="relative -top-3 bg-white dark:bg-slate-900 px-1">{ampmLabel}</span>
+                          </div>
+                          <div
+                            className="flex-1 pl-4 py-2 border-b border-slate-100 dark:border-slate-800/60 relative hover:bg-slate-50/50 dark:hover:bg-slate-800/20 cursor-pointer transition-colors"
+                            onClick={() => {
+                              setSelectedDate(currentDate.toISOString().split('T')[0])
+                              setNewTask({ ...newTask, dueDate: currentDate.toISOString().split('T')[0], scheduledTime: timeStr })
+                              setIsAddDialogOpen(true)
+                            }}
+                          >
+                            <div className="flex flex-col gap-2">
+                              {hourTasks.map(task => (
+                                <div
+                                  key={task.id}
+                                  onClick={(e) => e.stopPropagation()}
+                                  className={`p-2.5 rounded-lg border flex items-center gap-3 transition-colors ${task.completed
+                                    ? "bg-slate-100 dark:bg-slate-800/60 border-slate-200 dark:border-slate-700 opacity-60"
+                                    : task.priority === "high"
+                                      ? "bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800/50"
+                                      : "bg-emerald-50 dark:bg-emerald-900/20 border-emerald-200 dark:border-emerald-800/50"
+                                    }`}
+                                >
+                                  <Checkbox
+                                    checked={task.completed}
+                                    onCheckedChange={() => updateTask(task.id, { completed: !task.completed })}
+                                    className="h-4 w-4 border-slate-300 dark:border-slate-600 data-[state=checked]:bg-emerald-500 data-[state=checked]:text-white"
+                                  />
+                                  <div className="flex-1 min-w-0">
+                                    <p className={`text-sm font-medium truncate ${task.completed ? "text-slate-500 line-through" : "text-slate-900 dark:text-slate-100"}`}>
+                                      {task.title}
+                                    </p>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+                      )
+                    })}
+                  </div>
+                </div>
+              )}
           </div>
 
           {/* Legend */}

@@ -9,7 +9,7 @@
 [![Radix UI](https://img.shields.io/badge/Radix_UI-161618?style=for-the-badge&logo=radix-ui&logoColor=white)](https://www.radix-ui.com/)
 [![License](https://img.shields.io/badge/License-MIT-blue.svg?style=for-the-badge)](LICENSE)
 
-<img src="./public/assets/demo.gif" alt="Planthesia Demo Animation" width="600" style="border-radius: 12px; margin-top: 20px;" />
+<img src="./public/assets/download.gif" alt="Planthesia Demo Animation" width="600" style="border-radius: 12px; margin-top: 20px;" />
 
 </div>
 

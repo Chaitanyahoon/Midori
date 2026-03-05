@@ -251,32 +251,46 @@ export function VisualGarden({ onAddPlant }: { onAddPlant?: () => void }) {
                 mh2.addColorStop(0, "rgba(220,235,255,0.15)"); mh2.addColorStop(1, "rgba(220,235,255,0)")
                 ctx.fillStyle = mh2; ctx.beginPath(); ctx.arc(0, 0, ms * 2.5, 0, Math.PI * 2); ctx.fill()
 
-                // ── CRESCENT MOON (even-odd clip — no destination-out, no sky-color matching needed) ──
-                ctx.save()
-                // Create crescent clip path: full circle CCW, bite circle CW → even-odd makes the overlap transparent
-                ctx.beginPath()
-                ctx.arc(0, 0, ms, 0, Math.PI * 2, false)        // outer moon circle (CCW)
-                ctx.arc(ms * 0.44, -ms * 0.04, ms * 0.82, 0, Math.PI * 2, true)  // bite circle (CW)
-                ctx.clip("evenodd")
+                // ── CRESCENT MOON via offscreen canvas (destination-out is isolated, never touches main canvas) ──
+                const ms2 = Math.ceil(ms * 2.4)
+                const oc = document.createElement('canvas')
+                oc.width = ms2; oc.height = ms2
+                const ox = ms2 / 2; const oy = ms2 / 2
+                const octx = oc.getContext('2d')!
 
-                // Fill the clipped crescent with a warm moon gradient
-                const mb = ctx.createRadialGradient(-ms * 0.3, -ms * 0.3, 0, 0, 0, ms)
-                mb.addColorStop(0, "#FEFCE8")
-                mb.addColorStop(0.4, "#F1F5F9")
-                mb.addColorStop(0.75, "#CBD5E1")
-                mb.addColorStop(1, "#94A3B8")
-                ctx.fillStyle = mb
-                ctx.fillRect(-ms, -ms, ms * 2, ms * 2)
-                ctx.restore()
+                // Fill full moon sphere with gradient
+                const mb = octx.createRadialGradient(ox - ms * 0.22, oy - ms * 0.22, 0, ox, oy, ms)
+                mb.addColorStop(0, '#FEFCE8')
+                mb.addColorStop(0.35, '#F1F5F9')
+                mb.addColorStop(0.7, '#CBD5E1')
+                mb.addColorStop(1, '#94A3B8')
+                octx.fillStyle = mb
+                octx.beginPath(); octx.arc(ox, oy, ms, 0, Math.PI * 2); octx.fill()
 
-                // Subtle craters on the lit crescent side (no clip needed — just small circles)
-                ctx.save(); ctx.globalAlpha = 0.14
-                ctx.fillStyle = "#64748B"
-                // Only draw craters on the lit (left) portion
-                ctx.beginPath(); ctx.arc(-ms * 0.45, -ms * 0.3, ms * 0.1, 0, Math.PI * 2); ctx.fill()
-                ctx.beginPath(); ctx.arc(-ms * 0.65, ms * 0.18, ms * 0.075, 0, Math.PI * 2); ctx.fill()
-                ctx.beginPath(); ctx.arc(-ms * 0.22, ms * 0.48, ms * 0.06, 0, Math.PI * 2); ctx.fill()
-                ctx.restore()
+                // Cut the shadow bite — isolated to the offscreen canvas
+                octx.globalCompositeOperation = 'destination-out'
+                octx.beginPath()
+                octx.arc(ox + ms * 0.44, oy - ms * 0.04, ms * 0.82, 0, Math.PI * 2)
+                octx.fillStyle = 'rgba(0,0,0,1)'; octx.fill()
+                octx.globalCompositeOperation = 'source-over'
+
+                // Subtle craters on lit side
+                octx.globalAlpha = 0.12; octx.fillStyle = '#64748B'
+                octx.beginPath(); octx.arc(ox - ms * 0.42, oy - ms * 0.28, ms * 0.1, 0, Math.PI * 2); octx.fill()
+                octx.beginPath(); octx.arc(ox - ms * 0.62, oy + ms * 0.16, ms * 0.075, 0, Math.PI * 2); octx.fill()
+                octx.beginPath(); octx.arc(ox - ms * 0.2, oy + ms * 0.46, ms * 0.06, 0, Math.PI * 2); octx.fill()
+                octx.globalAlpha = 1
+
+                // Stamp the moon onto the main canvas, centred at origin (already translated to cx2,cy2)
+                ctx.drawImage(oc, -ms2 / 2, -ms2 / 2)
+
+                // Inner glow along the lit crescent edge
+                const rimGrad = ctx.createRadialGradient(-ms * 0.15, -ms * 0.1, ms * 0.7, 0, 0, ms)
+                rimGrad.addColorStop(0, 'rgba(255,255,220,0.0)')
+                rimGrad.addColorStop(0.85, 'rgba(220,235,255,0.18)')
+                rimGrad.addColorStop(1, 'rgba(200,220,255,0.0)')
+                ctx.fillStyle = rimGrad
+                ctx.beginPath(); ctx.arc(0, 0, ms, 0, Math.PI * 2); ctx.fill()
             } else {
                 const ss = Math.min(W, H) * (eve ? 0.065 : 0.052)
                 if (!eve && vs !== 'winter') {

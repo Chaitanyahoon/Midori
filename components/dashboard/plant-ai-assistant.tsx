@@ -331,10 +331,11 @@ export function PlantAIAssistant({ onCloseAction }: PlantAIAssistantProps) {
     [handleSubmit],
   )
 
-  // Choose whichever close handler the parent provided.
+  // Always close the modal via Zustand, then fire the optional parent callback.
   const handleClose = useCallback(() => {
-    if (typeof onCloseAction === "function") return onCloseAction()
-  }, [onCloseAction])
+    setAIModalOpen(false)
+    if (typeof onCloseAction === "function") onCloseAction()
+  }, [setAIModalOpen, onCloseAction])
 
   return (
     <Dialog open={isAIModalOpen} onOpenChange={(open) => { if (!open) handleClose() }}>

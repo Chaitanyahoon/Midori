@@ -1,27 +1,17 @@
-<div align="center">
-
-# 🌱 Planthesia
-### Grow your tasks, cultivate your focus.
+# 🌱 Planthesia: Your Productive Garden
 
 [![Next.js](https://img.shields.io/badge/Next.js-14-black?style=for-the-badge&logo=next.js&logoColor=white)](https://nextjs.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white)](https://tailwindcss.com/)
 [![Radix UI](https://img.shields.io/badge/Radix_UI-161618?style=for-the-badge&logo=radix-ui&logoColor=white)](https://www.radix-ui.com/)
-[![License](https://img.shields.io/badge/License-MIT-blue.svg?style=for-the-badge)](LICENSE)
-
-<img src="./public/assets/download.gif" alt="Planthesia Demo Animation" width="600" style="border-radius: 12px; margin-top: 20px;" />
-
-</div>
-
----
-
-## 📖 About The Project
 
 **Planthesia** is a unique productivity application that gamifies your daily workflow. Inspired by the tranquility of a garden, it helps you nurture your productivity by turning tasks into growth opportunities.
 
-In Planthesia, every completed task helps your digital garden grow. It combines powerful task management, the Pomodoro technique, and AI-driven insights to help you stay focused and clear-minded.
+Powered by **Next.js**, **Tailwind CSS**, and **Google Gemini AI**, this project lets you combine powerful task management with the Pomodoro technique to help you stay focused and clear-minded.
 
-## ✨ Key Features
+<img src="./public/assets/download.gif" alt="Planthesia Demo Animation" width="100%" style="border-radius: 8px; margin-top: 16px; margin-bottom: 24px;" />
+
+## ✨ Features
 
 ### 🌱 Smart Task Management
 Organize your life with an intuitive task board. Categorize, prioritize, and track your to-dos with ease. Watch your garden flourish as you check off items!

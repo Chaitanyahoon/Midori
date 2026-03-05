@@ -28,9 +28,6 @@ Your personal productivity botanist! Powered by the latest AI models (via Google
 ### ⚙️ Advanced Data Control
 Own your data. Planthesia's customized settings page provides cloud-synced preferences tailored for your behavior, plus 1-click **JSON Data Exports** for all tasks, pomodoros, and history!
 
-<div align="center">
-  <img src="./public/assets/dashboard.png" alt="Dashboard Interface" width="800" style="border-radius: 12px; margin-top: 15px;" />
-</div>
 
 ## 🛠️ Technology Stack
 

@@ -967,10 +967,10 @@ export default function PomodoroPage() {
                 }`} />
 
               <div className="relative flex flex-col items-center justify-center">
-                <span className={`text-[12rem] md:text-[14rem] font-thin text-white/90 tabular-nums tracking-tighter leading-none transition-all duration-300 ${isActive ? "scale-105" : "scale-100"}`}>
+                <span className={`text-7xl sm:text-8xl md:text-[8rem] lg:text-[10rem] xl:text-[12rem] font-thin text-white/90 tabular-nums tracking-tighter leading-none transition-all duration-300 ${isActive ? "scale-105" : "scale-100"}`}>
                   {formatTime(timeLeft)}
                 </span>
-                <p className="text-xl text-emerald-400/60 font-medium tracking-[0.2em] uppercase mt-4 animate-pulse">
+                <p className="text-sm sm:text-lg md:text-xl text-emerald-400/60 font-medium tracking-[0.2em] uppercase mt-4 animate-pulse">
                   {isBreak ? "Rest Phase" : isActive ? "Focusing..." : "Ready"}
                 </p>
               </div>

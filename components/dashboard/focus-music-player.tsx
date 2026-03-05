@@ -615,46 +615,21 @@ export function FocusMusicPlayer({
             )}
           </div>
 
-          {/* Controls */}
-          <div className="flex items-center justify-center gap-6 mb-6">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => {
-                /* Logic to pick random track could go here, for now just stop */
-                handleStop()
-              }}
-              className="text-white/60 hover:text-white hover:bg-white/10 rounded-full w-10 h-10"
-            >
-              <Icons.stop className="w-5 h-5" />
-            </Button>
-
-            <Button
-              onClick={() => {
-                if (isPlaying) handlePause()
-                else {
-                  const track = currentTrack || MUSIC_OPTIONS[0]
-                  handlePlayMusic(track)
-                }
-              }}
-              size="lg"
-              className="bg-white text-black hover:bg-emerald-100 rounded-full w-16 h-16 p-0 flex items-center justify-center shadow-lg hover:scale-105 transition-all"
-            >
-              {isPlaying ? <Icons.pause className="w-6 h-6 fill-current" /> : <Icons.play className="w-6 h-6 fill-current ml-1" />}
-            </Button>
-
+          {/* Controls - Stripped down for Zen mode to not duplicate main controls */}
+          <div className="flex items-center justify-center gap-4 mb-6">
             {/* Ambient Toggle in Zen Mode */}
             <Button
               variant="ghost"
               size="icon"
               onClick={() => {
-                const rain = MUSIC_OPTIONS.find(m => m.name === "Rain Sounds")
-                if (rain) handlePlayAmbient(rain)
+                const rainTrack = MUSIC_OPTIONS.find((t) => t.category === "nature" && t.name.includes("Rain"))
+                if (rainTrack) handlePlayAmbient(rainTrack)
               }}
-              className={`rounded-full w-10 h-10 transition-all ${isAmbientPlaying ? 'text-emerald-400 bg-emerald-500/20' : 'text-white/60 hover:text-white hover:bg-white/10'}`}
-              title="Toggle Rain Ambience"
+              className={`rounded-full w-12 h-12 transition-all ${isAmbientPlaying ? "bg-emerald-500/20 text-emerald-300" : "text-white/60 hover:text-white hover:bg-white/10"
+                }`}
+              title="Toggle Rain/Ambient"
             >
-              <Icons.droplets className="w-5 h-5" />
+              <Icons.cloudRain className="w-5 h-5" />
             </Button>
           </div>
 

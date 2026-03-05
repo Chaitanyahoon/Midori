@@ -26,8 +26,8 @@ cd /var/www/planthesia
 # Create .env.local
 echo "🔑 Creating .env.local..."
 cat > /var/www/planthesia/.env.local << 'EOF'
-GEMINI_API_KEY=AIzaSyBHrcgMRNwS7gKWVmIUcRj3k_kOvog4SGo
-NEXT_PUBLIC_FIREBASE_API_KEY=AIzaSyC6wMAS_AmoYgFMkPDaQhD57-s-OpbNJHM
+GEMINI_API_KEY=your_gemini_api_key_here
+NEXT_PUBLIC_FIREBASE_API_KEY=your_firebase_api_key_here
 NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=planthesia.firebaseapp.com
 NEXT_PUBLIC_FIREBASE_PROJECT_ID=planthesia
 NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=planthesia.firebasestorage.app

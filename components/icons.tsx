@@ -37,6 +37,7 @@ import {
   FiType,
   FiAlignLeft,
   FiTag,
+  FiCloudRain,
 } from "react-icons/fi"
 
 import {
@@ -98,4 +99,5 @@ export const Icons = {
   type: FiType,
   alignLeft: FiAlignLeft,
   tag: FiTag,
+  cloudRain: FiCloudRain,
 }

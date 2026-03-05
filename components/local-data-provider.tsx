@@ -70,6 +70,7 @@ interface DataContextType {
   addCustomTrack: (track: Omit<CustomTrack, "id" | "addedAt">) => Promise<void>
   removeCustomTrack: (id: string) => Promise<void>
   refreshData: () => void
+  exportData: () => Promise<string | null>
 }
 
 const DataContext = createContext<DataContextType | undefined>(undefined)
@@ -205,13 +206,37 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     // Real-time listeners handle updates automatically
   }, [])
 
+  const exportData = useCallback(async () => {
+    if (!uid) return null
+    try {
+      const exportObject = {
+        meta: {
+          exportedAt: new Date().toISOString(),
+          app: "Planthesia",
+          version: "1.0"
+        },
+        settings,
+        stats,
+        collections: {
+          tasks,
+          pomodoros,
+          customTracks
+        }
+      }
+      return JSON.stringify(exportObject, null, 2)
+    } catch (e) {
+      console.error("Failed to export data", e)
+      return null
+    }
+  }, [uid, settings, stats, tasks, pomodoros, customTracks])
+
   const value = useMemo(() => ({
     tasks, pomodoros, stats, settings, customTracks, loading,
     addTask, updateTask, deleteTask, addPomodoro,
-    updateSettings, addCustomTrack, removeCustomTrack, refreshData,
+    updateSettings, addCustomTrack, removeCustomTrack, refreshData, exportData
   }), [tasks, pomodoros, stats, settings, customTracks, loading,
     addTask, updateTask, deleteTask, addPomodoro,
-    updateSettings, addCustomTrack, removeCustomTrack, refreshData])
+    updateSettings, addCustomTrack, removeCustomTrack, refreshData, exportData])
 
   return <DataContext.Provider value={value}>{children}</DataContext.Provider>
 }

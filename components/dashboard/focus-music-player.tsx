@@ -615,22 +615,37 @@ export function FocusMusicPlayer({
             )}
           </div>
 
-          {/* Controls - Stripped down for Zen mode to not duplicate main controls */}
-          <div className="flex items-center justify-center gap-4 mb-6">
-            {/* Ambient Toggle in Zen Mode */}
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => {
-                const rainTrack = MUSIC_OPTIONS.find((t) => t.category === "nature" && t.name.includes("Rain"))
-                if (rainTrack) handlePlayAmbient(rainTrack)
-              }}
-              className={`rounded-full w-12 h-12 transition-all ${isAmbientPlaying ? "bg-emerald-500/20 text-emerald-300" : "text-white/60 hover:text-white hover:bg-white/10"
-                }`}
-              title="Toggle Rain/Ambient"
-            >
-              <Icons.cloudRain className="w-5 h-5" />
-            </Button>
+          {/* Zen Soundscapes */}
+          <div className="mb-6">
+            <h4 className="text-xs font-semibold text-white/50 text-center uppercase tracking-widest mb-3">Soundscapes</h4>
+            <div className="flex items-center justify-center gap-3">
+              {[
+                { name: "Rain Sounds", icon: <Icons.cloudRain className="w-5 h-5" /> },
+                { name: "Forest Sounds", icon: <Icons.tree className="w-5 h-5" /> },
+                { name: "Ocean Waves", icon: <Icons.droplets className="w-5 h-5" /> },
+                { name: "Fireplace Sounds", icon: <Icons.sun className="w-5 h-5" /> }
+              ].map((scape) => {
+                const track = MUSIC_OPTIONS.find(t => t.name === scape.name)
+                const isActive = isAmbientPlaying && ambientTrack?.name === scape.name
+                if (!track) return null
+
+                return (
+                  <Button
+                    key={scape.name}
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => handlePlayAmbient(track)}
+                    className={`rounded-full w-12 h-12 transition-all ${isActive
+                        ? "bg-emerald-500/20 text-emerald-300 ring-1 ring-emerald-500/50"
+                        : "text-white/60 hover:text-white hover:bg-white/10"
+                      }`}
+                    title={`Toggle ${scape.name}`}
+                  >
+                    {scape.icon}
+                  </Button>
+                )
+              })}
+            </div>
           </div>
 
           {/* Volume Sliders */}
@@ -861,19 +876,27 @@ export function FocusMusicPlayer({
             )}
           </div>
           <div className="flex gap-2">
-            {MUSIC_OPTIONS.filter(m => m.category === "nature").slice(0, 5).map((track) => {
-              const active = isAmbientPlaying && ambientTrack?.name === track.name
+            {[
+              { name: "Rain Sounds", icon: <Icons.cloudRain className="w-4 h-4" /> },
+              { name: "Forest Sounds", icon: <Icons.tree className="w-4 h-4" /> },
+              { name: "Ocean Waves", icon: <Icons.droplets className="w-4 h-4" /> },
+              { name: "Fireplace Sounds", icon: <Icons.sun className="w-4 h-4" /> }
+            ].map((scape) => {
+              const track = MUSIC_OPTIONS.find(t => t.name === scape.name)
+              const active = isAmbientPlaying && ambientTrack?.name === scape.name
+              if (!track) return null
+
               return (
                 <button
-                  key={track.name}
+                  key={scape.name}
                   onClick={() => handlePlayAmbient(track)}
-                  title={track.name}
-                  className={`flex-1 flex flex-col items-center justify-center py-2 rounded-xl transition-all text-lg ${active
-                    ? "bg-emerald-100 dark:bg-emerald-900/50 ring-1 ring-emerald-400 text-emerald-600"
-                    : "hover:bg-white dark:hover:bg-slate-700 text-slate-400 hover:text-slate-600"
+                  title={scape.name}
+                  className={`flex-1 flex flex-col items-center justify-center py-2.5 rounded-xl transition-all ${active
+                      ? "bg-emerald-100 dark:bg-emerald-900/50 ring-1 ring-emerald-400 text-emerald-600 dark:text-emerald-400"
+                      : "hover:bg-white dark:hover:bg-slate-700 text-slate-400 hover:text-slate-600"
                     }`}
                 >
-                  {track.icon}
+                  {scape.icon}
                 </button>
               )
             })}

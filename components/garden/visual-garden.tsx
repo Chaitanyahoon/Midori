@@ -1,5 +1,4 @@
 "use client"
-
 import { useEffect, useRef, useState } from "react"
 import { useData } from "@/components/local-data-provider"
 import { Card, CardHeader, CardTitle } from "@/components/ui/card"
@@ -7,749 +6,462 @@ import { Icons } from "@/components/icons"
 import { useTheme } from "next-themes"
 import { useWeather } from "@/hooks/use-weather"
 
-interface Plant {
-    x: number; y: number; type: "flower" | "tree"; subtype: string; color: string; scale: number; growth: number; delay: number; swayOffset: number; swaySpeed: number; seed: number
-}
-
-interface Star { x: number; y: number; size: number; twinkleSpeed: number; twinkleOffset: number; opacity: number }
-interface Cloud { x: number; y: number; w: number; h: number; speed: number; opacity: number }
-interface Firefly { x: number; y: number; vx: number; vy: number; opacity: number; maxOpacity: number; glowPhase: number; glowSpeed: number }
-interface Particle {
-    x: number; y: number; color: string; size: number; rotation: number; speedX: number; speedY: number; opacity: number;
-    type: "leaf" | "petal" | "snow" | "rain" | "pollen" | "butterfly";
-    life: number; maxLife: number;
-    vx?: number; vy?: number;
-}
+interface Plant { x: number; y: number; type: "flower" | "tree"; subtype: string; color: string; scale: number; growth: number; delay: number; swayOffset: number; swaySpeed: number; seed: number }
+interface Star { x: number; y: number; size: number; ts: number; to: number }
+interface Cloud { x: number; y: number; w: number; h: number; spd: number; op: number }
+interface Firefly { x: number; y: number; vx: number; vy: number; phase: number; spd: number; maxOp: number }
+interface Bird { x: number; y: number; spd: number; flap: number; flapSpd: number; scale: number }
+interface Particle { x: number; y: number; vx: number; vy: number; rot: number; size: number; color: string; op: number; type: string; life: number }
+interface ShootingStar { x: number; y: number; vx: number; vy: number; life: number; maxLife: number; trail: number }
 
 export function VisualGarden({ onAddPlant }: { onAddPlant?: () => void }) {
-    const canvasRef = useRef<HTMLCanvasElement>(null)
-    const containerRef = useRef<HTMLDivElement>(null)
+    const cvs = useRef<HTMLCanvasElement>(null)
+    const cont = useRef<HTMLDivElement>(null)
     const { tasks, pomodoros, stats } = useData()
     const { theme } = useTheme()
     const { season, weather } = useWeather()
     const { condition, isDay, temperature } = weather
 
-    const [manualSeason, setManualSeason] = useState<"spring" | "summer" | "autumn" | "winter">(season)
-    const [manualTime, setManualTime] = useState<"morning" | "afternoon" | "evening" | "night" | "auto">("auto")
-
-    const visualSeason = manualSeason
-
+    const [mSeason, setMSeason] = useState<"spring" | "summer" | "autumn" | "winter">(season)
+    const [mTime, setMTime] = useState<"morning" | "afternoon" | "evening" | "night" | "auto">("auto")
     const [plants, setPlants] = useState<Plant[]>([])
-    const particlesRef = useRef<Particle[]>([])
-    const starsRef = useRef<Star[]>([])
-    const cloudsRef = useRef<Cloud[]>([])
-    const firefliesRef = useRef<Firefly[]>([])
 
-    // --- ASSET PRELOADING ---
-    const assetsRef = useRef<Record<string, HTMLImageElement>>({})
-    const [assetsLoaded, setAssetsLoaded] = useState(false)
+    const pRef = useRef<Plant[]>([])
+    const parts = useRef<Particle[]>([])
+    const stars = useRef<Star[]>([])
+    const clouds = useRef<Cloud[]>([])
+    const flies = useRef<Firefly[]>([])
+    const birds = useRef<Bird[]>([])
+    const shoots = useRef<ShootingStar[]>([])
+    const assets = useRef<Record<string, HTMLImageElement>>({})
+    const [loaded, setLoaded] = useState(false)
+    const mTimeRef = useRef(mTime)
 
-    const seededRandom = (seed: number) => {
-        const x = Math.sin(seed++) * 10000; return x - Math.floor(x)
-    }
+    const sr = (s: number) => { const x = Math.sin(s++) * 10000; return x - Math.floor(x) }
 
-    // --- PRELOAD ASSETS ---
     useEffect(() => {
-        const toLoad = [
-            { key: 'sakura', src: '/assets/garden/sakura.png' },
-            { key: 'jacaranda', src: '/assets/garden/Jacaranda.png' },
-            { key: 'maple', src: '/assets/garden/Maple.png' },
-            { key: 'pine', src: '/assets/garden/Pine.png' },
-            { key: 'sunflower', src: '/assets/garden/sunflower.png' },
-            { key: 'tulip', src: '/assets/garden/tulip.png' },
-            { key: 'marigold', src: '/assets/garden/Marigold.png' },
-            { key: 'snowdrop', src: '/assets/garden/snowdrop.png' },
-            { key: 'lily', src: '/assets/garden/lily.png' },
-            { key: 'orchid', src: '/assets/garden/orchid.png' },
-            { key: 'chrysanthemum', src: '/assets/garden/Chrysanthemum.png' },
-            { key: 'snowflower', src: '/assets/garden/flower-snowflower.png' }
+        const list = [
+            ['sakura', '/assets/garden/sakura.png'], ['jacaranda', '/assets/garden/Jacaranda.png'],
+            ['maple', '/assets/garden/Maple.png'], ['pine', '/assets/garden/Pine.png'],
+            ['sunflower', '/assets/garden/sunflower.png'], ['tulip', '/assets/garden/tulip.png'],
+            ['marigold', '/assets/garden/Marigold.png'], ['snowdrop', '/assets/garden/snowdrop.png'],
+            ['lily', '/assets/garden/lily.png'], ['orchid', '/assets/garden/orchid.png'],
+            ['chrysanthemum', '/assets/garden/Chrysanthemum.png'], ['snowflower', '/assets/garden/flower-snowflower.png']
         ]
-        let loadedCount = 0
-        toLoad.forEach(item => {
-            const img = new Image()
-            img.src = item.src
-            img.onload = () => { loadedCount++; if (loadedCount === toLoad.length) setAssetsLoaded(true) }
-            img.onerror = () => { loadedCount++; if (loadedCount === toLoad.length) setAssetsLoaded(true) }
-            assetsRef.current[item.key] = img
+        let n = 0; list.forEach(([k, src]) => {
+            const img = new Image(); img.src = src
+            img.onload = img.onerror = () => { n++; if (n === list.length) setLoaded(true) }
+            assets.current[k] = img
         })
     }, [])
 
-    // --- STAR INITIALIZATION ---
     useEffect(() => {
-        starsRef.current = Array.from({ length: 120 }, (_, i) => ({
-            x: Math.random(), y: Math.random() * 0.65,
-            size: Math.random() * 1.8 + 0.4,
-            twinkleSpeed: 0.01 + Math.random() * 0.03,
-            twinkleOffset: Math.random() * Math.PI * 2,
-            opacity: 0.4 + Math.random() * 0.6,
-        }))
+        stars.current = Array.from({ length: 140 }, () => ({ x: Math.random(), y: Math.random() * 0.62, size: Math.random() * 1.8 + 0.3, ts: 0.01 + Math.random() * 0.03, to: Math.random() * Math.PI * 2 }))
+        clouds.current = Array.from({ length: 7 }, () => ({ x: Math.random(), y: 0.04 + Math.random() * 0.22, w: 0.1 + Math.random() * 0.18, h: 0.04 + Math.random() * 0.06, spd: 0.00003 + Math.random() * 0.00006, op: 0.5 + Math.random() * 0.4 }))
+        flies.current = Array.from({ length: 30 }, () => ({ x: 0.1 + Math.random() * 0.8, y: 0.45 + Math.random() * 0.4, vx: (Math.random() - 0.5) * 0.001, vy: (Math.random() - 0.5) * 0.0005, phase: Math.random() * Math.PI * 2, spd: 0.02 + Math.random() * 0.04, maxOp: 0.5 + Math.random() * 0.5 }))
+        birds.current = Array.from({ length: 5 }, (_, i) => ({ x: -0.05 - i * 0.08, y: 0.15 + Math.random() * 0.2, spd: 0.0008 + Math.random() * 0.0005, flap: Math.random() * Math.PI * 2, flapSpd: 0.12 + Math.random() * 0.08, scale: 0.6 + Math.random() * 0.6 }))
     }, [])
 
-    // --- CLOUD INITIALIZATION ---
+    useEffect(() => { mTimeRef.current = mTime }, [mTime])
+
     useEffect(() => {
-        cloudsRef.current = Array.from({ length: 6 }, (_, i) => ({
-            x: Math.random(),
-            y: 0.05 + Math.random() * 0.25,
-            w: 0.12 + Math.random() * 0.18,
-            h: 0.04 + Math.random() * 0.06,
-            speed: 0.00004 + Math.random() * 0.00006,
-            opacity: 0.55 + Math.random() * 0.35,
-        }))
-    }, [])
-
-    // --- FIREFLY INITIALIZATION ---
-    useEffect(() => {
-        firefliesRef.current = Array.from({ length: 28 }, () => ({
-            x: 0.1 + Math.random() * 0.8,
-            y: 0.4 + Math.random() * 0.45,
-            vx: (Math.random() - 0.5) * 0.0008,
-            vy: (Math.random() - 0.5) * 0.0004,
-            opacity: 0,
-            maxOpacity: 0.5 + Math.random() * 0.5,
-            glowPhase: Math.random() * Math.PI * 2,
-            glowSpeed: 0.02 + Math.random() * 0.04,
-        }))
-    }, [])
-
-    // --- PLANT INITIALIZATION ---
-    useEffect(() => {
-        const newPlants: Plant[] = []
-        const today = new Date().toISOString().split("T")[0]
-        let seed = stats.streak + 1
-
-        let treeType = "sakura"; let treeColor = "#FBCFE8"
-        if (visualSeason === 'summer') { treeType = "jacaranda"; treeColor = "#A78BFA" }
-        else if (visualSeason === 'autumn') { treeType = "maple"; treeColor = "#EA580C" }
-        else if (visualSeason === 'winter') { treeType = "pine"; treeColor = "#CBD5E1" }
-
-        newPlants.push({
-            x: 0.85, y: 0.82, type: "tree", subtype: treeType, color: treeColor,
-            scale: 1.0, growth: 1, delay: 0, swayOffset: 0, swaySpeed: 0.005, seed: 9999
-        })
-
-        const completedTasks = tasks.filter((t: any) => t.completedAt && t.completedAt.split("T")[0] === today)
-        const displayTasks = completedTasks.slice(0, 12)
-        const ambientCount = Math.max(0, 5 - displayTasks.length) + 2
-
-        const addPlant = (x: number, type: "flower" | "tree", subtype: string, color: string, scaleMod: number, dOffset: number) => {
-            const rY = 0.8 + seededRandom(seed + newPlants.length * 11) * 0.08
-            newPlants.push({
-                x, y: rY, type, subtype, color,
-                scale: (0.4 + seededRandom(seed + newPlants.length * 99) * 0.25) * scaleMod,
-                growth: 0, delay: dOffset, swayOffset: seededRandom(seed) * 10, swaySpeed: 0.015, seed: seed + newPlants.length
-            })
+        const np: Plant[] = []; const today = new Date().toISOString().split("T")[0]; let seed = stats.streak + 1
+        let tt = "sakura", tc = "#FBCFE8"
+        if (mSeason === 'summer') { tt = "jacaranda"; tc = "#A78BFA" }
+        else if (mSeason === 'autumn') { tt = "maple"; tc = "#EA580C" }
+        else if (mSeason === 'winter') { tt = "pine"; tc = "#CBD5E1" }
+        np.push({ x: 0.85, y: 0.82, type: "tree", subtype: tt, color: tc, scale: 1, growth: 1, delay: 0, swayOffset: 0, swaySpeed: 0.005, seed: 9999 })
+        const done = tasks.filter((t: any) => t.completedAt && t.completedAt.split("T")[0] === today).slice(0, 12)
+        const amb = Math.max(0, 5 - done.length) + 2
+        const ap = (x: number, type: "flower" | "tree", sub: string, col: string, sm: number, d: number) => {
+            np.push({ x, y: 0.8 + sr(seed + np.length * 11) * 0.08, type, subtype: sub, color: col, scale: (0.4 + sr(seed + np.length * 99) * 0.25) * sm, growth: 0, delay: d, swayOffset: sr(seed) * 10, swaySpeed: 0.015, seed: seed + np.length })
         }
-
-        displayTasks.forEach((task: any, index: number) => {
-            let flowerSubtype = "lily"; let flowerColor = "#F8FAFC"
-            if (visualSeason === 'spring') {
-                flowerSubtype = task.priority === 'high' ? "tulip" : "orchid"
-                flowerColor = task.priority === 'high' ? "#F43F5E" : "#E879F9"
-            } else if (visualSeason === 'summer') {
-                flowerSubtype = task.priority === 'high' ? "sunflower" : "lily"
-                flowerColor = task.priority === 'high' ? "#FBBF24" : "#F43F5E"
-            } else if (visualSeason === 'autumn') {
-                flowerSubtype = task.priority === 'high' ? "chrysanthemum" : "marigold"
-                flowerColor = task.priority === 'high' ? "#EA580C" : "#F59E0B"
-            } else { flowerSubtype = "snowflower"; flowerColor = "#8B5CF6" }
-
-            const section = 1 / (displayTasks.length + 1)
-            const x = (index + 1) * section + (seededRandom(seed + index) * 0.1 - 0.05)
-            addPlant(x, "flower", flowerSubtype, flowerColor, 1.0, index * 100)
+        done.forEach((t: any, i: number) => {
+            let fs = "lily", fc = "#F8FAFC"
+            if (mSeason === 'spring') { fs = t.priority === 'high' ? "tulip" : "orchid"; fc = t.priority === 'high' ? "#F43F5E" : "#E879F9" }
+            else if (mSeason === 'summer') { fs = t.priority === 'high' ? "sunflower" : "lily"; fc = t.priority === 'high' ? "#FBBF24" : "#F43F5E" }
+            else if (mSeason === 'autumn') { fs = t.priority === 'high' ? "chrysanthemum" : "marigold"; fc = t.priority === 'high' ? "#EA580C" : "#F59E0B" }
+            else { fs = "snowflower"; fc = "#8B5CF6" }
+            ap((i + 1) / (done.length + 1) + (sr(seed + i) * 0.1 - 0.05), "flower", fs, fc, 1, i * 100)
         })
-
-        for (let i = 0; i < ambientCount; i++) {
-            let available = ['tulip']; let fallbackCol = "#A78BFA"
-            if (visualSeason === 'spring') { available = ['tulip', 'orchid']; fallbackCol = "#F472B6" }
-            if (visualSeason === 'summer') { available = ['sunflower', 'lily']; fallbackCol = "#FBBF24" }
-            if (visualSeason === 'autumn') { available = ['marigold', 'chrysanthemum']; fallbackCol = "#EA580C" }
-            if (visualSeason === 'winter') { available = ['snowflower']; fallbackCol = "#E0F2FE" }
-            const type = available[Math.floor(seededRandom(seed + i * 33) * available.length)]
-            addPlant(seededRandom(seed + i * 77), "flower", type, fallbackCol, 0.7, 500 + i * 100)
+        for (let i = 0; i < amb; i++) {
+            let avail = ['tulip'], fc = "#A78BFA"
+            if (mSeason === 'spring') { avail = ['tulip', 'orchid']; fc = "#F472B6" }
+            if (mSeason === 'summer') { avail = ['sunflower', 'lily']; fc = "#FBBF24" }
+            if (mSeason === 'autumn') { avail = ['marigold', 'chrysanthemum']; fc = "#EA580C" }
+            if (mSeason === 'winter') { avail = ['snowflower']; fc = "#E0F2FE" }
+            ap(sr(seed + i * 77), "flower", avail[Math.floor(sr(seed + i * 33) * avail.length)], fc, 0.7, 500 + i * 100)
         }
-
-        const completedPomodoros = pomodoros.filter(p => p.completed && p.startTime.split("T")[0] === today)
-        completedPomodoros.slice(0, 3).forEach((p, index) => {
-            const x = 0.1 + seededRandom(seed + index + 500) * 0.8
-            addPlant(x, "tree", treeType, treeColor, 1.2, 800 + index * 200)
+        pomodoros.filter(p => p.completed && p.startTime.split("T")[0] === today).slice(0, 3).forEach((_, i) => {
+            ap(0.1 + sr(seed + i + 500) * 0.8, "tree", tt, tc, 1.2, 800 + i * 200)
         })
+        np.sort((a, b) => a.y - b.y); setPlants(np)
+    }, [tasks, pomodoros, season, mSeason])
 
-        newPlants.sort((a, b) => a.y - b.y)
-        setPlants(newPlants)
-    }, [tasks, pomodoros, season, visualSeason])
+    useEffect(() => { pRef.current = plants }, [plants])
 
-    const plantsRef = useRef<Plant[]>([])
-    useEffect(() => { plantsRef.current = plants }, [plants])
-
-    const manualTimeRef = useRef(manualTime)
-    useEffect(() => { manualTimeRef.current = manualTime }, [manualTime])
-
-    // Helper: draw a fluffy cloud puff at (cx, cy) with radius r
-    const drawCloud = (ctx: CanvasRenderingContext2D, cx: number, cy: number, w: number, h: number, opacity: number, isDark: boolean) => {
-        ctx.save()
-        ctx.globalAlpha = opacity
-        const base = isDark ? "#2D3748" : "#FFFFFF"
-        const shadow = isDark ? "#1A202C" : "#EDF2F7"
-        const gradient = ctx.createRadialGradient(cx, cy - h * 0.2, h * 0.1, cx, cy, w * 0.5)
-        gradient.addColorStop(0, base)
-        gradient.addColorStop(1, shadow)
-        ctx.fillStyle = gradient
-
-        // Draw overlapping ellipses for puffy cloud shape
-        const drawPuff = (x: number, y: number, rx: number, ry: number) => {
-            ctx.beginPath(); ctx.ellipse(x, y, rx, ry, 0, 0, Math.PI * 2); ctx.fill()
-        }
-        drawPuff(cx, cy, w * 0.4, h * 0.55)
-        drawPuff(cx - w * 0.28, cy + h * 0.12, w * 0.3, h * 0.42)
-        drawPuff(cx + w * 0.28, cy + h * 0.12, w * 0.3, h * 0.42)
-        drawPuff(cx - w * 0.14, cy - h * 0.15, w * 0.28, h * 0.48)
-        drawPuff(cx + w * 0.14, cy - h * 0.08, w * 0.25, h * 0.44)
-        ctx.restore()
-    }
-
-    // --- RENDER LOOP ---
     useEffect(() => {
-        if (!containerRef.current || !canvasRef.current || !assetsLoaded) return
-        const canvas = canvasRef.current
-        const container = containerRef.current
-        let ctxRef = canvas.getContext("2d")
-
-        const resizeObserver = new ResizeObserver((entries) => {
-            for (const entry of entries) {
-                if (entry.target === container) {
-                    const { width, height } = entry.contentRect
-                    const dpr = window.devicePixelRatio || 1
-                    canvas.width = width * dpr; canvas.height = height * dpr
-                    canvas.style.width = `${width}px`; canvas.style.height = `${height}px`
-                    ctxRef = canvas.getContext('2d')
-                    if (ctxRef) ctxRef.scale(dpr, dpr)
-                }
+        if (!cont.current || !cvs.current || !loaded) return
+        const canvas = cvs.current; const container = cont.current
+        let ctx2 = canvas.getContext("2d")
+        const ro = new ResizeObserver(entries => {
+            for (const e of entries) {
+                const { width: w, height: h } = e.contentRect; const dpr = window.devicePixelRatio || 1
+                canvas.width = w * dpr; canvas.height = h * dpr; canvas.style.width = `${w}px`; canvas.style.height = `${h}px`
+                ctx2 = canvas.getContext('2d'); if (ctx2) ctx2.scale(dpr, dpr)
             }
-        })
-        resizeObserver.observe(container)
-
-        let animationFrameId: number; let time = 0
+        }); ro.observe(container)
+        let raf: number; let t = 0
 
         const render = () => {
-            const ctx = ctxRef
-            if (!ctx) { animationFrameId = requestAnimationFrame(render); return }
-            time++
-            const width = canvas.width / (window.devicePixelRatio || 1)
-            const height = canvas.height / (window.devicePixelRatio || 1)
-            ctx.clearRect(0, 0, width, height)
+            const ctx = ctx2; if (!ctx) { raf = requestAnimationFrame(render); return }
+            t++
+            const W = canvas.width / (window.devicePixelRatio || 1); const H = canvas.height / (window.devicePixelRatio || 1)
+            ctx.clearRect(0, 0, W, H)
 
-            // --- RESOLVE TIME OF DAY ---
-            let timeOfDay = "night"
-            const currentManualTime = manualTimeRef.current
-            if (currentManualTime !== 'auto') {
-                timeOfDay = currentManualTime
-            } else {
-                const hour = new Date().getHours()
-                if (hour >= 6 && hour < 12) timeOfDay = "morning"
-                else if (hour >= 12 && hour < 17) timeOfDay = "afternoon"
-                else if (hour >= 17 && hour < 20) timeOfDay = "evening"
-                else timeOfDay = "night"
-            }
-            const isNight = timeOfDay === "night"
-            const isEvening = timeOfDay === "evening"
-            const isMorning = timeOfDay === "morning"
-            const showNightElements = isNight || isEvening
-            const showDayElements = timeOfDay === "morning" || timeOfDay === "afternoon"
-            const vs = visualSeason
+            // TIME
+            let tod = "night"
+            const mt = mTimeRef.current
+            if (mt !== 'auto') tod = mt
+            else { const h = new Date().getHours(); if (h >= 6 && h < 12) tod = "morning"; else if (h >= 12 && h < 17) tod = "afternoon"; else if (h >= 17 && h < 20) tod = "evening" }
+            const night = tod === "night"; const eve = tod === "evening"; const morn = tod === "morning"; const aft = tod === "afternoon"
+            const vs = mSeason; const dark = night || eve
 
-            // ═══════════════════════════════════════════
-            // 1. SKY GRADIENT
-            // ═══════════════════════════════════════════
-            const skyGrad = ctx.createLinearGradient(0, 0, 0, height * 0.75)
-
-            if (timeOfDay === "night") {
-                if (vs === "winter") {
-                    skyGrad.addColorStop(0, "#0A0E1A"); skyGrad.addColorStop(0.5, "#111827"); skyGrad.addColorStop(1, "#1F2937")
-                } else if (vs === "autumn") {
-                    skyGrad.addColorStop(0, "#0C0A1A"); skyGrad.addColorStop(0.5, "#1A0F2E"); skyGrad.addColorStop(1, "#2D1B4E")
-                } else {
-                    skyGrad.addColorStop(0, "#060818"); skyGrad.addColorStop(0.4, "#0D1B3E"); skyGrad.addColorStop(1, "#1A2744")
-                }
-            } else if (timeOfDay === "morning") {
-                if (vs === "winter") {
-                    skyGrad.addColorStop(0, "#7B94B5"); skyGrad.addColorStop(0.5, "#A3B9C9"); skyGrad.addColorStop(1, "#D4E2EA")
-                } else if (vs === "autumn") {
-                    skyGrad.addColorStop(0, "#C25B3F"); skyGrad.addColorStop(0.4, "#E8885A"); skyGrad.addColorStop(1, "#F7C59F")
-                } else if (vs === "summer") {
-                    skyGrad.addColorStop(0, "#F97316"); skyGrad.addColorStop(0.4, "#FDBA74"); skyGrad.addColorStop(1, "#FEF3C7")
-                } else {
-                    // spring
-                    skyGrad.addColorStop(0, "#F9A8D4"); skyGrad.addColorStop(0.4, "#FCD5CE"); skyGrad.addColorStop(1, "#FEF9C3")
-                }
-            } else if (timeOfDay === "afternoon") {
-                if (vs === "winter") {
-                    skyGrad.addColorStop(0, "#94A3B8"); skyGrad.addColorStop(1, "#E2E8F0")
-                } else if (vs === "autumn") {
-                    skyGrad.addColorStop(0, "#2563EB"); skyGrad.addColorStop(0.5, "#60A5FA"); skyGrad.addColorStop(1, "#BFDBFE")
-                } else if (vs === "summer") {
-                    skyGrad.addColorStop(0, "#0369A1"); skyGrad.addColorStop(0.5, "#0EA5E9"); skyGrad.addColorStop(1, "#BAE6FD")
-                } else {
-                    // spring
-                    skyGrad.addColorStop(0, "#4F46E5"); skyGrad.addColorStop(0.5, "#818CF8"); skyGrad.addColorStop(1, "#E0E7FF")
-                }
-            } else {
-                // evening
-                if (vs === "winter") {
-                    skyGrad.addColorStop(0, "#1E1B4B"); skyGrad.addColorStop(0.5, "#4C1D95"); skyGrad.addColorStop(1, "#7C3AED")
-                } else if (vs === "autumn") {
-                    skyGrad.addColorStop(0, "#7C2D12"); skyGrad.addColorStop(0.4, "#C2410C"); skyGrad.addColorStop(1, "#FB923C")
-                } else if (vs === "summer") {
-                    skyGrad.addColorStop(0, "#831843"); skyGrad.addColorStop(0.4, "#DB2777"); skyGrad.addColorStop(1, "#F9A8D4")
-                } else {
-                    // spring evening
-                    skyGrad.addColorStop(0, "#312E81"); skyGrad.addColorStop(0.4, "#7C3AED"); skyGrad.addColorStop(1, "#F472B6")
+            // ── SKY ──
+            const sg = ctx.createLinearGradient(0, 0, 0, H * 0.72)
+            const skies: Record<string, Record<string, string[]>> = {
+                night: {
+                    spring: ["#060818", "#0D1B3E", "#1A2744"], summer: ["#030A1A", "#09152F", "#132040"],
+                    autumn: ["#0C0A1A", "#1A0F2E", "#2D1B4E"], winter: ["#0A0E1A", "#111827", "#1F2937"]
+                },
+                morning: {
+                    spring: ["#F9A8D4", "#FCD5CE", "#FEF9C3"], summer: ["#F97316", "#FDBA74", "#FEF3C7"],
+                    autumn: ["#C25B3F", "#E8885A", "#F7C59F"], winter: ["#7B94B5", "#A3B9C9", "#D4E2EA"]
+                },
+                afternoon: {
+                    spring: ["#4F46E5", "#818CF8", "#E0E7FF"], summer: ["#0369A1", "#0EA5E9", "#BAE6FD"],
+                    autumn: ["#2563EB", "#60A5FA", "#BFDBFE"], winter: ["#94A3B8", "#B0BEC5", "#E2E8F0"]
+                },
+                evening: {
+                    spring: ["#312E81", "#7C3AED", "#F472B6"], summer: ["#831843", "#DB2777", "#F9A8D4"],
+                    autumn: ["#7C2D12", "#C2410C", "#FB923C"], winter: ["#1E1B4B", "#4C1D95", "#7C3AED"]
                 }
             }
-            ctx.fillStyle = skyGrad; ctx.fillRect(0, 0, width, height * 0.75)
+            const sc = skies[tod]?.[vs] || ["#060818", "#0D1B3E", "#1A2744"]
+            sc.forEach((c, i) => sg.addColorStop(i / (sc.length - 1), c))
+            ctx.fillStyle = sg; ctx.fillRect(0, 0, W, H * 0.72)
 
-            // ═══════════════════════════════════════════
-            // 2. STARS (night + evening)
-            // ═══════════════════════════════════════════
-            if (showNightElements) {
-                const starAlpha = isNight ? 1.0 : 0.4
-                starsRef.current.forEach(star => {
-                    const tw = Math.sin(time * star.twinkleSpeed + star.twinkleOffset)
-                    const alpha = starAlpha * star.opacity * (0.6 + 0.4 * tw)
-                    ctx.save()
-                    ctx.globalAlpha = Math.max(0, alpha)
-                    // Draw 4-pointed cross star
-                    const sx = star.x * width; const sy = star.y * height * 0.7
-                    const r = star.size
-                    const glow = ctx.createRadialGradient(sx, sy, 0, sx, sy, r * 4)
-                    glow.addColorStop(0, star.size > 1.4 ? "rgba(200,220,255,0.9)" : "rgba(255,255,255,0.8)")
-                    glow.addColorStop(1, "rgba(200,220,255,0)")
-                    ctx.fillStyle = glow
-                    ctx.beginPath(); ctx.arc(sx, sy, r * 4, 0, Math.PI * 2); ctx.fill()
-                    ctx.fillStyle = "white"
-                    ctx.beginPath(); ctx.arc(sx, sy, r * 0.7, 0, Math.PI * 2); ctx.fill()
-                    if (star.size > 1.3) {
-                        // Cross sparkle
-                        ctx.strokeStyle = "rgba(255,255,255,0.6)"; ctx.lineWidth = 0.5
-                        ctx.beginPath(); ctx.moveTo(sx - r * 3, sy); ctx.lineTo(sx + r * 3, sy)
-                        ctx.moveTo(sx, sy - r * 3); ctx.lineTo(sx, sy + r * 3); ctx.stroke()
-                    }
+            // ── STARS ──
+            if (dark) {
+                const sa = night ? 1 : 0.45
+                stars.current.forEach(s => {
+                    const tw = Math.sin(t * s.ts + s.to); const a = sa * (0.5 + 0.5 * tw)
+                    const sx = s.x * W; const sy = s.y * H * 0.68
+                    ctx.save(); ctx.globalAlpha = Math.max(0, a)
+                    const g = ctx.createRadialGradient(sx, sy, 0, sx, sy, s.size * 4)
+                    g.addColorStop(0, "rgba(220,235,255,0.9)"); g.addColorStop(1, "rgba(200,220,255,0)")
+                    ctx.fillStyle = g; ctx.beginPath(); ctx.arc(sx, sy, s.size * 4, 0, Math.PI * 2); ctx.fill()
+                    ctx.fillStyle = "#fff"; ctx.beginPath(); ctx.arc(sx, sy, s.size * 0.6, 0, Math.PI * 2); ctx.fill()
                     ctx.restore()
                 })
-            }
 
-            // ═══════════════════════════════════════════
-            // 3. CELESTIAL — SUN / MOON
-            // ═══════════════════════════════════════════
-            let celX = 0, celY = 0
-            if (isMorning) { celX = width * 0.22; celY = height * 0.35 }
-            else if (timeOfDay === "afternoon") { celX = width * 0.6; celY = height * 0.12 }
-            else if (isEvening) { celX = width * 0.82; celY = height * 0.42 }
-            else { celX = width * 0.5; celY = height * 0.18 }
-
-            ctx.save(); ctx.translate(celX, celY)
-
-            if (isNight) {
-                // — MOON —
-                const moonSize = Math.min(width, height) * 0.05
-                // Halo
-                const halo = ctx.createRadialGradient(0, 0, moonSize, 0, 0, moonSize * 7)
-                halo.addColorStop(0, "rgba(200,220,255,0.25)")
-                halo.addColorStop(0.5, "rgba(150,180,255,0.08)")
-                halo.addColorStop(1, "rgba(150,180,255,0)")
-                ctx.fillStyle = halo; ctx.beginPath(); ctx.arc(0, 0, moonSize * 7, 0, Math.PI * 2); ctx.fill()
-                // Body
-                const moonGrad = ctx.createRadialGradient(-moonSize * 0.25, -moonSize * 0.25, 0, 0, 0, moonSize)
-                moonGrad.addColorStop(0, "#F8FAFC"); moonGrad.addColorStop(1, "#C8D6E5")
-                ctx.fillStyle = moonGrad; ctx.beginPath(); ctx.arc(0, 0, moonSize, 0, Math.PI * 2); ctx.fill()
-                // Crescent shadow (bite-out)
-                ctx.globalCompositeOperation = "destination-out"
-                ctx.fillStyle = "rgba(0,0,0,0.6)"
-                ctx.beginPath(); ctx.arc(moonSize * 0.45, -moonSize * 0.1, moonSize * 0.82, 0, Math.PI * 2); ctx.fill()
-                ctx.globalCompositeOperation = "source-over"
-                // Craters
-                ctx.globalAlpha = 0.3; ctx.fillStyle = "#94A3B8"
-                ctx.beginPath(); ctx.arc(-moonSize * 0.35, -moonSize * 0.25, moonSize * 0.18, 0, Math.PI * 2); ctx.fill()
-                ctx.beginPath(); ctx.arc(-moonSize * 0.1, moonSize * 0.3, moonSize * 0.12, 0, Math.PI * 2); ctx.fill()
-                ctx.beginPath(); ctx.arc(-moonSize * 0.5, moonSize * 0.1, moonSize * 0.08, 0, Math.PI * 2); ctx.fill()
-            } else {
-                // — SUN —
-                const sunSize = Math.min(width, height) * (isEvening ? 0.065 : 0.055)
-                // God rays (morning & afternoon, not evening)
-                if (!isEvening && vs !== "winter") {
-                    ctx.save(); ctx.rotate(time * 0.003)
-                    for (let r = 0; r < 16; r++) {
-                        const rayLen = width * (isMorning ? 0.55 : 0.7)
-                        const rayGrad = ctx.createLinearGradient(0, 0, rayLen, 0)
-                        const rayAlpha = isMorning ? 0.08 : 0.05
-                        rayGrad.addColorStop(0, `rgba(255,230,100,${rayAlpha})`)
-                        rayGrad.addColorStop(1, "rgba(255,230,100,0)")
-                        ctx.fillStyle = rayGrad; ctx.beginPath()
-                        ctx.moveTo(0, -sunSize * 0.4); ctx.lineTo(rayLen, 0); ctx.lineTo(0, sunSize * 0.4); ctx.fill()
-                        ctx.rotate(Math.PI / 8)
-                    }
+                // ── SHOOTING STARS ──
+                if (night && Math.random() < 0.004) {
+                    shoots.current.push({ x: Math.random() * 0.7, y: Math.random() * 0.3, vx: 0.005 + Math.random() * 0.008, vy: 0.003 + Math.random() * 0.004, life: 0, maxLife: 50 + Math.random() * 30, trail: 30 + Math.random() * 40 })
+                }
+                for (let i = shoots.current.length - 1; i >= 0; i--) {
+                    const ss = shoots.current[i]; ss.life++; ss.x += ss.vx; ss.y += ss.vy
+                    if (ss.life > ss.maxLife || ss.x > 1.1 || ss.y > 0.7) { shoots.current.splice(i, 1); continue }
+                    const prog = ss.life / ss.maxLife; const alpha = (1 - prog) * 0.9
+                    const tx = ss.x * W; const ty = ss.y * H * 0.7
+                    ctx.save(); ctx.globalAlpha = alpha
+                    const tg = ctx.createLinearGradient(tx, ty, tx - ss.trail * ss.vx * W, ty - ss.trail * ss.vy * H)
+                    tg.addColorStop(0, "rgba(255,255,255,0.9)"); tg.addColorStop(1, "rgba(200,220,255,0)")
+                    ctx.strokeStyle = tg; ctx.lineWidth = 1.5
+                    ctx.beginPath(); ctx.moveTo(tx, ty); ctx.lineTo(tx - ss.trail * ss.vx * W, ty - ss.trail * ss.vy * H); ctx.stroke()
                     ctx.restore()
                 }
-                // Outer glow
-                const outerGlow = ctx.createRadialGradient(0, 0, sunSize * 0.8, 0, 0, sunSize * 3.5)
-                if (isEvening) {
-                    outerGlow.addColorStop(0, "rgba(251,146,60,0.5)"); outerGlow.addColorStop(1, "rgba(239,68,68,0)")
-                } else if (isMorning) {
-                    outerGlow.addColorStop(0, "rgba(253,186,116,0.4)"); outerGlow.addColorStop(1, "rgba(253,186,116,0)")
-                } else {
-                    outerGlow.addColorStop(0, "rgba(250,204,21,0.3)"); outerGlow.addColorStop(1, "rgba(250,204,21,0)")
+
+                // ── AURORA (winter night) ──
+                if (vs === 'winter') {
+                    for (let a = 0; a < 4; a++) {
+                        ctx.save(); ctx.globalAlpha = 0.18 + Math.sin(t * 0.008 + a) * 0.08
+                        const ay = H * (0.12 + a * 0.07)
+                        const ag = ctx.createLinearGradient(0, ay - H * 0.06, 0, ay + H * 0.06)
+                        const cols = [["#00FFB2", "#00CEC9"], ["#7F5AF0", "#6A0DAD"], ["#00F5FF", "#0088CC"], ["#A8FF78", "#78FFD6"]]
+                        const [c1, c2] = cols[a % cols.length]
+                        ag.addColorStop(0, "transparent"); ag.addColorStop(0.5, c1 + "88"); ag.addColorStop(1, "transparent")
+                        ctx.fillStyle = ag
+                        ctx.beginPath(); ctx.moveTo(0, ay)
+                        for (let x = 0; x <= W; x += 20) { ctx.lineTo(x, ay + Math.sin(x * 0.012 + t * 0.015 + a * 2) * H * 0.04) }
+                        ctx.lineTo(W, ay + H * 0.06); ctx.lineTo(0, ay + H * 0.06); ctx.closePath(); ctx.fill()
+                        ctx.restore()
+                    }
                 }
-                ctx.fillStyle = outerGlow; ctx.beginPath(); ctx.arc(0, 0, sunSize * 3.5, 0, Math.PI * 2); ctx.fill()
-                // Body
-                const sunGrad = ctx.createRadialGradient(-sunSize * 0.3, -sunSize * 0.3, 0, 0, 0, sunSize)
-                if (isEvening) {
-                    sunGrad.addColorStop(0, "#FECACA"); sunGrad.addColorStop(1, "#DC2626")
-                } else if (isMorning) {
-                    sunGrad.addColorStop(0, "#FEF9C3"); sunGrad.addColorStop(1, "#FDBA74")
-                } else {
-                    sunGrad.addColorStop(0, "#FEF9C3"); sunGrad.addColorStop(1, "#EAB308")
+            }
+
+            // ── CELESTIAL ──
+            let cx2 = W * (morn ? 0.2 : aft ? 0.6 : eve ? 0.82 : 0.5), cy2 = H * (morn ? 0.35 : aft ? 0.12 : eve ? 0.4 : 0.18)
+            ctx.save(); ctx.translate(cx2, cy2)
+            if (night) {
+                const ms = Math.min(W, H) * 0.048
+                const mh = ctx.createRadialGradient(0, 0, ms, 0, 0, ms * 8); mh.addColorStop(0, "rgba(200,220,255,0.2)"); mh.addColorStop(1, "rgba(200,220,255,0)")
+                ctx.fillStyle = mh; ctx.beginPath(); ctx.arc(0, 0, ms * 8, 0, Math.PI * 2); ctx.fill()
+                const mb = ctx.createRadialGradient(-ms * 0.25, -ms * 0.25, 0, 0, 0, ms); mb.addColorStop(0, "#F8FAFC"); mb.addColorStop(1, "#C8D6E5")
+                ctx.fillStyle = mb; ctx.beginPath(); ctx.arc(0, 0, ms, 0, Math.PI * 2); ctx.fill()
+                ctx.globalCompositeOperation = "destination-out"; ctx.fillStyle = "rgba(0,0,0,0.62)"
+                ctx.beginPath(); ctx.arc(ms * 0.45, -ms * 0.08, ms * 0.83, 0, Math.PI * 2); ctx.fill()
+                ctx.globalCompositeOperation = "source-over"
+            } else {
+                const ss = Math.min(W, H) * (eve ? 0.065 : 0.052)
+                if (!eve && vs !== 'winter') {
+                    ctx.save(); ctx.rotate(t * 0.003)
+                    for (let r = 0; r < 16; r++) {
+                        const rl = W * (morn ? 0.5 : 0.65)
+                        const rg = ctx.createLinearGradient(0, 0, rl, 0)
+                        rg.addColorStop(0, `rgba(255,230,100,${morn ? 0.07 : 0.04})`); rg.addColorStop(1, "rgba(255,230,100,0)")
+                        ctx.fillStyle = rg; ctx.beginPath(); ctx.moveTo(0, -ss * 0.4); ctx.lineTo(rl, 0); ctx.lineTo(0, ss * 0.4); ctx.fill()
+                        ctx.rotate(Math.PI / 8)
+                    }; ctx.restore()
                 }
-                ctx.fillStyle = sunGrad; ctx.beginPath(); ctx.arc(0, 0, sunSize, 0, Math.PI * 2); ctx.fill()
+                const sg2 = ctx.createRadialGradient(0, 0, ss * 0.7, 0, 0, ss * 3.5)
+                sg2.addColorStop(0, eve ? "rgba(251,146,60,0.5)" : morn ? "rgba(253,186,116,0.35)" : "rgba(250,204,21,0.25)"); sg2.addColorStop(1, "rgba(255,220,50,0)")
+                ctx.fillStyle = sg2; ctx.beginPath(); ctx.arc(0, 0, ss * 3.5, 0, Math.PI * 2); ctx.fill()
+                const sb = ctx.createRadialGradient(-ss * 0.3, -ss * 0.3, 0, 0, 0, ss)
+                if (eve) { sb.addColorStop(0, "#FECACA"); sb.addColorStop(1, "#DC2626") }
+                else if (morn) { sb.addColorStop(0, "#FEF9C3"); sb.addColorStop(1, "#FDBA74") }
+                else { sb.addColorStop(0, "#FEF9C3"); sb.addColorStop(1, "#EAB308") }
+                ctx.fillStyle = sb; ctx.beginPath(); ctx.arc(0, 0, ss, 0, Math.PI * 2); ctx.fill()
+                // Lens flare (summer afternoon)
+                if (vs === 'summer' && aft) {
+                    [1.4, 1.9, 2.5, 3.2].forEach((d, i) => {
+                        ctx.save(); ctx.globalAlpha = 0.07 - i * 0.01
+                        ctx.beginPath(); ctx.arc(ss * d * 0.6, ss * d * 0.4, ss * (0.3 - i * 0.04), 0, Math.PI * 2)
+                        ctx.fillStyle = "#FEF9C3"; ctx.fill(); ctx.restore()
+                    })
+                }
             }
             ctx.restore()
 
-            // ═══════════════════════════════════════════
-            // 4. HORIZON GLOW (morning & evening)
-            // ═══════════════════════════════════════════
-            if (isMorning || isEvening) {
-                const hgY = height * 0.55
-                const hGlow = ctx.createRadialGradient(celX, hgY, 10, celX, hgY, width * 0.55)
-                if (isEvening) {
-                    hGlow.addColorStop(0, vs === "autumn" ? "rgba(251,146,60,0.55)" : "rgba(244,114,182,0.5)")
-                    hGlow.addColorStop(1, "rgba(0,0,0,0)")
-                } else {
-                    hGlow.addColorStop(0, vs === "spring" ? "rgba(253,186,116,0.45)" : "rgba(253,186,116,0.5)")
-                    hGlow.addColorStop(1, "rgba(0,0,0,0)")
-                }
-                ctx.fillStyle = hGlow; ctx.fillRect(0, 0, width, height * 0.75)
+            // ── HORIZON GLOW ──
+            if (morn || eve) {
+                const hg = ctx.createRadialGradient(cx2, H * 0.55, 10, cx2, H * 0.55, W * 0.55)
+                hg.addColorStop(0, eve ? (vs === 'autumn' ? "rgba(251,146,60,0.55)" : "rgba(244,114,182,0.5)") : "rgba(253,186,116,0.45)"); hg.addColorStop(1, "rgba(0,0,0,0)")
+                ctx.fillStyle = hg; ctx.fillRect(0, 0, W, H * 0.72)
             }
 
-            // ═══════════════════════════════════════════
-            // 5. CLOUDS (day & morning)
-            // ═══════════════════════════════════════════
-            if (!isNight || vs === "winter") {
-                const cloudAlpha = isEvening ? 0.35 : (isMorning ? 0.65 : 0.75)
-                const cloudDark = isNight || isEvening
-                cloudsRef.current.forEach(cloud => {
-                    cloud.x += cloud.speed
-                    if (cloud.x > 1.2) cloud.x = -cloud.w
-                    drawCloud(ctx, cloud.x * width, cloud.y * height, cloud.w * width, cloud.h * height, cloud.opacity * cloudAlpha, cloudDark)
+            // ── RAINBOW (rain + spring/summer) ──
+            if (condition === 'rain' && (vs === 'spring' || vs === 'summer') && !dark) {
+                const rx = W * 0.5, ry = H * 0.72, rr = W * 0.55
+                const colors = ["rgba(255,0,0,0.15)", "rgba(255,127,0,0.15)", "rgba(255,255,0,0.12)",
+                    "rgba(0,255,0,0.12)", "rgba(0,100,255,0.12)", "rgba(75,0,130,0.1)", "rgba(148,0,211,0.1)"]
+                colors.forEach((c, i) => {
+                    ctx.save(); ctx.strokeStyle = c; ctx.lineWidth = W * 0.018
+                    ctx.beginPath(); ctx.arc(rx, ry, rr - i * W * 0.018, Math.PI, 0); ctx.stroke(); ctx.restore()
                 })
             }
 
-            // ═══════════════════════════════════════════
-            // 6. LAYERED GROUND
-            // ═══════════════════════════════════════════
-            // Far hill (back)
-            let farGround = "#BBF7D0", midGround = "#86EFAC", frontGround = "#4ADE80"
-
-            if (timeOfDay === "night") {
-                farGround = "#052E16"; midGround = "#064E3B"; frontGround = "#065F46"
-                if (vs === "winter") { farGround = "#1E3A5F"; midGround = "#1E293B"; frontGround = "#334155" }
-                if (vs === "autumn") { farGround = "#1C1007"; midGround = "#2C1A07"; frontGround = "#3D2309" }
-            } else if (timeOfDay === "morning") {
-                farGround = "#D1FAE5"; midGround = "#A7F3D0"; frontGround = "#6EE7B7"
-                if (vs === "winter") { farGround = "#CBD5E1"; midGround = "#94A3B8"; frontGround = "#64748B" }
-                if (vs === "autumn") { farGround = "#FDE68A"; midGround = "#FCD34D"; frontGround = "#F59E0B" }
-                if (vs === "summer") { farGround = "#BBF7D0"; midGround = "#86EFAC"; frontGround = "#4ADE80" }
-            } else if (timeOfDay === "afternoon") {
-                farGround = "#DCFCE7"; midGround = "#BBF7D0"; frontGround = "#86EFAC"
-                if (vs === "winter") { farGround = "#E2E8F0"; midGround = "#CBD5E1"; frontGround = "#94A3B8" }
-                if (vs === "autumn") { farGround = "#FEF3C7"; midGround = "#FDE68A"; frontGround = "#FBBF24" }
-                if (vs === "summer") { farGround = "#D1FAE5"; midGround = "#A7F3D0"; frontGround = "#34D399" }
-            } else {
-                // evening
-                farGround = "#14532D"; midGround = "#166534"; frontGround = "#15803D"
-                if (vs === "winter") { farGround = "#334155"; midGround = "#1E293B"; frontGround = "#0F172A" }
-                if (vs === "autumn") { farGround = "#7C2D12"; midGround = "#9A3412"; frontGround = "#B45309" }
-                if (vs === "summer") { farGround = "#14532D"; midGround = "#15803D"; frontGround = "#16A34A" }
+            // ── CLOUDS ──
+            if (!night || (vs === 'winter')) {
+                const ca = eve ? 0.3 : morn ? 0.6 : 0.7
+                clouds.current.forEach(cl => {
+                    cl.x += cl.spd; if (cl.x > 1.2) cl.x = -cl.w
+                    const cxc = cl.x * W, cyr = cl.y * H, cw = cl.w * W, ch = cl.h * H
+                    ctx.save(); ctx.globalAlpha = cl.op * ca
+                    const bg = dark ? "#2D3748" : "#FFFFFF", sh = dark ? "#1A202C" : "#EDF2F7"
+                    const cg = ctx.createRadialGradient(cxc, cyr - ch * 0.2, ch * 0.1, cxc, cyr, cw * 0.5)
+                    cg.addColorStop(0, bg); cg.addColorStop(1, sh); ctx.fillStyle = cg
+                    const dp = (x: number, y: number, rx: number, ry: number) => { ctx.beginPath(); ctx.ellipse(x, y, rx, ry, 0, 0, Math.PI * 2); ctx.fill() }
+                    dp(cxc, cyr, cw * 0.4, ch * 0.55); dp(cxc - cw * 0.28, cyr + ch * 0.1, cw * 0.3, ch * 0.42)
+                    dp(cxc + cw * 0.28, cyr + ch * 0.1, cw * 0.3, ch * 0.42); dp(cxc - cw * 0.12, cyr - ch * 0.14, cw * 0.28, ch * 0.48)
+                    dp(cxc + cw * 0.12, cyr - ch * 0.08, cw * 0.25, ch * 0.44)
+                    ctx.restore()
+                })
             }
 
-            // Far hill
-            ctx.fillStyle = farGround
-            ctx.beginPath(); ctx.moveTo(0, height)
-            ctx.lineTo(0, height * 0.7)
-            ctx.bezierCurveTo(width * 0.25, height * 0.58, width * 0.55, height * 0.72, width * 0.75, height * 0.66)
-            ctx.bezierCurveTo(width * 0.9, height * 0.62, width, height * 0.68, width, height * 0.65)
-            ctx.lineTo(width, height); ctx.closePath(); ctx.fill()
+            // ── MOUNTAINS ──
+            const mtPalettes: Record<string, Record<string, string[]>> = {
+                night: {
+                    spring: ["#1E293B", "#334155", "#475569"], summer: ["#172554", "#1E3A5F", "#1D4ED8"],
+                    autumn: ["#1C1A2E", "#2D2942", "#3D3655"], winter: ["#0F172A", "#1C2A3F", "#1E3A5F"]
+                },
+                morning: {
+                    spring: ["#A78BFA", "#C4B5FD", "#DDD6FE"], summer: ["#7DD3FC", "#BAE6FD", "#E0F2FE"],
+                    autumn: ["#FCA5A5", "#FCD34D", "#FDE68A"], winter: ["#94A3B8", "#B0BEC5", "#D1D5DB"]
+                },
+                afternoon: {
+                    spring: ["#818CF8", "#A5B4FC", "#C7D2FE"], summer: ["#38BDF8", "#7DD3FC", "#BAE6FD"],
+                    autumn: ["#60A5FA", "#93C5FD", "#BFDBFE"], winter: ["#64748B", "#94A3B8", "#CBD5E1"]
+                },
+                evening: {
+                    spring: ["#4C1D95", "#6D28D9", "#7C3AED"], summer: ["#9D174D", "#BE185D", "#EC4899"],
+                    autumn: ["#431407", "#7C2D12", "#C2410C"], winter: ["#1E1B4B", "#312E81", "#4338CA"]
+                }
+            }
+            const mp = mtPalettes[tod]?.[vs] || ["#1E293B", "#334155", "#475569"]
+            // 3 mountain layers
+            [[0.48, 0.12, mp[0]], [0.44, 0.07, mp[1]], [0.4, 0.05, mp[2]]].forEach(([yBase, roughness, col], li) => {
+                ctx.fillStyle = col as string
+                ctx.beginPath(); ctx.moveTo(0, H)
+                const pts = 12 + li * 3; const yb = (yBase as number) * H
+                for (let i = 0; i <= pts; i++) {
+                    const px = (i / pts) * W
+                    const ph = yb - Math.abs(Math.sin(i * 2.1 + li * 3)) * H * (roughness as number) * 1.8 - Math.abs(Math.sin(i * 0.7 + li)) * H * (roughness as number) * 0.8
+                    ctx.lineTo(px, ph)
+                }
+                ctx.lineTo(W, H); ctx.closePath(); ctx.fill()
+            })
 
-            // Mid hill
-            ctx.fillStyle = midGround
-            ctx.beginPath(); ctx.moveTo(0, height)
-            ctx.lineTo(0, height * 0.79)
-            ctx.bezierCurveTo(width * 0.2, height * 0.76, width * 0.45, height * 0.82, width * 0.65, height * 0.77)
-            ctx.bezierCurveTo(width * 0.82, height * 0.73, width, height * 0.79, width, height * 0.77)
-            ctx.lineTo(width, height); ctx.closePath(); ctx.fill()
+            // ── GROUND LAYERS ──
+            const gPal: Record<string, Record<string, string[]>> = {
+                night: { spring: ["#052E16", "#064E3B", "#065F46"], summer: ["#052E16", "#064E3B", "#065F46"], autumn: ["#1C1007", "#2C1A07", "#3D2309"], winter: ["#1E3A5F", "#1E293B", "#334155"] },
+                morning: { spring: ["#D1FAE5", "#A7F3D0", "#6EE7B7"], summer: ["#BBF7D0", "#86EFAC", "#4ADE80"], autumn: ["#FDE68A", "#FCD34D", "#F59E0B"], winter: ["#CBD5E1", "#94A3B8", "#64748B"] },
+                afternoon: { spring: ["#DCFCE7", "#BBF7D0", "#86EFAC"], summer: ["#D1FAE5", "#A7F3D0", "#34D399"], autumn: ["#FEF3C7", "#FDE68A", "#FBBF24"], winter: ["#E2E8F0", "#CBD5E1", "#94A3B8"] },
+                evening: { spring: ["#14532D", "#166534", "#15803D"], summer: ["#14532D", "#15803D", "#16A34A"], autumn: ["#7C2D12", "#9A3412", "#B45309"], winter: ["#334155", "#1E293B", "#0F172A"] }
+            }
+            const gp = gPal[tod]?.[vs] || ["#052E16", "#064E3B", "#065F46"]
+            ctx.fillStyle = gp[0]; ctx.beginPath(); ctx.moveTo(0, H); ctx.lineTo(0, H * 0.62)
+            ctx.bezierCurveTo(W * 0.3, H * 0.54, W * 0.65, H * 0.64, W, H * 0.58); ctx.lineTo(W, H); ctx.closePath(); ctx.fill()
+            ctx.fillStyle = gp[1]; ctx.beginPath(); ctx.moveTo(0, H); ctx.lineTo(0, H * 0.76)
+            ctx.bezierCurveTo(W * 0.25, H * 0.73, W * 0.6, H * 0.79, W, H * 0.75); ctx.lineTo(W, H); ctx.closePath(); ctx.fill()
+            ctx.fillStyle = gp[2]; ctx.beginPath(); ctx.moveTo(0, H); ctx.lineTo(0, H * 0.88)
+            ctx.bezierCurveTo(W * 0.3, H * 0.86, W * 0.65, H * 0.9, W, H * 0.87); ctx.lineTo(W, H); ctx.closePath(); ctx.fill()
 
-            // Front ground
-            ctx.fillStyle = frontGround
-            ctx.beginPath(); ctx.moveTo(0, height)
-            ctx.lineTo(0, height * 0.88)
-            ctx.bezierCurveTo(width * 0.3, height * 0.86, width * 0.65, height * 0.9, width, height * 0.87)
-            ctx.lineTo(width, height); ctx.closePath(); ctx.fill()
+            // Winter snow drift
+            if (vs === 'winter') {
+                const wg = ctx.createLinearGradient(0, H * 0.83, 0, H)
+                wg.addColorStop(0, night ? "rgba(200,220,255,0.3)" : "rgba(248,250,252,0.7)"); wg.addColorStop(1, "rgba(241,245,249,0.5)")
+                ctx.fillStyle = wg; ctx.beginPath(); ctx.moveTo(0, H); ctx.lineTo(0, H * 0.88)
+                ctx.bezierCurveTo(W * 0.2, H * 0.86, W * 0.6, H * 0.89, W, H * 0.87); ctx.lineTo(W, H); ctx.closePath(); ctx.fill()
+            }
 
-            // ═══════════════════════════════════════════
-            // 7. MORNING MIST
-            // ═══════════════════════════════════════════
-            if (isMorning) {
-                for (let layer = 0; layer < 3; layer++) {
-                    const mistY = height * (0.72 + layer * 0.06)
-                    const mistGrad = ctx.createLinearGradient(0, mistY - height * 0.06, 0, mistY + height * 0.04)
-                    const mistAlpha = 0.2 - layer * 0.05
-                    mistGrad.addColorStop(0, "rgba(255,255,255,0)")
-                    mistGrad.addColorStop(0.5, `rgba(255,255,255,${mistAlpha})`)
-                    mistGrad.addColorStop(1, "rgba(255,255,255,0)")
-                    ctx.fillStyle = mistGrad
-                    // Wavy mist
+            // Morning mist
+            if (morn) {
+                for (let l = 0; l < 3; l++) {
+                    const my = H * (0.72 + l * 0.06); const mg = ctx.createLinearGradient(0, my - H * 0.06, 0, my + H * 0.04)
+                    mg.addColorStop(0, "rgba(255,255,255,0)"); mg.addColorStop(0.5, `rgba(255,255,255,${0.18 - l * 0.04})`); mg.addColorStop(1, "rgba(255,255,255,0)")
+                    ctx.fillStyle = mg; ctx.beginPath(); ctx.moveTo(0, my)
+                    for (let mx = 0; mx <= W; mx += 18) ctx.lineTo(mx, my + Math.sin(mx * 0.015 + t * 0.008 + l * 1.2) * H * 0.011)
+                    ctx.lineTo(W, my + H * 0.06); ctx.lineTo(0, my + H * 0.06); ctx.closePath(); ctx.fill()
+                }
+            }
+
+            // ── BIRDS (morning + afternoon) ──
+            if (!dark) {
+                birds.current.forEach(b => {
+                    b.x += b.spd; b.flap += b.flapSpd; if (b.x > 1.1) b.x = -0.05
+                    const bx = b.x * W, by = b.y * H + Math.sin(t * 0.04 + b.flap) * H * 0.008
+                    const wing = Math.sin(b.flap) * 0.3
+                    ctx.save(); ctx.translate(bx, by); ctx.scale(b.scale, b.scale)
+                    ctx.globalAlpha = 0.55; ctx.strokeStyle = dark ? "#94A3B8" : "#475569"; ctx.lineWidth = 1.5
                     ctx.beginPath()
-                    ctx.moveTo(0, mistY)
-                    for (let mx = 0; mx <= width; mx += 20) {
-                        const wave = Math.sin(mx * 0.015 + time * 0.008 + layer * 1.2) * height * 0.012
-                        ctx.lineTo(mx, mistY + wave)
-                    }
-                    ctx.lineTo(width, mistY + height * 0.06)
-                    ctx.lineTo(0, mistY + height * 0.06)
-                    ctx.closePath(); ctx.fill()
-                }
+                    ctx.moveTo(0, 0); ctx.quadraticCurveTo(-8, -8 - wing * 10, -16, wing * 4)
+                    ctx.moveTo(0, 0); ctx.quadraticCurveTo(8, -8 - wing * 10, 16, wing * 4)
+                    ctx.stroke(); ctx.restore()
+                })
             }
 
-            // ═══════════════════════════════════════════
-            // 8. WINTER SNOW ACCUMULATION ON GROUND
-            // ═══════════════════════════════════════════
-            if (vs === "winter") {
-                const snowGrad = ctx.createLinearGradient(0, height * 0.83, 0, height)
-                snowGrad.addColorStop(0, isNight ? "rgba(200,220,255,0.3)" : "rgba(248,250,252,0.7)")
-                snowGrad.addColorStop(1, isNight ? "rgba(200,220,255,0.15)" : "rgba(241,245,249,0.5)")
-                ctx.fillStyle = snowGrad
-                ctx.beginPath(); ctx.moveTo(0, height)
-                ctx.lineTo(0, height * 0.88)
-                ctx.bezierCurveTo(width * 0.2, height * 0.86, width * 0.6, height * 0.89, width, height * 0.87)
-                ctx.lineTo(width, height); ctx.closePath(); ctx.fill()
-            }
-
-            // ═══════════════════════════════════════════
-            // 9. PLANTS (grow + sway)
-            // ═══════════════════════════════════════════
-            plantsRef.current.forEach((plant: Plant) => {
-                if (time > plant.delay && plant.growth < 1) plant.growth += 0.008
+            // ── PLANTS ──
+            pRef.current.forEach((plant: Plant) => {
+                if (t > plant.delay && plant.growth < 1) plant.growth += 0.008
                 if (plant.growth <= 0) return
-
-                const x = plant.x * width; const y = plant.y * height; const s = plant.scale * plant.growth
-                const windBase = Math.sin(time * 0.008) * 0.015
-                const wind = windBase + Math.sin(time * plant.swaySpeed + plant.swayOffset) * 0.02
-
-                ctx.save(); ctx.translate(x, y)
-
-                // Night tint on plants
-                if (isNight) {
-                    ctx.filter = "brightness(0.35) saturate(0.7)"
-                } else if (isEvening) {
-                    ctx.filter = "brightness(0.75) saturate(1.2)"
-                } else if (isMorning) {
-                    ctx.filter = "brightness(0.9) saturate(0.85)"
-                }
-
-                // Stems
-                if (vs !== "winter" && plant.type === "flower") {
-                    ctx.save(); ctx.filter = "none"
-                    ctx.strokeStyle = isNight ? "#064E3B" : "#15803D"
-                    ctx.lineWidth = 1.5 * s
+                const px = plant.x * W, py = plant.y * H, s = plant.scale * plant.growth
+                const wind = Math.sin(t * 0.008) * 0.015 + Math.sin(t * plant.swaySpeed + plant.swayOffset) * 0.02
+                ctx.save(); ctx.translate(px, py)
+                if (night) ctx.filter = "brightness(0.3) saturate(0.6)"
+                else if (eve) ctx.filter = "brightness(0.72) saturate(1.15)"
+                else if (morn) ctx.filter = "brightness(0.9) saturate(0.85)"
+                if (vs !== 'winter' && plant.type === 'flower') {
+                    ctx.save(); ctx.filter = "none"; ctx.strokeStyle = night ? "#064E3B" : "#15803D"; ctx.lineWidth = 1.5 * s
                     ctx.beginPath(); ctx.moveTo(-2 * s, 0); ctx.quadraticCurveTo(-5 * s, -3 * s, -8 * s, 0); ctx.stroke()
                     ctx.beginPath(); ctx.moveTo(2 * s, 0); ctx.quadraticCurveTo(5 * s, -4 * s, 8 * s, 0); ctx.stroke()
                     ctx.restore()
                 }
-
-                const img = assetsRef.current[plant.subtype] || assetsRef.current['sakura']
+                const img = assets.current[plant.subtype] || assets.current['sakura']
                 if (img) {
                     if (plant.type === 'tree') {
-                        ctx.rotate(wind * 2); const size = 180 * s
-                        try { ctx.drawImage(img, -size / 2, -size, size, size) } catch (e) { }
+                        ctx.rotate(wind * 2); const sz = 180 * s; try { ctx.drawImage(img, -sz / 2, -sz, sz, sz) } catch (e) { }
                     } else {
-                        ctx.rotate(wind * 8)
-                        const pulse = 1 + Math.sin(time * 0.05 + plant.seed) * 0.04
-                        ctx.scale(pulse, pulse)
-                        const bob = Math.sin(time * 0.1 + plant.seed) * 2
-                        ctx.translate(0, bob)
-                        const size = 85 * s
-                        try { ctx.drawImage(img, -size / 2, -size, size, size) } catch (e) { }
-
-                        // Night glow on flowers
-                        if (isNight) {
-                            ctx.filter = "none"; ctx.globalAlpha = 0.25
-                            const fGlow = ctx.createRadialGradient(0, -size * 0.5, 0, 0, -size * 0.5, size * 0.6)
-                            fGlow.addColorStop(0, plant.color); fGlow.addColorStop(1, "transparent")
-                            ctx.fillStyle = fGlow; ctx.beginPath(); ctx.arc(0, -size * 0.5, size * 0.6, 0, Math.PI * 2); ctx.fill()
+                        ctx.rotate(wind * 8); const p2 = 1 + Math.sin(t * 0.05 + plant.seed) * 0.04; ctx.scale(p2, p2)
+                        ctx.translate(0, Math.sin(t * 0.1 + plant.seed) * 2); const sz = 85 * s
+                        try { ctx.drawImage(img, -sz / 2, -sz, sz, sz) } catch (e) { }
+                        if (night) {
+                            ctx.filter = "none"; ctx.globalAlpha = 0.22
+                            const fg = ctx.createRadialGradient(0, -sz * 0.5, 0, 0, -sz * 0.5, sz * 0.6)
+                            fg.addColorStop(0, plant.color); fg.addColorStop(1, "transparent")
+                            ctx.fillStyle = fg; ctx.beginPath(); ctx.arc(0, -sz * 0.5, sz * 0.6, 0, Math.PI * 2); ctx.fill()
                         }
                     }
                 }
                 ctx.restore()
             })
 
-            // ═══════════════════════════════════════════
-            // 10. PARTICLES — SEASON + WEATHER
-            // ═══════════════════════════════════════════
+            // ── PARTICLES ──
+            const rnd = Math.random()
+            if (vs === 'spring' && rnd < 0.18) parts.current.push({ x: Math.random() * W * 1.1, y: -15, vx: (Math.random() - 0.4) * 0.8, vy: Math.random() * 0.6 + 0.4, rot: Math.random() * Math.PI * 2, size: Math.random() * 5 + 3, color: ["#FBCFE8", "#F9A8D4", "#FDE68A", "#E879F9"][Math.floor(Math.random() * 4)], op: 0.75, type: "petal", life: 0 })
+            if (vs === 'autumn' && rnd < 0.15) parts.current.push({ x: Math.random() * W * 1.1, y: -15, vx: (Math.random() - 0.4) * 1.2, vy: Math.random() * 0.8 + 0.5, rot: Math.random() * Math.PI * 2, size: Math.random() * 7 + 4, color: ["#EA580C", "#F59E0B", "#DC2626", "#D97706"][Math.floor(Math.random() * 4)], op: 0.85, type: "leaf", life: 0 })
+            if (vs === 'winter' && rnd < 0.35) parts.current.push({ x: Math.random() * W, y: -10, vx: (Math.random() - 0.5) * 0.5, vy: Math.random() * 0.8 + 0.4, rot: 0, size: Math.random() * 3.5 + 1, color: "#F0F9FF", op: 0.7 + Math.random() * 0.3, type: "snow", life: 0 })
+            if (vs === 'summer' && !night && rnd < 0.12) parts.current.push({ x: Math.random() * W, y: H * 0.5 + Math.random() * H * 0.4, vx: (Math.random() - 0.5) * 0.4, vy: -Math.random() * 0.5 - 0.1, rot: 0, size: Math.random() * 2.5 + 0.5, color: "#FDE047", op: 0, type: "pollen", life: 0 })
 
-            // Spawn particles
-            const spawnChance = Math.random()
-
-            // Spring: cherry blossom petals
-            if (vs === "spring" && spawnChance < 0.18) {
-                particlesRef.current.push({
-                    type: "petal", x: Math.random() * width * 1.1, y: -15,
-                    color: ["#FBCFE8", "#F9A8D4", "#FDE68A", "#E879F9"][Math.floor(Math.random() * 4)],
-                    size: Math.random() * 5 + 3,
-                    rotation: Math.random() * Math.PI * 2,
-                    speedX: (Math.random() - 0.4) * 0.8, speedY: Math.random() * 0.6 + 0.4,
-                    opacity: 0.7 + Math.random() * 0.3, life: 0, maxLife: 999
-                })
-            }
-            // Autumn: falling leaves
-            if (vs === "autumn" && spawnChance < 0.15) {
-                particlesRef.current.push({
-                    type: "leaf", x: Math.random() * width * 1.1, y: -15,
-                    color: ["#EA580C", "#F59E0B", "#DC2626", "#D97706", "#B45309"][Math.floor(Math.random() * 5)],
-                    size: Math.random() * 7 + 4,
-                    rotation: Math.random() * Math.PI * 2,
-                    speedX: (Math.random() - 0.4) * 1.2, speedY: Math.random() * 0.8 + 0.5,
-                    opacity: 0.8 + Math.random() * 0.2, life: 0, maxLife: 999
-                })
-            }
-            // Winter: snowflakes
-            if (vs === "winter" && spawnChance < 0.3) {
-                particlesRef.current.push({
-                    type: "snow", x: Math.random() * width, y: -10,
-                    color: "#F0F9FF", size: Math.random() * 4 + 1,
-                    rotation: 0, speedX: (Math.random() - 0.5) * 0.6, speedY: Math.random() * 0.8 + 0.4,
-                    opacity: 0.6 + Math.random() * 0.4, life: 0, maxLife: 999
-                })
-            }
-            // Summer: pollen
-            if (vs === "summer" && !isNight && spawnChance < 0.12) {
-                particlesRef.current.push({
-                    type: "pollen", x: Math.random() * width, y: height * 0.5 + Math.random() * height * 0.4,
-                    color: "#FDE047", size: Math.random() * 2.5 + 0.5,
-                    rotation: 0, speedX: (Math.random() - 0.5) * 0.4, speedY: -Math.random() * 0.5 - 0.1,
-                    opacity: 0, life: 0, maxLife: 200
-                })
-            }
-
-            // Update & draw particles
-            for (let i = particlesRef.current.length - 1; i >= 0; i--) {
-                const p = particlesRef.current[i]
-                p.life++
-
-                // Movement
-                const drift = Math.sin(time * 0.03 + p.y * 0.01) * 0.3
-                p.x += p.speedX + drift
-                p.y += p.speedY
-                p.rotation += 0.02
-
-                // Fade pollen in/out
-                if (p.type === "pollen") {
-                    p.opacity = p.life < 30 ? p.life / 30 : (p.life > 170 ? (200 - p.life) / 30 : 0.6)
-                }
-
-                // Remove out of bounds
-                if (p.y > height + 30 || p.x < -50 || p.x > width + 50 || p.life > p.maxLife) {
-                    particlesRef.current.splice(i, 1); continue
-                }
-
-                // Draw
-                ctx.save(); ctx.translate(p.x, p.y)
-                ctx.globalAlpha = Math.max(0, p.opacity)
-
-                if (p.type === "snow") {
-                    // Snowflake
-                    ctx.strokeStyle = p.color; ctx.lineWidth = p.size * 0.3
-                    for (let arm = 0; arm < 6; arm++) {
-                        ctx.save(); ctx.rotate(arm * Math.PI / 3)
+            for (let i = parts.current.length - 1; i >= 0; i--) {
+                const p = parts.current[i]; p.life++
+                const drift = Math.sin(t * 0.03 + p.y * 0.01) * 0.3
+                p.x += p.vx + drift; p.y += p.vy; p.rot += 0.025
+                if (p.type === 'pollen') p.op = p.life < 30 ? p.life / 30 : (p.life > 170 ? (200 - p.life) / 30 : 0.6)
+                if (p.y > H + 30 || p.x < -50 || p.x > W + 50 || p.life > 350) { parts.current.splice(i, 1); continue }
+                ctx.save(); ctx.translate(p.x, p.y); ctx.globalAlpha = Math.max(0, p.op)
+                if (p.type === 'snow') {
+                    ctx.strokeStyle = p.color; ctx.lineWidth = p.size * 0.28
+                    for (let a = 0; a < 6; a++) {
+                        ctx.save(); ctx.rotate(a * Math.PI / 3)
                         ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(0, -p.size * 2); ctx.stroke()
                         ctx.beginPath(); ctx.moveTo(0, -p.size); ctx.lineTo(-p.size * 0.5, -p.size * 0.6); ctx.stroke()
                         ctx.beginPath(); ctx.moveTo(0, -p.size); ctx.lineTo(p.size * 0.5, -p.size * 0.6); ctx.stroke()
                         ctx.restore()
                     }
-                } else if (p.type === "pollen") {
+                } else if (p.type === 'pollen') {
                     const pg = ctx.createRadialGradient(0, 0, 0, 0, 0, p.size * 2)
                     pg.addColorStop(0, "rgba(253,224,71,0.9)"); pg.addColorStop(1, "rgba(253,224,71,0)")
                     ctx.fillStyle = pg; ctx.beginPath(); ctx.arc(0, 0, p.size * 2, 0, Math.PI * 2); ctx.fill()
                 } else {
-                    // Leaf / petal — ellipse rotated
-                    ctx.rotate(p.rotation + Math.sin(time * 0.05) * 0.3)
-                    ctx.scale(1, Math.abs(Math.sin(time * 0.04 + p.y * 0.05)) * 0.6 + 0.4)
-                    ctx.fillStyle = p.color
-                    ctx.beginPath()
-                    ctx.ellipse(0, 0, p.size, p.size * 0.45, 0, 0, Math.PI * 2)
-                    ctx.fill()
-                    // Vein
-                    if (p.type === "leaf") {
-                        ctx.strokeStyle = "rgba(0,0,0,0.15)"; ctx.lineWidth = 0.5
-                        ctx.beginPath(); ctx.moveTo(-p.size, 0); ctx.lineTo(p.size, 0); ctx.stroke()
-                    }
+                    ctx.rotate(p.rot + Math.sin(t * 0.05) * 0.3); ctx.scale(1, Math.abs(Math.sin(t * 0.04 + p.y * 0.05)) * 0.6 + 0.4)
+                    ctx.fillStyle = p.color; ctx.beginPath(); ctx.ellipse(0, 0, p.size, p.size * 0.45, 0, 0, Math.PI * 2); ctx.fill()
+                    if (p.type === 'leaf') { ctx.strokeStyle = "rgba(0,0,0,0.12)"; ctx.lineWidth = 0.5; ctx.beginPath(); ctx.moveTo(-p.size, 0); ctx.lineTo(p.size, 0); ctx.stroke() }
                 }
                 ctx.restore()
             }
-            // Cap particle count
-            if (particlesRef.current.length > 180) particlesRef.current.splice(0, 30)
+            if (parts.current.length > 200) parts.current.splice(0, 30)
 
-            // ═══════════════════════════════════════════
-            // 11. FIREFLIES (evening + night)
-            // ═══════════════════════════════════════════
-            if (showNightElements) {
-                const ffAlpha = isNight ? 1.0 : 0.55
-                firefliesRef.current.forEach(ff => {
-                    // Wander
-                    ff.vx += (Math.random() - 0.5) * 0.00015
-                    ff.vy += (Math.random() - 0.5) * 0.00008
-                    ff.vx = Math.max(-0.0015, Math.min(0.0015, ff.vx))
-                    ff.vy = Math.max(-0.001, Math.min(0.001, ff.vy))
-                    ff.x += ff.vx; ff.y += ff.vy
-                    // Wrap
-                    if (ff.x < 0.05) ff.x = 0.95
-                    if (ff.x > 0.95) ff.x = 0.05
-                    if (ff.y < 0.35) ff.y = 0.35
-                    if (ff.y > 0.93) ff.y = 0.93
-                    // Glow pulse
-                    ff.glowPhase += ff.glowSpeed
-                    const pulse = (Math.sin(ff.glowPhase) + 1) / 2
-                    const alpha = ffAlpha * ff.maxOpacity * pulse
-
+            // ── FIREFLIES ──
+            if (dark) {
+                const fa = night ? 1 : 0.5
+                flies.current.forEach(ff => {
+                    ff.vx += (Math.random() - 0.5) * 0.00015; ff.vy += (Math.random() - 0.5) * 0.00008
+                    ff.vx = Math.max(-0.0015, Math.min(0.0015, ff.vx)); ff.vy = Math.max(-0.001, Math.min(0.001, ff.vy))
+                    ff.x += ff.vx; ff.y += ff.vy; ff.phase += ff.spd
+                    if (ff.x < 0.05) ff.x = 0.95; if (ff.x > 0.95) ff.x = 0.05; if (ff.y < 0.38) ff.y = 0.38; if (ff.y > 0.93) ff.y = 0.93
+                    const pulse = (Math.sin(ff.phase) + 1) / 2; const alpha = fa * ff.maxOp * pulse
                     if (alpha < 0.05) return
-                    const fx = ff.x * width; const fy = ff.y * height
+                    const fx = ff.x * W, fy = ff.y * H
                     ctx.save()
-                    // Outer halo
-                    const halo = ctx.createRadialGradient(fx, fy, 0, fx, fy, 14)
-                    halo.addColorStop(0, `rgba(167,243,208,${alpha * 0.5})`)
-                    halo.addColorStop(1, "rgba(167,243,208,0)")
-                    ctx.fillStyle = halo; ctx.beginPath(); ctx.arc(fx, fy, 14, 0, Math.PI * 2); ctx.fill()
-                    // Core
-                    ctx.globalAlpha = alpha
-                    ctx.fillStyle = "#D1FAE5"
-                    ctx.beginPath(); ctx.arc(fx, fy, 2, 0, Math.PI * 2); ctx.fill()
+                    const fh = ctx.createRadialGradient(fx, fy, 0, fx, fy, 14)
+                    fh.addColorStop(0, `rgba(167,243,208,${alpha * 0.55})`); fh.addColorStop(1, "rgba(167,243,208,0)")
+                    ctx.fillStyle = fh; ctx.beginPath(); ctx.arc(fx, fy, 14, 0, Math.PI * 2); ctx.fill()
+                    ctx.globalAlpha = alpha; ctx.fillStyle = "#D1FAE5"; ctx.beginPath(); ctx.arc(fx, fy, 2, 0, Math.PI * 2); ctx.fill()
                     ctx.restore()
                 })
             }
 
-            animationFrameId = requestAnimationFrame(render)
+            raf = requestAnimationFrame(render)
         }
-
         render()
-        return () => { cancelAnimationFrame(animationFrameId); resizeObserver.disconnect() }
-    }, [visualSeason, condition, assetsLoaded])
+        return () => { cancelAnimationFrame(raf); ro.disconnect() }
+    }, [mSeason, condition, loaded])
 
-    // Label Logic
     const hour = new Date().getHours()
-    let timeOfDayLabel = "Night"
-    if (manualTime !== 'auto') {
-        timeOfDayLabel = manualTime.charAt(0).toUpperCase() + manualTime.slice(1)
-    } else {
-        if (hour >= 6 && hour < 12) timeOfDayLabel = "Morning"
-        else if (hour >= 12 && hour < 17) timeOfDayLabel = "Afternoon"
-        else if (hour >= 17 && hour < 20) timeOfDayLabel = "Evening"
-    }
+    let todLabel = "Night"
+    if (mTime !== 'auto') todLabel = mTime.charAt(0).toUpperCase() + mTime.slice(1)
+    else { if (hour >= 6 && hour < 12) todLabel = "Morning"; else if (hour >= 12 && hour < 17) todLabel = "Afternoon"; else if (hour >= 17 && hour < 20) todLabel = "Evening" }
 
     return (
         <Card className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-sm rounded-3xl overflow-hidden h-full flex flex-col relative group">
@@ -759,74 +471,36 @@ export function VisualGarden({ onAddPlant }: { onAddPlant?: () => void }) {
                         <Icons.tree className="w-5 h-5 text-slate-700 dark:text-slate-300" />
                     </div>
                     <div className="bg-white/30 dark:bg-slate-900/30 px-3 py-1.5 rounded-xl backdrop-blur-md border border-slate-400/10">
-                        <CardTitle className="text-lg font-bold text-slate-800 dark:text-slate-100">
-                            Visual Garden
-                        </CardTitle>
+                        <CardTitle className="text-lg font-bold text-slate-800 dark:text-slate-100">Visual Garden</CardTitle>
                         <p className="text-xs text-slate-600 dark:text-slate-300 font-medium capitalize flex items-center gap-1.5">
-                            <span>{visualSeason}</span>
-                            <span className="opacity-50">•</span>
-                            <span>{timeOfDayLabel}</span>
-                            <span className="opacity-50">•</span>
+                            <span>{mSeason}</span><span className="opacity-50">•</span>
+                            <span>{todLabel}</span><span className="opacity-50">•</span>
                             <span>{temperature != null ? Math.round(temperature) : '--'}°C</span>
                         </p>
                     </div>
                 </div>
-
                 <div className="flex gap-2 flex-wrap justify-end pointer-events-auto">
-                    {/* Plant Seed Button */}
-                    <button
-                        onClick={onAddPlant}
-                        className="h-9 px-4 rounded-full flex items-center gap-2 bg-emerald-500 hover:bg-emerald-600 text-white shadow-lg hover:shadow-emerald-500/30 transition-all active:scale-95"
-                        title="Plant a New Task"
-                    >
-                        <Icons.plus className="w-4 h-4" />
-                        <span className="text-sm font-bold hidden sm:inline">Plant Seed</span>
+                    <button onClick={onAddPlant} className="h-9 px-4 rounded-full flex items-center gap-2 bg-emerald-500 hover:bg-emerald-600 text-white shadow-lg hover:shadow-emerald-500/30 transition-all active:scale-95" title="Plant a New Task">
+                        <Icons.plus className="w-4 h-4" /><span className="text-sm font-bold hidden sm:inline">Plant Seed</span>
                     </button>
-
-                    {/* Time Selector */}
                     <div className="flex bg-white/80 dark:bg-slate-900/80 rounded-full p-1 border border-slate-200/50 dark:border-slate-700/50 shadow-md backdrop-blur-md">
-                        {(['auto', 'morning', 'afternoon', 'evening', 'night'] as const).map((t) => (
-                            <button
-                                key={t}
-                                onClick={() => setManualTime(t)}
-                                className={`w-9 h-9 rounded-full flex items-center justify-center text-lg transition-all ${manualTime === t
-                                    ? 'bg-white dark:bg-slate-700 shadow-sm scale-110 ring-1 ring-black/5 dark:ring-white/10'
-                                    : 'hover:bg-white/50 dark:hover:bg-slate-800/50 opacity-60 hover:opacity-100 grayscale hover:grayscale-0'
-                                    }`}
-                                title={t === 'auto' ? 'Auto Time' : t}
-                            >
-                                {t === 'auto' && '🤖'}
-                                {t === 'morning' && '🌅'}
-                                {t === 'afternoon' && '☀️'}
-                                {t === 'evening' && '🌆'}
-                                {t === 'night' && '🌙'}
+                        {(['auto', 'morning', 'afternoon', 'evening', 'night'] as const).map(t2 => (
+                            <button key={t2} onClick={() => setMTime(t2)} className={`w-9 h-9 rounded-full flex items-center justify-center text-lg transition-all ${mTime === t2 ? 'bg-white dark:bg-slate-700 shadow-sm scale-110' : 'opacity-60 hover:opacity-100 grayscale hover:grayscale-0'}`} title={t2 === 'auto' ? 'Auto' : t2}>
+                                {t2 === 'auto' && '🤖'}{t2 === 'morning' && '🌅'}{t2 === 'afternoon' && '☀️'}{t2 === 'evening' && '🌆'}{t2 === 'night' && '🌙'}
                             </button>
                         ))}
                     </div>
-
-                    {/* Season Selector */}
                     <div className="flex bg-white/80 dark:bg-slate-900/80 rounded-full p-1 border border-slate-200/50 dark:border-slate-700/50 shadow-md backdrop-blur-md">
-                        {(['spring', 'summer', 'autumn', 'winter'] as const).map((s) => (
-                            <button
-                                key={s}
-                                onClick={() => setManualSeason(s)}
-                                className={`w-9 h-9 rounded-full flex items-center justify-center text-lg transition-all ${manualSeason === s
-                                    ? 'bg-white dark:bg-slate-700 shadow-sm scale-110 ring-1 ring-black/5 dark:ring-white/10'
-                                    : 'hover:bg-white/50 dark:hover:bg-slate-800/50 opacity-60 hover:opacity-100 grayscale hover:grayscale-0'
-                                    }`}
-                                title={s}
-                            >
-                                {s === 'spring' && '🌸'}
-                                {s === 'summer' && '🌻'}
-                                {s === 'autumn' && '🍂'}
-                                {s === 'winter' && '❄️'}
+                        {(['spring', 'summer', 'autumn', 'winter'] as const).map(s2 => (
+                            <button key={s2} onClick={() => setMSeason(s2)} className={`w-9 h-9 rounded-full flex items-center justify-center text-lg transition-all ${mSeason === s2 ? 'bg-white dark:bg-slate-700 shadow-sm scale-110' : 'opacity-60 hover:opacity-100 grayscale hover:grayscale-0'}`} title={s2}>
+                                {s2 === 'spring' && '🌸'}{s2 === 'summer' && '🌻'}{s2 === 'autumn' && '🍂'}{s2 === 'winter' && '❄️'}
                             </button>
                         ))}
                     </div>
                 </div>
             </CardHeader>
-            <div ref={containerRef} className="w-full h-72 sm:h-96 relative bg-slate-50 dark:bg-slate-900 transition-colors duration-700 flex-1">
-                <canvas ref={canvasRef} className="w-full h-full block" />
+            <div ref={cont} className="w-full h-72 sm:h-96 relative bg-slate-50 dark:bg-slate-900 transition-colors duration-700 flex-1">
+                <canvas ref={cvs} className="w-full h-full block" />
             </div>
         </Card>
     )

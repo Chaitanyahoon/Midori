@@ -339,7 +339,7 @@ export function PlantAIAssistant({ onCloseAction }: PlantAIAssistantProps) {
 
   return (
     <Dialog open={isAIModalOpen} onOpenChange={(open) => { if (!open) handleClose() }}>
-      <DialogContent className="max-w-2xl h-[90vh] flex flex-col p-0 bg-gradient-to-br from-white via-green-50 to-emerald-50 border-2 border-emerald-200 overflow-hidden">
+      <DialogContent className="w-full h-full sm:h-[90vh] sm:max-w-2xl flex flex-col p-0 bg-gradient-to-br from-white via-green-50 to-emerald-50 border-2 border-emerald-200 overflow-hidden rounded-none sm:rounded-2xl m-0 sm:m-auto">
         <DialogHeader className="flex flex-row items-center justify-between gap-4 pb-4 px-6 pt-6 border-b-2 border-emerald-100 flex-shrink-0 bg-gradient-to-r from-emerald-50 to-teal-50">
           <DialogTitle className="flex items-center gap-4 flex-1 min-w-0">
             <div className="relative flex-shrink-0">

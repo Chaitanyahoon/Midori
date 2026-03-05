@@ -2,7 +2,7 @@
 
 import type React from "react"
 import { useEffect } from "react"
-import { useRouter } from "next/navigation"
+import { useRouter, usePathname } from "next/navigation"
 import { DataProvider } from "@/components/local-data-provider"
 import { Sidebar } from "@/components/dashboard/sidebar"
 import { TopNav } from "@/components/dashboard/top-nav"
@@ -14,6 +14,7 @@ import { Icons } from "@/components/icons"
 function DashboardContent({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth()
   const router = useRouter()
+  const pathname = usePathname()
   const { isSidebarOpen, toggleSidebar, setSidebarOpen } = useUIStore()
 
   useEffect(() => {
@@ -78,16 +79,22 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
             { href: "/dashboard/calendar", icon: Icons.calendar, label: "Plan" },
             { href: "/dashboard/pomodoro", icon: Icons.timer, label: "Focus" },
             { href: "/dashboard/insights", icon: Icons.sprout, label: "Insights" },
-          ].map((item) => (
-            <a
-              key={item.href}
-              href={item.href}
-              className="flex flex-col items-center gap-0.5 px-2 py-1 rounded-xl transition-colors text-slate-400 dark:text-slate-500 hover:text-emerald-600 dark:hover:text-emerald-400 active:scale-95 touch-manipulation"
-            >
-              <item.icon className="w-5 h-5" />
-              <span className="text-[10px] font-medium">{item.label}</span>
-            </a>
-          ))}
+          ].map((item) => {
+            const isActive = pathname === item.href
+            return (
+              <a
+                key={item.href}
+                href={item.href}
+                className={`flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-xl transition-all touch-manipulation active:scale-95 ${isActive
+                    ? "text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/30"
+                    : "text-slate-400 dark:text-slate-500 hover:text-emerald-500 dark:hover:text-emerald-400"
+                  }`}
+              >
+                <item.icon className={`w-5 h-5 ${isActive ? "scale-110" : ""} transition-transform`} />
+                <span className={`text-[10px] ${isActive ? "font-bold text-emerald-600 dark:text-emerald-400" : "font-medium"}`}>{item.label}</span>
+              </a>
+            )
+          })}
         </nav>
 
         <PlantAIAssistant />

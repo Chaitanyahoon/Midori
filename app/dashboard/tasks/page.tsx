@@ -482,8 +482,8 @@ export default function TasksPage() {
                                   <Badge
                                     variant="outline"
                                     className={`rounded-md px-2 py-0.5 text-xs border bg-transparent ${task.dueDate < new Date().toISOString().split("T")[0] && !task.completed
-                                        ? "border-rose-200 text-rose-600 dark:border-rose-900/50 dark:text-rose-400"
-                                        : "border-slate-200 text-slate-500 dark:border-slate-700 dark:text-slate-400"
+                                      ? "border-rose-200 text-rose-600 dark:border-rose-900/50 dark:text-rose-400"
+                                      : "border-slate-200 text-slate-500 dark:border-slate-700 dark:text-slate-400"
                                       }`}
                                   >
                                     <Icons.calendar className="w-3 h-3 mr-1.5" />
@@ -493,12 +493,12 @@ export default function TasksPage() {
                               </div>
                             </div>
 
-                            <div className="flex items-center self-end sm:self-start opacity-0 group-hover:opacity-100 transition-opacity">
+                            <div className="flex items-center self-end sm:self-start opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
                               <Button
                                 variant="ghost"
                                 size="sm"
                                 onClick={() => deleteTask(task.id)}
-                                className="text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-900/20 rounded-full h-8 w-8 p-0"
+                                className="text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-900/20 rounded-full h-8 w-8 p-0 touch-manipulation"
                               >
                                 <Icons.trash className="w-4 h-4" />
                               </Button>

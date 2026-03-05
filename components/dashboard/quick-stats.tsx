@@ -94,7 +94,7 @@ export function QuickStats() {
   }
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 animate-bloom">
+    <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 animate-bloom">
       {statsData.map((stat, index) => {
         const colors = colorClasses[stat.color as keyof typeof colorClasses]
         return (
@@ -102,24 +102,26 @@ export function QuickStats() {
             key={index}
             className={`${colors.bg} border ${colors.border} shadow-sm rounded-2xl hover:scale-105 transition-transform duration-300 group`}
           >
-            <CardContent className="p-5">
-              <div className="flex items-start justify-between mb-4">
-                <div className="flex-1">
-                  <p className="text-xs font-medium text-slate-500 dark:text-slate-400 mb-1 tracking-wide uppercase">
+            <CardContent className="p-3 sm:p-5">
+              <div className="flex items-start justify-between mb-3 sm:mb-4">
+                <div className="flex-1 min-w-0">
+                  <p className="text-[10px] sm:text-xs font-medium text-slate-500 dark:text-slate-400 mb-1 tracking-wide uppercase">
                     {stat.title}
                   </p>
-                  <p className={`text-3xl font-bold ${colors.text} mb-1 tracking-tight`}>
+                  <p className={`text-2xl sm:text-3xl font-bold ${colors.text} mb-1 tracking-tight`}>
                     {stat.value}
                   </p>
-                  <p className="text-xs text-slate-400 dark:text-slate-500 font-medium">
+                  <p className="text-[10px] sm:text-xs text-slate-400 dark:text-slate-500 font-medium truncate">
                     {stat.total}
                   </p>
                 </div>
-                <div className={`w-12 h-12 ${colors.icon} rounded-xl shadow-md flex items-center justify-center group-hover:rotate-6 transition-transform duration-500`}>
-                  <stat.icon className="w-6 h-6 text-white" />
+                <div className={`w-9 h-9 sm:w-12 sm:h-12 ml-2 flex-shrink-0 ${colors.icon} rounded-xl shadow-md flex items-center justify-center group-hover:rotate-6 transition-transform duration-500`}>
+                  <stat.icon className="w-4 h-4 sm:w-6 sm:h-6 text-white" />
                 </div>
               </div>
-              <Progress value={stat.progress} className={`h-2 ${colors.progress.replace('bg-', 'text-')} bg-slate-100 dark:bg-slate-800`} />
+              <div className={`h-1.5 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden`}>
+                <div className={`h-full ${colors.progress} rounded-full transition-all duration-500`} style={{ width: `${stat.progress}%` }} />
+              </div>
             </CardContent>
           </Card>
         )

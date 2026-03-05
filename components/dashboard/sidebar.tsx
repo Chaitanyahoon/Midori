@@ -30,15 +30,25 @@ export function Sidebar({ onClose }: SidebarProps) {
   const initials = userName === "My Profile" ? "ME" : userName.toUpperCase().slice(0, 2)
 
   return (
-    <div className="w-72 hidden lg:block h-screen sticky top-0 z-40">
+    <div className="w-72 h-screen flex flex-col sticky top-0 z-40">
       <div className="sidebar-float flex flex-col h-full overflow-hidden">
         {/* Header */}
         <div className="p-6 relative overflow-hidden">
           {/* Background Decoration */}
           <div className="absolute top-0 left-0 w-full h-32 bg-gradient-to-br from-emerald-500/10 to-amber-500/10 rounded-b-[3rem] -z-10" />
 
-          <div className="flex items-center space-x-3 mb-6 animate-bloom">
+          <div className="flex items-center justify-between mb-6 animate-bloom">
             <PlanthesiaLogo size="lg" />
+            {/* Mobile close button */}
+            {onClose && (
+              <button
+                onClick={onClose}
+                className="lg:hidden w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-500 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
+                aria-label="Close sidebar"
+              >
+                <Icons.close className="w-4 h-4" />
+              </button>
+            )}
           </div>
 
           {/* User Profile Tiny or Search could go here */}

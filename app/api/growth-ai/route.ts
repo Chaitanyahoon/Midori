@@ -23,8 +23,11 @@ export async function POST(request: Request) {
   try {
     const { message, context, intent } = await request.json();
 
-    const apiKey = process.env.GEMINI_API_KEY || "AIzaSyBd4SrCAd-CqdzbRR18UUt7U056AxcO6K8";
-    console.log("[Growth AI] Initializing with key prefix:", apiKey ? apiKey.substring(0, 8) + "..." : "UNDEFINED");
+    const apiKey = process.env.GEMINI_API_KEY;
+    if (!apiKey) {
+      throw new Error("GEMINI_API_KEY is not defined in environment variables");
+    }
+    console.log("[Growth AI] Initializing with key prefix:", apiKey.substring(0, 8) + "...");
     const ai = new GoogleGenAI({ apiKey });
 
     if (intent === "schedule") {

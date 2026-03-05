@@ -354,62 +354,87 @@ export function VisualGarden({ onAddPlant }: { onAddPlant?: () => void }) {
                 })
             }
 
-            // ── MOUNTAINS ──
-            const mtPalettes: Record<string, Record<string, string[]>> = {
-                night: {
-                    spring: ["#1E293B", "#334155", "#475569"], summer: ["#172554", "#1E3A5F", "#1D4ED8"],
-                    autumn: ["#1C1A2E", "#2D2942", "#3D3655"], winter: ["#0F172A", "#1C2A3F", "#1E3A5F"]
-                },
-                morning: {
-                    spring: ["#A78BFA", "#C4B5FD", "#DDD6FE"], summer: ["#7DD3FC", "#BAE6FD", "#E0F2FE"],
-                    autumn: ["#FCA5A5", "#FCD34D", "#FDE68A"], winter: ["#94A3B8", "#B0BEC5", "#D1D5DB"]
-                },
-                afternoon: {
-                    spring: ["#818CF8", "#A5B4FC", "#C7D2FE"], summer: ["#38BDF8", "#7DD3FC", "#BAE6FD"],
-                    autumn: ["#60A5FA", "#93C5FD", "#BFDBFE"], winter: ["#64748B", "#94A3B8", "#CBD5E1"]
-                },
-                evening: {
-                    spring: ["#4C1D95", "#6D28D9", "#7C3AED"], summer: ["#9D174D", "#BE185D", "#EC4899"],
-                    autumn: ["#431407", "#7C2D12", "#C2410C"], winter: ["#1E1B4B", "#312E81", "#4338CA"]
-                }
+
+            // ── GROUND LAYERS (Garden) ──
+            const gPal: Record<string, Record<string, string[]>> = {
+                night: { spring: ["#052E16", "#064E3B", "#065F46", "#1A0A00"], summer: ["#052E16", "#064E3B", "#065F46", "#1A1400"], autumn: ["#1C1007", "#2C1A07", "#3D2309", "#0A0500"], winter: ["#0F172A", "#1E293B", "#334155", "#0C1726"] },
+                morning: { spring: ["#BBF7D0", "#86EFAC", "#4ADE80", "#78350F"], summer: ["#A7F3D0", "#6EE7B7", "#34D399", "#713F12"], autumn: ["#FEF3C7", "#FDE68A", "#FBBF24", "#7C2D12"], winter: ["#E2E8F0", "#CBD5E1", "#94A3B8", "#1E293B"] },
+                afternoon: { spring: ["#DCFCE7", "#BBF7D0", "#86EFAC", "#92400E"], summer: ["#D1FAE5", "#A7F3D0", "#34D399", "#78350F"], autumn: ["#FEF9C3", "#FEF08A", "#FDE047", "#92400E"], winter: ["#F1F5F9", "#E2E8F0", "#CBD5E1", "#334155"] },
+                evening: { spring: ["#14532D", "#166534", "#15803D", "#1C0A00"], summer: ["#14532D", "#15803D", "#16A34A", "#1A0F00"], autumn: ["#431407", "#7C2D12", "#9A3412", "#050200"], winter: ["#1E293B", "#334155", "#475569", "#0A0F1A"] }
             }
-            const mp: string[] = mtPalettes[tod]?.[vs] || ["#1E293B", "#334155", "#475569"]
-            // 3 mountain layers
-            const mtLayers: [number, number, string][] = [[0.48, 0.12, mp[0]], [0.44, 0.07, mp[1]], [0.4, 0.05, mp[2]]]
-            mtLayers.forEach(([yBase, roughness, col], li) => {
-                ctx.fillStyle = col
-                ctx.beginPath(); ctx.moveTo(0, H)
-                const pts = 12 + li * 3; const yb = yBase * H
-                for (let i = 0; i <= pts; i++) {
-                    const px = (i / pts) * W
-                    const ph = yb - Math.abs(Math.sin(i * 2.1 + li * 3)) * H * roughness * 1.8 - Math.abs(Math.sin(i * 0.7 + li)) * H * roughness * 0.8
-                    ctx.lineTo(px, ph)
-                }
-                ctx.lineTo(W, H); ctx.closePath(); ctx.fill()
+            const gp = gPal[tod]?.[vs] || ["#052E16", "#064E3B", "#065F46", "#1A0A00"]
+
+            // Far rolling meadow
+            ctx.fillStyle = gp[0]
+            ctx.beginPath(); ctx.moveTo(0, H); ctx.lineTo(0, H * 0.64)
+            ctx.bezierCurveTo(W * 0.2, H * 0.59, W * 0.5, H * 0.67, W * 0.75, H * 0.61)
+            ctx.bezierCurveTo(W * 0.88, H * 0.58, W, H * 0.63, W, H * 0.61)
+            ctx.lineTo(W, H); ctx.closePath(); ctx.fill()
+
+            // Mid lawn
+            ctx.fillStyle = gp[1]
+            ctx.beginPath(); ctx.moveTo(0, H); ctx.lineTo(0, H * 0.76)
+            ctx.bezierCurveTo(W * 0.18, H * 0.74, W * 0.45, H * 0.79, W * 0.7, H * 0.75)
+            ctx.bezierCurveTo(W * 0.85, H * 0.73, W, H * 0.77, W, H * 0.75)
+            ctx.lineTo(W, H); ctx.closePath(); ctx.fill()
+
+            // Front garden ground
+            ctx.fillStyle = gp[2]
+            ctx.beginPath(); ctx.moveTo(0, H); ctx.lineTo(0, H * 0.87)
+            ctx.bezierCurveTo(W * 0.3, H * 0.85, W * 0.65, H * 0.89, W, H * 0.86)
+            ctx.lineTo(W, H); ctx.closePath(); ctx.fill()
+
+            // Soil / garden bed strip (darkest, front bottom)
+            const soilGrad = ctx.createLinearGradient(0, H * 0.9, 0, H)
+            soilGrad.addColorStop(0, gp[3] + "EE"); soilGrad.addColorStop(1, gp[3])
+            ctx.fillStyle = soilGrad
+            ctx.beginPath(); ctx.moveTo(0, H); ctx.lineTo(0, H * 0.92)
+            ctx.bezierCurveTo(W * 0.25, H * 0.91, W * 0.65, H * 0.93, W, H * 0.91)
+            ctx.lineTo(W, H); ctx.closePath(); ctx.fill()
+
+            // Dirt path (winding from bottom center into mid)
+            const pathCol = dark ? "rgba(60,35,15,0.7)" : (vs === "winter" ? "rgba(160,170,180,0.5)" : "rgba(180,130,80,0.55)")
+            ctx.fillStyle = pathCol
+            ctx.beginPath()
+            ctx.moveTo(W * 0.38, H)
+            ctx.bezierCurveTo(W * 0.4, H * 0.95, W * 0.44, H * 0.88, W * 0.48, H * 0.8)
+            ctx.bezierCurveTo(W * 0.52, H * 0.72, W * 0.5, H * 0.68, W * 0.52, H * 0.62)
+            ctx.bezierCurveTo(W * 0.56, H * 0.62, W * 0.62, H * 0.72, W * 0.64, H * 0.8)
+            ctx.bezierCurveTo(W * 0.66, H * 0.88, W * 0.63, H * 0.95, W * 0.62, H)
+            ctx.closePath(); ctx.fill()
+
+            // Stepping stones along path
+            const stoneCol = dark ? "rgba(100,110,130,0.55)" : (vs === "winter" ? "rgba(200,210,220,0.6)" : "rgba(160,140,110,0.65)")
+            ctx.fillStyle = stoneCol
+            const stones: [number, number, number, number][] = [[0.49, 0.93, 18, 10], [0.5, 0.86, 16, 9], [0.50, 0.79, 15, 8], [0.51, 0.72, 13, 7]]
+            stones.forEach(([sx, sy, rw, rh]) => {
+                ctx.save(); ctx.beginPath()
+                ctx.ellipse(sx * W, sy * H, rw, rh, 0, 0, Math.PI * 2); ctx.fill()
+                ctx.strokeStyle = dark ? "rgba(150,160,180,0.2)" : "rgba(255,255,255,0.25)"; ctx.lineWidth = 1
+                ctx.stroke(); ctx.restore()
             })
 
-            // ── GROUND LAYERS ──
-            const gPal: Record<string, Record<string, string[]>> = {
-                night: { spring: ["#052E16", "#064E3B", "#065F46"], summer: ["#052E16", "#064E3B", "#065F46"], autumn: ["#1C1007", "#2C1A07", "#3D2309"], winter: ["#1E3A5F", "#1E293B", "#334155"] },
-                morning: { spring: ["#D1FAE5", "#A7F3D0", "#6EE7B7"], summer: ["#BBF7D0", "#86EFAC", "#4ADE80"], autumn: ["#FDE68A", "#FCD34D", "#F59E0B"], winter: ["#CBD5E1", "#94A3B8", "#64748B"] },
-                afternoon: { spring: ["#DCFCE7", "#BBF7D0", "#86EFAC"], summer: ["#D1FAE5", "#A7F3D0", "#34D399"], autumn: ["#FEF3C7", "#FDE68A", "#FBBF24"], winter: ["#E2E8F0", "#CBD5E1", "#94A3B8"] },
-                evening: { spring: ["#14532D", "#166534", "#15803D"], summer: ["#14532D", "#15803D", "#16A34A"], autumn: ["#7C2D12", "#9A3412", "#B45309"], winter: ["#334155", "#1E293B", "#0F172A"] }
+            // Grass blade tufts along soil edge
+            const bladeCol = dark ? gp[2] + "99" : gp[2]
+            ctx.strokeStyle = bladeCol; ctx.lineWidth = 1.5
+            for (let g2 = 0; g2 < 28; g2++) {
+                const gx = (g2 / 28) * W * 0.95 + W * 0.025
+                const gy = H * 0.905 + Math.sin(g2 * 1.7) * H * 0.008
+                const sway = Math.sin(t * 0.012 + g2 * 0.8) * 4
+                ctx.save(); ctx.globalAlpha = 0.7
+                ctx.beginPath(); ctx.moveTo(gx, gy); ctx.quadraticCurveTo(gx + sway, gy - 10, gx + sway * 1.5, gy - 18); ctx.stroke()
+                ctx.beginPath(); ctx.moveTo(gx + 5, gy); ctx.quadraticCurveTo(gx + 5 + sway * 0.5, gy - 8, gx + 5 + sway, gy - 14); ctx.stroke()
+                ctx.restore()
             }
-            const gp = gPal[tod]?.[vs] || ["#052E16", "#064E3B", "#065F46"]
-            ctx.fillStyle = gp[0]; ctx.beginPath(); ctx.moveTo(0, H); ctx.lineTo(0, H * 0.62)
-            ctx.bezierCurveTo(W * 0.3, H * 0.54, W * 0.65, H * 0.64, W, H * 0.58); ctx.lineTo(W, H); ctx.closePath(); ctx.fill()
-            ctx.fillStyle = gp[1]; ctx.beginPath(); ctx.moveTo(0, H); ctx.lineTo(0, H * 0.76)
-            ctx.bezierCurveTo(W * 0.25, H * 0.73, W * 0.6, H * 0.79, W, H * 0.75); ctx.lineTo(W, H); ctx.closePath(); ctx.fill()
-            ctx.fillStyle = gp[2]; ctx.beginPath(); ctx.moveTo(0, H); ctx.lineTo(0, H * 0.88)
-            ctx.bezierCurveTo(W * 0.3, H * 0.86, W * 0.65, H * 0.9, W, H * 0.87); ctx.lineTo(W, H); ctx.closePath(); ctx.fill()
 
-            // Winter snow drift
+            // Winter snow drift on ground
             if (vs === 'winter') {
                 const wg = ctx.createLinearGradient(0, H * 0.83, 0, H)
-                wg.addColorStop(0, night ? "rgba(200,220,255,0.3)" : "rgba(248,250,252,0.7)"); wg.addColorStop(1, "rgba(241,245,249,0.5)")
+                wg.addColorStop(0, night ? "rgba(200,220,255,0.28)" : "rgba(248,250,252,0.65)"); wg.addColorStop(1, "rgba(241,245,249,0.45)")
                 ctx.fillStyle = wg; ctx.beginPath(); ctx.moveTo(0, H); ctx.lineTo(0, H * 0.88)
                 ctx.bezierCurveTo(W * 0.2, H * 0.86, W * 0.6, H * 0.89, W, H * 0.87); ctx.lineTo(W, H); ctx.closePath(); ctx.fill()
             }
+
 
             // Morning mist
             if (morn) {

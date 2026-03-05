@@ -1,4 +1,4 @@
-import { Loader2Icon } from 'lucide-react'
+import { FiLoader as Loader2Icon } from 'react-icons/fi'
 
 import { cn } from '@/lib/utils'
 

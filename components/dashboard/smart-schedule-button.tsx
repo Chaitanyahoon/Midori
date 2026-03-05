@@ -14,7 +14,7 @@ import {
     DialogTrigger,
 } from "@/components/ui/dialog"
 import { toast } from "sonner"
-import { Loader2 } from "lucide-react"
+import { FiLoader as Loader2 } from "react-icons/fi"
 
 interface SuggestedTask {
     title: string

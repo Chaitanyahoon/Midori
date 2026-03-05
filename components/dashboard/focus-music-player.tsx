@@ -704,80 +704,128 @@ export function FocusMusicPlayer({
 
   // --- DEFAULT RENDER ---
   return (
-    <Card className={`bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border border-slate-200 dark:border-slate-800 shadow-xl overflow-hidden ${className}`}>
-      <CardHeader className="pb-4 border-b border-slate-100 dark:border-slate-800">
-        <div className="flex items-center justify-between">
-          <div>
-            <CardTitle className="text-xl font-bold flex items-center gap-2">
-              <span className="w-8 h-8 rounded-lg bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center text-lg">🎵</span>
-              Focus Groove
-            </CardTitle>
-          </div>
-        </div>
-      </CardHeader>
+    <Card className={`relative bg-white/60 dark:bg-slate-900/60 backdrop-blur-xl border border-white/40 dark:border-slate-700/50 shadow-xl shadow-emerald-500/5 rounded-2xl overflow-hidden ${className}`}>
+      {/* Ambient glow when playing */}
+      {isPlaying && (
+        <div
+          className="absolute inset-0 pointer-events-none"
+          style={{
+            background: "radial-gradient(ellipse at 50% 100%, rgba(16,185,129,0.07) 0%, transparent 65%)"
+          }}
+        />
+      )}
 
-      <CardContent className="space-y-6">
-        {/* Category Tabs & Grid */}
+      {/* Header */}
+      <div className="px-5 pt-5 pb-4 border-b border-slate-100/60 dark:border-slate-800/60 relative z-10">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center shadow-md shadow-emerald-500/20">
+              <span className="text-xl">🎵</span>
+            </div>
+            <div>
+              <h3 className="text-base font-bold text-slate-800 dark:text-slate-100 tracking-tight">Focus Groove</h3>
+              <p className="text-[11px] text-slate-400 dark:text-slate-500 font-medium">
+                {isPlaying && currentTrack ? currentTrack.name : "Choose your sound"}
+              </p>
+            </div>
+          </div>
+
+          {/* Equalizer bars when playing */}
+          {isPlaying && (
+            <div className="flex items-end gap-0.5 h-5 mr-1">
+              {[3, 5, 4, 6, 3].map((h, i) => (
+                <div
+                  key={i}
+                  className="w-1 bg-emerald-500 rounded-full"
+                  style={{
+                    height: `${h * 3}px`,
+                    animation: `equalizer ${0.6 + i * 0.1}s ease-in-out infinite alternate`,
+                  }}
+                />
+              ))}
+              <style>{`
+                @keyframes equalizer {
+                  from { transform: scaleY(0.4); }
+                  to   { transform: scaleY(1);   }
+                }
+              `}</style>
+            </div>
+          )}
+        </div>
+      </div>
+
+      <CardContent className="px-5 py-4 space-y-4 relative z-10">
+        {/* Category Tabs */}
         <Tabs value={activeCategory} onValueChange={(v) => setActiveCategory(v as MusicTrack["category"] | "custom")}>
-          <TabsList className="grid w-full grid-cols-5 h-auto p-1 bg-white/50 dark:bg-slate-800/50 backdrop-blur-sm rounded-xl">
-            {(["focus", "relax", "energy", "instrumental"] as const).map((cat) => (
-              <TabsTrigger
-                key={cat}
-                value={cat}
-                className={`text-xs px-1 y-2 transition-all data-[state=active]:bg-white data-[state=active]:shadow-sm rounded-lg flex flex-col items-center gap-1 ${activeCategory === cat ? "text-emerald-600 dark:text-emerald-400" : "text-slate-500 hover:bg-white/40"
-                  }`}
-                title={categoryLabels[cat]}
-              >
-                <span className="text-lg">{categoryIcons[cat]}</span>
-                <span className="hidden sm:inline text-[10px] uppercase font-bold tracking-tight">{cat}</span>
-              </TabsTrigger>
-            ))}
+          <TabsList className="flex w-full gap-1 h-auto p-1 bg-slate-100/60 dark:bg-slate-800/50 rounded-xl">
+            {(["focus", "relax", "energy", "instrumental"] as const).map((cat) => {
+              const colors: Record<string, string> = {
+                focus: "data-[state=active]:text-emerald-600 dark:data-[state=active]:text-emerald-400",
+                relax: "data-[state=active]:text-blue-600 dark:data-[state=active]:text-blue-400",
+                energy: "data-[state=active]:text-orange-600 dark:data-[state=active]:text-orange-400",
+                instrumental: "data-[state=active]:text-purple-600 dark:data-[state=active]:text-purple-400",
+              }
+              return (
+                <TabsTrigger
+                  key={cat}
+                  value={cat}
+                  title={categoryLabels[cat]}
+                  className={`flex-1 text-[10px] py-1.5 flex flex-col items-center gap-0.5 rounded-lg transition-all
+                    data-[state=active]:bg-white dark:data-[state=active]:bg-slate-700 data-[state=active]:shadow-sm
+                    text-slate-400 ${colors[cat]} font-bold uppercase tracking-wider`}
+                >
+                  <span className="text-base leading-none">{categoryIcons[cat]}</span>
+                  <span className="hidden sm:block">{cat}</span>
+                </TabsTrigger>
+              )
+            })}
             <TabsTrigger
               value="custom"
-              className={`text-xs px-1 y-2 transition-all data-[state=active]:bg-white data-[state=active]:shadow-sm rounded-lg flex flex-col items-center gap-1 ${activeCategory === "custom" ? "text-emerald-600 dark:text-emerald-400" : "text-slate-500 hover:bg-white/40"
-                }`}
-              title="My Custom Mix"
+              title="Custom Mix"
+              className="flex-1 text-[10px] py-1.5 flex flex-col items-center gap-0.5 rounded-lg transition-all
+                data-[state=active]:bg-white dark:data-[state=active]:bg-slate-700 data-[state=active]:shadow-sm
+                text-slate-400 data-[state=active]:text-slate-700 dark:data-[state=active]:text-slate-200 font-bold uppercase tracking-wider"
             >
-              <span className="text-lg">🎧</span>
-              <span className="hidden sm:inline text-[10px] uppercase font-bold tracking-tight">Custom</span>
+              <span className="text-base leading-none">🎧</span>
+              <span className="hidden sm:block">Custom</span>
             </TabsTrigger>
           </TabsList>
 
           {(["focus", "relax", "energy", "instrumental"] as const).map((cat) => (
-            <TabsContent key={cat} value={cat} className="mt-4 focus-visible:outline-none min-h-[120px]">
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 max-h-[240px] overflow-y-auto pr-2 custom-scrollbar">
-                {filteredMusic.map((music) => (
-                  <button
-                    key={music.name}
-                    onClick={() => handlePlayMusic(music)}
-                    className={`group flex items-center gap-3 p-2 text-left rounded-xl transition-all border ${isPlaying && currentTrack?.name === music.name
-                      ? "bg-slate-900 text-white border-slate-900 dark:bg-emerald-600 dark:border-emerald-600 shadow-md"
-                      : "bg-white/50 dark:bg-slate-800/50 border-slate-200/50 dark:border-slate-700/50 hover:bg-white hover:border-emerald-300 dark:hover:border-emerald-600"
-                      }`}
-                  >
-                    <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-lg flex-shrink-0 transition-colors ${isPlaying && currentTrack?.name === music.name
-                      ? "bg-white/10"
-                      : "bg-slate-100 dark:bg-slate-700 group-hover:bg-emerald-50 dark:group-hover:bg-emerald-900/20"
-                      }`}>
-                      {music.icon || "🎵"}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="font-medium text-xs truncate">{music.name}</div>
-                    </div>
-                  </button>
-                ))}
+            <TabsContent key={cat} value={cat} className="mt-3 focus-visible:outline-none">
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 max-h-[220px] overflow-y-auto pr-1">
+                {filteredMusic.map((music) => {
+                  const playing = isPlaying && currentTrack?.name === music.name
+                  return (
+                    <button
+                      key={music.name}
+                      onClick={() => handlePlayMusic(music)}
+                      className={`group relative flex items-center gap-2.5 p-2.5 text-left rounded-xl transition-all border ${playing
+                        ? "bg-emerald-500 text-white border-emerald-500 shadow-md shadow-emerald-500/20"
+                        : "bg-white/60 dark:bg-slate-800/40 border-slate-200/40 dark:border-slate-700/40 hover:bg-white dark:hover:bg-slate-800 hover:border-emerald-200 dark:hover:border-emerald-700 hover:shadow-sm"
+                        }`}
+                    >
+                      <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-lg flex-shrink-0 ${playing ? "bg-white/20" : "bg-slate-100 dark:bg-slate-700"
+                        }`}>
+                        {music.icon || "🎵"}
+                      </div>
+                      <span className={`text-xs font-semibold truncate ${playing ? "text-white" : "text-slate-700 dark:text-slate-300"}`}>
+                        {music.name}
+                      </span>
+                    </button>
+                  )
+                })}
               </div>
             </TabsContent>
           ))}
 
-          <TabsContent value="custom" className="mt-4 focus-visible:outline-none min-h-[120px]">
-            <div className="space-y-4">
-              {/* Add New Track */}
-              <div className="p-3 bg-white/50 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700">
-                <h4 className="text-xs font-semibold mb-2 text-slate-600 dark:text-slate-400">Add YouTube Track</h4>
+          <TabsContent value="custom" className="mt-3 focus-visible:outline-none">
+            <div className="space-y-3">
+              <div className="p-3 bg-white/50 dark:bg-slate-800/50 rounded-xl border border-slate-200/60 dark:border-slate-700/60">
+                <h4 className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-2">Add YouTube Track</h4>
                 <div className="flex gap-2">
                   <Input
-                    placeholder="Track Name"
+                    placeholder="Track name"
                     value={newTrackName}
                     onChange={(e) => setNewTrackName(e.target.value)}
                     className="h-8 text-xs"
@@ -788,146 +836,109 @@ export function FocusMusicPlayer({
                     onChange={(e) => setNewTrackUrl(e.target.value)}
                     className="h-8 text-xs flex-[2]"
                   />
-                  <Button size="sm" onClick={handleAddCustomTrack} className="h-8 px-3 bg-emerald-600 hover:bg-emerald-700 text-white" disabled={!newTrackName || !newTrackUrl}>
+                  <Button size="sm" onClick={handleAddCustomTrack} className="h-8 px-3 bg-emerald-500 hover:bg-emerald-600 text-white" disabled={!newTrackName || !newTrackUrl}>
                     <Icons.plus className="w-3 h-3" />
                   </Button>
                 </div>
               </div>
 
-              {/* Custom Tracks List */}
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 max-h-[160px] overflow-y-auto pr-2 custom-scrollbar">
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 max-h-[140px] overflow-y-auto pr-1">
                 {customTracks.length === 0 ? (
-                  <div className="col-span-full text-center py-6 text-slate-400 text-xs italic">
-                    Add your favorite YouTube tracks above!
-                  </div>
+                  <div className="col-span-full text-center py-6 text-slate-400 text-xs italic">Add your favorite YouTube tracks above!</div>
                 ) : (
-                  customTracks.map((track) => (
-                    <div
-                      key={track.id}
-                      className={`group flex items-center justify-between gap-2 p-2 rounded-xl transition-all border ${isPlaying && currentTrack?.name === track.name
-                        ? "bg-slate-900 text-white border-slate-900 dark:bg-emerald-600 dark:border-emerald-600 shadow-md"
-                        : "bg-white/50 dark:bg-slate-800/50 border-slate-200/50 dark:border-slate-700/50 hover:bg-white hover:border-emerald-300 dark:hover:border-emerald-600"
-                        }`}
-                    >
-                      <button
-                        onClick={() => handlePlayCustomTrack(track)}
-                        className="flex items-center gap-2 flex-1 min-w-0 text-left"
+                  customTracks.map((track) => {
+                    const playing = isPlaying && currentTrack?.name === track.name
+                    return (
+                      <div
+                        key={track.id}
+                        className={`group flex items-center justify-between gap-2 p-2.5 rounded-xl border transition-all ${playing
+                          ? "bg-emerald-500 text-white border-emerald-500"
+                          : "bg-white/60 dark:bg-slate-800/40 border-slate-200/40 dark:border-slate-700/40 hover:bg-white dark:hover:bg-slate-800"
+                          }`}
                       >
-                        <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-lg flex-shrink-0 transition-colors ${isPlaying && currentTrack?.name === track.name
-                          ? "bg-white/10"
-                          : "bg-slate-100 dark:bg-slate-700 group-hover:bg-emerald-50 dark:group-hover:bg-emerald-900/20"
-                          }`}>
-                          🎧
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="font-medium text-xs truncate">{track.name}</div>
-                        </div>
-                      </button>
-                      <button
-                        onClick={(e) => { e.stopPropagation(); removeCustomTrack(track.id); }}
-                        className="text-slate-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity p-1"
-                        title="Remove track"
-                      >
-                        <Icons.trash className="w-3 h-3" />
-                      </button>
-                    </div>
-                  ))
+                        <button onClick={() => handlePlayCustomTrack(track)} className="flex items-center gap-2 flex-1 min-w-0 text-left">
+                          <div className={`w-7 h-7 rounded-lg flex items-center justify-center text-base flex-shrink-0 ${playing ? "bg-white/20" : "bg-slate-100 dark:bg-slate-700"}`}>🎧</div>
+                          <span className={`text-xs font-semibold truncate ${playing ? "text-white" : "text-slate-700 dark:text-slate-300"}`}>{track.name}</span>
+                        </button>
+                        <button onClick={(e) => { e.stopPropagation(); removeCustomTrack(track.id) }} className="text-slate-400 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity p-1">
+                          <Icons.trash className="w-3 h-3" />
+                        </button>
+                      </div>
+                    )
+                  })
                 )}
               </div>
             </div>
           </TabsContent>
         </Tabs>
 
-        {/* --- Ambient Soundscapes (Condensed) --- */}
-        <div className="p-3 bg-slate-50/80 dark:bg-slate-800/30 rounded-xl border border-slate-100 dark:border-slate-800">
-          <div className="flex items-center justify-between mb-2">
-            <h4 className="text-xs font-bold uppercase tracking-wider text-slate-500 flex items-center gap-2">
+        {/* Nature Mixer */}
+        <div className="bg-slate-50/70 dark:bg-slate-800/30 rounded-xl p-3 border border-slate-100/80 dark:border-slate-800/60">
+          <div className="flex items-center justify-between mb-2.5">
+            <h4 className="text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500 flex items-center gap-1.5">
               <Icons.leaf className="w-3 h-3" /> Nature Mixer
             </h4>
             {isAmbientPlaying && ambientTrack && (
               <div className="flex items-center gap-2">
-                <span className="text-xs text-emerald-600 dark:text-emerald-400 font-medium">{ambientTrack.name}</span>
-                <Slider value={ambientVolume} onValueChange={setAmbientVolume} max={100} step={1} className="w-20" />
+                <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold">{ambientTrack.name}</span>
+                <Slider value={ambientVolume} onValueChange={setAmbientVolume} max={100} step={1} className="w-16" />
               </div>
             )}
           </div>
-
-          <div className="flex gap-2 justify-between">
-            {MUSIC_OPTIONS.filter(m => m.category === 'nature').slice(0, 5).map((track) => (
-              <button
-                key={track.name}
-                onClick={() => handlePlayAmbient(track)}
-                className={`flex-1 flex flex-col items-center justify-center p-2 rounded-lg transition-all ${isAmbientPlaying && ambientTrack?.name === track.name
-                  ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-300 border border-emerald-200"
-                  : "hover:bg-white dark:hover:bg-slate-700 text-slate-400 hover:text-slate-700"
-                  }`}
-                title={track.name}
-              >
-                <span className="text-lg mb-1">{track.icon}</span>
-              </button>
-            ))}
+          <div className="flex gap-2">
+            {MUSIC_OPTIONS.filter(m => m.category === "nature").slice(0, 5).map((track) => {
+              const active = isAmbientPlaying && ambientTrack?.name === track.name
+              return (
+                <button
+                  key={track.name}
+                  onClick={() => handlePlayAmbient(track)}
+                  title={track.name}
+                  className={`flex-1 flex flex-col items-center justify-center py-2 rounded-xl transition-all text-lg ${active
+                    ? "bg-emerald-100 dark:bg-emerald-900/50 ring-1 ring-emerald-400 text-emerald-600"
+                    : "hover:bg-white dark:hover:bg-slate-700 text-slate-400 hover:text-slate-600"
+                    }`}
+                >
+                  {track.icon}
+                </button>
+              )
+            })}
           </div>
-          {/* Hidden Ambient Player */}
           {ambientTrack && (
             <div className="hidden">
-              <div id={`youtube-player-ambient-${extractVideoId(ambientTrack.url) || "default"}`}></div>
+              <div id={`youtube-player-ambient-${extractVideoId(ambientTrack.url) || "default"}`} />
             </div>
           )}
         </div>
 
-        {/* Active Player Section (Combines Now Playing + Volume) */}
+        {/* Now Playing floating bar  */}
         {isPlaying && currentTrack && (
-          <div className="bg-slate-900 text-white rounded-xl overflow-hidden shadow-xl animate-in fade-in slide-in-from-bottom-2">
-            {/* Video Area */}
-            <div className="relative aspect-video bg-black group">
-              <div id={`youtube-player-${extractVideoId(currentTrack.url) || "default"}`} className="w-full h-full opacity-80 group-hover:opacity-100 transition-opacity"></div>
-
-              {/* Overlay Controls */}
-              <div className="absolute inset-x-0 bottom-0 p-3 bg-gradient-to-t from-black/80 to-transparent flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <Button size="icon" variant="ghost" className="h-8 w-8 text-white hover:bg-white/20 rounded-full" onClick={isPlaying ? handlePause : () => handlePlayMusic(currentTrack!)}>
-                    {isPlaying ? <Icons.pause className="w-4 h-4" /> : <Icons.play className="w-4 h-4 ml-1" />}
-                  </Button>
-                  <Button size="icon" variant="ghost" className="h-8 w-8 text-red-300 hover:text-red-200 hover:bg-white/10 rounded-full" onClick={handleStop}>
-                    <Icons.stop className="w-4 h-4" />
-                  </Button>
-                </div>
-
-                <div className="flex items-center gap-2 w-1/3">
-                  <Icons.volume className="w-3 h-3 text-white/70" />
-                  <Slider value={volume} onValueChange={setVolume} max={100} className="flex-1 opacity-70 hover:opacity-100 transition-opacity" />
-                </div>
-              </div>
+          <div className="bg-slate-900 dark:bg-slate-950 rounded-xl overflow-hidden shadow-lg">
+            {/* Hidden video player */}
+            <div className="hidden">
+              <div id={`youtube-player-${extractVideoId(currentTrack.url) || "default"}`} />
             </div>
-
-            {/* Info Bar */}
-            <div className="px-4 py-2 bg-slate-800 flex items-center justify-between text-xs">
-              <div className="flex items-center gap-2">
-                <span>{currentTrack.icon}</span>
-                <span className="font-medium truncate max-w-[150px]">{currentTrack.name}</span>
+            <div className="flex items-center gap-3 px-3 py-2.5">
+              <div className="w-8 h-8 rounded-lg bg-emerald-500/20 flex items-center justify-center text-lg flex-shrink-0">
+                {currentTrack.icon}
               </div>
-              <div className="text-slate-400">{activeCategory}</div>
+              <div className="flex-1 min-w-0">
+                <div className="text-xs font-semibold text-white truncate">{currentTrack.name}</div>
+                <div className="text-[10px] text-slate-400 capitalize">{activeCategory}</div>
+              </div>
+              <div className="flex items-center gap-2 flex-shrink-0">
+                <Icons.volume className="w-3 h-3 text-slate-400" />
+                <Slider value={volume} onValueChange={setVolume} max={100} className="w-16" />
+                <Button size="icon" variant="ghost" onClick={handlePause} className="h-7 w-7 text-white hover:bg-white/10 rounded-full">
+                  <Icons.pause className="w-3.5 h-3.5" />
+                </Button>
+                <Button size="icon" variant="ghost" onClick={handleStop} className="h-7 w-7 text-red-400 hover:text-red-300 hover:bg-white/10 rounded-full">
+                  <Icons.stop className="w-3.5 h-3.5" />
+                </Button>
+              </div>
             </div>
           </div>
         )}
-
       </CardContent>
-
-      <style jsx>{`
-        .custom-scrollbar::-webkit-scrollbar {
-          width: 4px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-track {
-          background: transparent;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb {
-          background: rgba(100, 116, 139, 0.2);
-          border-radius: 4px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-          background: rgba(100, 116, 139, 0.4);
-        }
-      `}</style>
-    </Card >
+    </Card>
   )
 }

@@ -155,17 +155,40 @@ export function VisualGarden({ onAddPlant }: { onAddPlant?: () => void }) {
             if (dark) {
                 const sa = night ? 1 : 0.45
                 stars.current.forEach(s => {
-                    const tw = Math.sin(t * s.ts + s.to); const a = sa * (0.5 + 0.5 * tw)
-                    const sx = s.x * W; const sy = s.y * H * 0.68
+                    const tw = Math.sin(t * s.ts + s.to)
+                    const a = sa * (0.55 + 0.45 * tw)
+                    const sx = s.x * W; const sy = s.y * H * 0.65
                     ctx.save(); ctx.globalAlpha = Math.max(0, a)
-                    const g = ctx.createRadialGradient(sx, sy, 0, sx, sy, s.size * 4)
-                    g.addColorStop(0, "rgba(220,235,255,0.9)"); g.addColorStop(1, "rgba(200,220,255,0)")
-                    ctx.fillStyle = g; ctx.beginPath(); ctx.arc(sx, sy, s.size * 4, 0, Math.PI * 2); ctx.fill()
-                    ctx.fillStyle = "#fff"; ctx.beginPath(); ctx.arc(sx, sy, s.size * 0.6, 0, Math.PI * 2); ctx.fill()
+                    // Soft outer glow
+                    const g = ctx.createRadialGradient(sx, sy, 0, sx, sy, s.size * 5)
+                    g.addColorStop(0, "rgba(210,230,255,0.85)"); g.addColorStop(0.4, "rgba(200,220,255,0.2)"); g.addColorStop(1, "rgba(200,220,255,0)")
+                    ctx.fillStyle = g; ctx.beginPath(); ctx.arc(sx, sy, s.size * 5, 0, Math.PI * 2); ctx.fill()
+                    // Star core
+                    ctx.fillStyle = "#FFFFFF"
+                    ctx.beginPath(); ctx.arc(sx, sy, s.size * 0.9, 0, Math.PI * 2); ctx.fill()
+                    // 4-point cross spike for brighter stars
+                    if (s.size > 1.1) {
+                        ctx.globalAlpha = Math.max(0, a * 0.7)
+                        ctx.strokeStyle = "rgba(255,255,255,0.8)"; ctx.lineWidth = 0.6
+                        const arm = s.size * 4.5
+                        ctx.beginPath()
+                        ctx.moveTo(sx - arm, sy); ctx.lineTo(sx + arm, sy)
+                        ctx.moveTo(sx, sy - arm); ctx.lineTo(sx, sy + arm)
+                        ctx.stroke()
+                        // Diagonal mini arms
+                        ctx.strokeStyle = "rgba(255,255,255,0.35)"; ctx.lineWidth = 0.4
+                        const darm = s.size * 2.5
+                        ctx.beginPath()
+                        ctx.moveTo(sx - darm, sy - darm); ctx.lineTo(sx + darm, sy + darm)
+                        ctx.moveTo(sx + darm, sy - darm); ctx.lineTo(sx - darm, sy + darm)
+                        ctx.stroke()
+                    }
                     ctx.restore()
                 })
+            }
 
-                // ── SHOOTING STARS ──
+            // ── SHOOTING STARS ──
+            if (dark) {
                 if (night && Math.random() < 0.012) {
                     const angle = 0.4 + Math.random() * 0.35
                     const spd = 0.006 + Math.random() * 0.01
@@ -179,30 +202,20 @@ export function VisualGarden({ onAddPlant }: { onAddPlant?: () => void }) {
                     const hx = ss.x * W; const hy = ss.y * H * 0.72
                     const tx2 = hx - ss.trail * ss.vx * W; const ty2 = hy - ss.trail * ss.vy * H * 0.72
                     ctx.save()
-                    // Glow halo at head
                     ctx.globalAlpha = alpha * 0.5
                     const halo = ctx.createRadialGradient(hx, hy, 0, hx, hy, 12)
                     halo.addColorStop(0, 'rgba(255,255,255,0.9)'); halo.addColorStop(1, 'rgba(200,230,255,0)')
                     ctx.fillStyle = halo; ctx.beginPath(); ctx.arc(hx, hy, 12, 0, Math.PI * 2); ctx.fill()
-                    // Wide tapered trail
                     ctx.globalAlpha = alpha
                     const tg = ctx.createLinearGradient(hx, hy, tx2, ty2)
-                    tg.addColorStop(0, 'rgba(255,255,255,0.95)')
-                    tg.addColorStop(0.15, 'rgba(200,230,255,0.7)')
-                    tg.addColorStop(0.5, 'rgba(180,210,255,0.25)')
-                    tg.addColorStop(1, 'rgba(150,200,255,0)')
-                    ctx.strokeStyle = tg; ctx.lineWidth = 3.5
-                    ctx.lineCap = 'round'
+                    tg.addColorStop(0, 'rgba(255,255,255,0.95)'); tg.addColorStop(0.15, 'rgba(200,230,255,0.7)'); tg.addColorStop(0.5, 'rgba(180,210,255,0.25)'); tg.addColorStop(1, 'rgba(150,200,255,0)')
+                    ctx.strokeStyle = tg; ctx.lineWidth = 3.5; ctx.lineCap = 'round'
                     ctx.beginPath(); ctx.moveTo(hx, hy); ctx.lineTo(tx2, ty2); ctx.stroke()
-                    // Bright core line
                     const tg2 = ctx.createLinearGradient(hx, hy, hx - ss.trail * 0.4 * ss.vx * W, hy - ss.trail * 0.4 * ss.vy * H * 0.72)
                     tg2.addColorStop(0, 'rgba(255,255,255,1)'); tg2.addColorStop(1, 'rgba(255,255,255,0)')
                     ctx.strokeStyle = tg2; ctx.lineWidth = 1.2
                     ctx.beginPath(); ctx.moveTo(hx, hy); ctx.lineTo(hx - ss.trail * 0.4 * ss.vx * W, hy - ss.trail * 0.4 * ss.vy * H * 0.72); ctx.stroke()
-                    // Head dot
-                    ctx.globalAlpha = alpha
-                    ctx.fillStyle = '#fff'
-                    ctx.beginPath(); ctx.arc(hx, hy, 2.5, 0, Math.PI * 2); ctx.fill()
+                    ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(hx, hy, 2.5, 0, Math.PI * 2); ctx.fill()
                     ctx.restore()
                 }
 
@@ -213,7 +226,7 @@ export function VisualGarden({ onAddPlant }: { onAddPlant?: () => void }) {
                         const ay = H * (0.12 + a * 0.07)
                         const ag = ctx.createLinearGradient(0, ay - H * 0.06, 0, ay + H * 0.06)
                         const cols = [["#00FFB2", "#00CEC9"], ["#7F5AF0", "#6A0DAD"], ["#00F5FF", "#0088CC"], ["#A8FF78", "#78FFD6"]]
-                        const [c1, c2] = cols[a % cols.length]
+                        const [c1] = cols[a % cols.length]
                         ag.addColorStop(0, "transparent"); ag.addColorStop(0.5, c1 + "88"); ag.addColorStop(1, "transparent")
                         ctx.fillStyle = ag
                         ctx.beginPath(); ctx.moveTo(0, ay)
@@ -228,14 +241,41 @@ export function VisualGarden({ onAddPlant }: { onAddPlant?: () => void }) {
             let cx2 = W * (morn ? 0.2 : aft ? 0.6 : eve ? 0.82 : 0.5), cy2 = H * (morn ? 0.35 : aft ? 0.12 : eve ? 0.4 : 0.18)
             ctx.save(); ctx.translate(cx2, cy2)
             if (night) {
-                const ms = Math.min(W, H) * 0.048
-                const mh = ctx.createRadialGradient(0, 0, ms, 0, 0, ms * 8); mh.addColorStop(0, "rgba(200,220,255,0.2)"); mh.addColorStop(1, "rgba(200,220,255,0)")
-                ctx.fillStyle = mh; ctx.beginPath(); ctx.arc(0, 0, ms * 8, 0, Math.PI * 2); ctx.fill()
-                const mb = ctx.createRadialGradient(-ms * 0.25, -ms * 0.25, 0, 0, 0, ms); mb.addColorStop(0, "#F8FAFC"); mb.addColorStop(1, "#C8D6E5")
-                ctx.fillStyle = mb; ctx.beginPath(); ctx.arc(0, 0, ms, 0, Math.PI * 2); ctx.fill()
-                ctx.globalCompositeOperation = "destination-out"; ctx.fillStyle = "rgba(0,0,0,0.62)"
-                ctx.beginPath(); ctx.arc(ms * 0.45, -ms * 0.08, ms * 0.83, 0, Math.PI * 2); ctx.fill()
-                ctx.globalCompositeOperation = "source-over"
+                const ms = Math.min(W, H) * 0.055
+                // Outer glow rings
+                const mh = ctx.createRadialGradient(0, 0, ms * 0.9, 0, 0, ms * 7)
+                mh.addColorStop(0, "rgba(200,220,255,0.28)"); mh.addColorStop(0.4, "rgba(180,210,255,0.08)"); mh.addColorStop(1, "rgba(200,220,255,0)")
+                ctx.fillStyle = mh; ctx.beginPath(); ctx.arc(0, 0, ms * 7, 0, Math.PI * 2); ctx.fill()
+                // Second closer ring
+                const mh2 = ctx.createRadialGradient(0, 0, ms, 0, 0, ms * 2.5)
+                mh2.addColorStop(0, "rgba(220,235,255,0.15)"); mh2.addColorStop(1, "rgba(220,235,255,0)")
+                ctx.fillStyle = mh2; ctx.beginPath(); ctx.arc(0, 0, ms * 2.5, 0, Math.PI * 2); ctx.fill()
+
+                // Draw crescent properly using clip (no destination-out which erases stars)
+                ctx.save()
+                ctx.beginPath(); ctx.arc(0, 0, ms, 0, Math.PI * 2)
+                ctx.clip()
+                // Fill full moon body
+                const mb = ctx.createRadialGradient(-ms * 0.2, -ms * 0.2, 0, 0, 0, ms)
+                mb.addColorStop(0, "#FEFCE8"); mb.addColorStop(0.55, "#F8FAFC"); mb.addColorStop(1, "#94A3B8")
+                ctx.fillStyle = mb; ctx.fillRect(-ms, -ms, ms * 2, ms * 2)
+                // Paint sky-colored circle over part of moon to create crescent bite
+                const skyColor = skies[tod]?.[vs]?.[1] || "#0D1B3E"
+                ctx.fillStyle = skyColor
+                ctx.beginPath(); ctx.arc(ms * 0.42, -ms * 0.06, ms * 0.84, 0, Math.PI * 2); ctx.fill()
+                // Soft inner edge on the crescent shadow
+                const shadowEdge = ctx.createRadialGradient(ms * 0.42, -ms * 0.06, ms * 0.6, ms * 0.42, -ms * 0.06, ms * 0.84)
+                shadowEdge.addColorStop(0, skyColor); shadowEdge.addColorStop(1, "rgba(0,0,0,0)")
+                ctx.fillStyle = shadowEdge; ctx.beginPath(); ctx.arc(ms * 0.42, -ms * 0.06, ms * 0.84, 0, Math.PI * 2); ctx.fill()
+                ctx.restore()
+
+                // Subtle crater dots on the lit side
+                ctx.save(); ctx.globalAlpha = 0.18
+                ctx.fillStyle = "#94A3B8"
+                ctx.beginPath(); ctx.arc(-ms * 0.3, -ms * 0.25, ms * 0.12, 0, Math.PI * 2); ctx.fill()
+                ctx.beginPath(); ctx.arc(-ms * 0.6, ms * 0.15, ms * 0.09, 0, Math.PI * 2); ctx.fill()
+                ctx.beginPath(); ctx.arc(-ms * 0.15, ms * 0.4, ms * 0.07, 0, Math.PI * 2); ctx.fill()
+                ctx.restore()
             } else {
                 const ss = Math.min(W, H) * (eve ? 0.065 : 0.052)
                 if (!eve && vs !== 'winter') {

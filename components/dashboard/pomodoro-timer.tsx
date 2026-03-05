@@ -1,16 +1,15 @@
 "use client"
 
 import { useState, useEffect, useRef, useCallback } from "react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Progress } from "@/components/ui/progress"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Icons } from "@/components/icons"
 import { useData } from "@/components/local-data-provider"
 import { useToast } from "@/hooks/use-toast"
 
 export function PomodoroTimer() {
-  const [timeLeft, setTimeLeft] = useState(25 * 60) // 25 minutes in seconds
+  const [timeLeft, setTimeLeft] = useState(25 * 60)
   const [isActive, setIsActive] = useState(false)
   const [isBreak, setIsBreak] = useState(false)
   const [sessionStartTime, setSessionStartTime] = useState<string | null>(null)
@@ -27,7 +26,6 @@ export function PomodoroTimer() {
     return session.startTime.split("T")[0] === today && session.completed
   }).length
 
-  // Clear interval on unmount and when dependencies change
   const clearCurrentInterval = useCallback(() => {
     if (intervalRef.current) {
       clearInterval(intervalRef.current)
@@ -36,14 +34,11 @@ export function PomodoroTimer() {
   }, [])
 
   useEffect(() => {
-    return () => {
-      clearCurrentInterval()
-    }
+    return () => { clearCurrentInterval() }
   }, [clearCurrentInterval])
 
   const handleTimerComplete = useCallback(() => {
     if (!isBreak && sessionStartTime) {
-      // Complete focus session
       addPomodoro({
         startTime: sessionStartTime,
         endTime: new Date().toISOString(),
@@ -54,27 +49,23 @@ export function PomodoroTimer() {
 
       const newSessionCount = sessionCount + 1
       setSessionCount(newSessionCount)
-
       toast({
         title: "Focus session completed! 🎉",
         description: `Great job! You've completed ${newSessionCount} sessions today.`,
       })
 
-      // Start break
       setIsBreak(true)
-      const breakDuration = newSessionCount % 4 === 0 ? 15 : 5 // Long break every 4 sessions
+      const breakDuration = newSessionCount % 4 === 0 ? 15 : 5
       setTimeLeft(breakDuration * 60)
       setSessionStartTime(null)
     } else if (isBreak) {
-      // Break completed
       const isLongBreak = sessionCount % 4 === 0
       toast({
         title: isLongBreak ? "Long break over! 💪" : "Break time over! ⚡",
         description: "Ready for another focused session?",
       })
-
       setIsBreak(false)
-      setTimeLeft(25 * 60) // Back to 25 minutes
+      setTimeLeft(25 * 60)
     }
   }, [isBreak, sessionStartTime, sessionCount, selectedTask, addPomodoro, toast])
 
@@ -94,9 +85,7 @@ export function PomodoroTimer() {
       clearCurrentInterval()
     }
 
-    return () => {
-      clearCurrentInterval()
-    }
+    return () => { clearCurrentInterval() }
   }, [isActive, timeLeft, handleTimerComplete, clearCurrentInterval])
 
   const formatTime = (seconds: number) => {
@@ -106,10 +95,8 @@ export function PomodoroTimer() {
   }
 
   const getTotalTime = () => {
-    if (isBreak) {
-      return sessionCount % 4 === 0 ? 15 * 60 : 5 * 60 // Long break or short break
-    }
-    return 25 * 60 // Focus time
+    if (isBreak) return sessionCount % 4 === 0 ? 15 * 60 : 5 * 60
+    return 25 * 60
   }
 
   const totalTime = getTotalTime()
@@ -122,14 +109,11 @@ export function PomodoroTimer() {
     }
   }
 
-  const handlePause = () => {
-    setIsActive(false)
-  }
+  const handlePause = () => { setIsActive(false) }
 
   const handleReset = () => {
     setIsActive(false)
     clearCurrentInterval()
-
     if (isBreak) {
       const breakDuration = sessionCount % 4 === 0 ? 15 : 5
       setTimeLeft(breakDuration * 60)
@@ -142,23 +126,19 @@ export function PomodoroTimer() {
   const handleSkip = () => {
     setIsActive(false)
     clearCurrentInterval()
-
     if (isBreak) {
-      // Skip break
       setIsBreak(false)
       setTimeLeft(25 * 60)
     } else {
-      // Skip to break
       if (sessionStartTime) {
         addPomodoro({
           startTime: sessionStartTime,
           endTime: new Date().toISOString(),
-          duration: Math.round((25 * 60 - timeLeft) / 60), // Partial session
+          duration: Math.round((25 * 60 - timeLeft) / 60),
           taskId: selectedTask === "general" ? undefined : selectedTask,
           completed: false,
         })
       }
-
       setIsBreak(true)
       const breakDuration = (sessionCount + 1) % 4 === 0 ? 15 : 5
       setTimeLeft(breakDuration * 60)
@@ -166,177 +146,179 @@ export function PomodoroTimer() {
     }
   }
 
-  const getTaskTitle = (taskId?: string) => {
-    if (!taskId) return "General Focus"
-    const task = tasks.find((t) => t.id === taskId)
-    return task ? task.title : "Deleted Task"
-  }
-
   return (
-    <Card className="relative overflow-hidden bg-white/60 dark:bg-slate-900/60 backdrop-blur-xl border border-white/40 dark:border-slate-700/50 shadow-xl shadow-emerald-500/5 rounded-2xl group">
-      {/* Subtle animated background gradient */}
-      <div className={`absolute inset-0 opacity-20 transition-colors duration-1000 ${isActive ? (isBreak ? 'bg-gradient-to-br from-emerald-400/20 to-teal-400/20' : 'bg-gradient-to-br from-amber-400/20 to-orange-400/20') : 'bg-transparent'}`} />
+    <Card className="relative overflow-hidden bg-white/60 dark:bg-slate-900/60 backdrop-blur-xl border border-white/40 dark:border-slate-700/50 shadow-xl shadow-emerald-500/5 rounded-2xl">
+      {/* Ambient radial glow when active */}
+      {isActive && (
+        <div
+          className="absolute inset-0 pointer-events-none transition-opacity duration-1000"
+          style={{
+            background: isBreak
+              ? "radial-gradient(ellipse at 50% 0%, rgba(16,185,129,0.09) 0%, transparent 70%)"
+              : "radial-gradient(ellipse at 50% 0%, rgba(245,158,11,0.09) 0%, transparent 70%)",
+          }}
+        />
+      )}
 
-      <CardHeader className="pb-2 relative z-10">
-        <CardTitle className="text-lg font-bold tracking-tight flex items-center text-slate-800 dark:text-slate-100">
-          <Icons.timer className={`w-5 h-5 mr-2.5 transition-colors duration-500 ${isActive ? (isBreak ? 'text-emerald-500' : 'text-amber-500') : 'text-slate-400'}`} />
-          Focus Flow
-        </CardTitle>
-        <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
-          {sessionCount > 0 ? `${sessionCount} sessions completed today` : 'Ready to grow your focus?'}
-        </p>
-      </CardHeader>
-      <CardContent className="space-y-6 relative z-10">
-        <div className="text-center mt-2">
-          {/* Main Timer Display */}
-          <div className="relative w-40 h-40 mx-auto mb-6 flex items-center justify-center">
-            {/* Outer animated glow ring when active */}
-            {isActive && (
-              <div className={`absolute inset-0 rounded-full blur-xl opacity-40 animate-pulse ${isBreak ? 'bg-emerald-400' : 'bg-amber-400'}`} />
-            )}
-
-            {/* Inner circle background */}
-            <div
-              className={`absolute inset-2 rounded-full shadow-inner transition-colors duration-700 ${isBreak
-                  ? "bg-emerald-50/80 dark:bg-emerald-950/40"
-                  : "bg-amber-50/80 dark:bg-amber-950/40"
-                }`}
-            />
-
-            {/* Time reading */}
-            <div className="relative z-10 flex flex-col items-center">
-              <span className={`text-4xl font-black tracking-tighter tabular-nums drop-shadow-sm ${isBreak ? 'text-emerald-700 dark:text-emerald-300' : 'text-amber-700 dark:text-amber-300'}`}>
-                {formatTime(timeLeft)}
-              </span>
-              <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500 mt-1">
-                {isBreak ? (sessionCount % 4 === 0 ? "Long Break" : "Take a beat") : "Deep Work"}
-              </span>
-            </div>
-
-            {/* Progress Ring SVG */}
-            <svg className="absolute inset-0 w-full h-full transform -rotate-90 drop-shadow-md" viewBox="0 0 100 100">
-              <defs>
-                <linearGradient id="focusGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                  <stop offset="0%" stopColor="#f59e0b" />
-                  <stop offset="100%" stopColor="#d97706" />
-                </linearGradient>
-                <linearGradient id="breakGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                  <stop offset="0%" stopColor="#10b981" />
-                  <stop offset="100%" stopColor="#059669" />
-                </linearGradient>
-              </defs>
-              <circle
-                cx="50"
-                cy="50"
-                r="46"
-                stroke="currentColor"
-                strokeWidth="3"
-                fill="none"
-                className="text-slate-100 dark:text-slate-800"
-              />
-              <circle
-                cx="50"
-                cy="50"
-                r="46"
-                stroke={isBreak ? "url(#breakGradient)" : "url(#focusGradient)"}
-                strokeWidth="4"
-                strokeLinecap="round"
-                fill="none"
-                strokeDasharray={`${2 * Math.PI * 46}`}
-                strokeDashoffset={`${2 * Math.PI * 46 * (1 - progress / 100)}`}
-                style={{ transition: "stroke-dashoffset 1s linear" }}
-              />
-            </svg>
+      <CardContent className="px-5 pt-6 pb-5 relative z-10 space-y-5">
+        {/* Header */}
+        <div className="flex items-center justify-between">
+          <div>
+            <h3 className="text-base font-bold text-slate-800 dark:text-slate-100 tracking-tight">Focus Flow</h3>
+            <p className="text-[11px] text-slate-400 dark:text-slate-500 font-medium mt-0.5">
+              {sessionCount > 0 ? `${sessionCount} session${sessionCount > 1 ? "s" : ""} today` : "Ready to grow?"}
+            </p>
           </div>
-
-          <div className="flex items-center justify-between text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2 px-1">
-            <span>Progress</span>
-            <span>{Math.round(progress)}%</span>
-          </div>
-          <Progress value={progress} className={`w-full h-2 mb-6 ${isBreak ? '[&>div]:bg-emerald-500' : '[&>div]:bg-amber-500'}`} />
-
-          {/* Task Selection */}
-          {!isBreak && (
-            <div className="mb-6 relative group">
-              <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
-                <Icons.leaf className="w-4 h-4 text-emerald-500" />
-              </div>
-              <Select value={selectedTask} onValueChange={setSelectedTask}>
-                <SelectTrigger className="w-full pl-9 pr-3 py-5 text-sm font-medium bg-white/50 dark:bg-slate-900/50 border-slate-200/60 dark:border-slate-700/60 rounded-xl focus:ring-emerald-500/50 transition-all hover:bg-white dark:hover:bg-slate-900 shadow-sm">
-                  <SelectValue placeholder="What are we growing today?" />
-                </SelectTrigger>
-                <SelectContent className="rounded-xl border-slate-100 dark:border-slate-800 shadow-xl">
-                  <SelectItem value="general" className="font-medium text-slate-700 dark:text-slate-300">
-                    General Focus
-                  </SelectItem>
-                  {pendingTasks.map((task) => (
-                    <SelectItem key={task.id} value={task.id} className="text-slate-600 dark:text-slate-400">
-                      {task.title}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          )}
-
-          {/* Controls */}
-          <div className="flex items-center justify-center gap-3 mb-2">
-            {!isActive ? (
-              <Button
-                onClick={handleStart}
-                className="flex-1 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white rounded-xl py-6 shadow-lg shadow-emerald-500/20 hover:shadow-emerald-500/40 transition-all hover:scale-[1.02] active:scale-[0.98]"
-              >
-                <Icons.play className="w-5 h-5 mr-1.5 fill-current" />
-                <span className="font-bold text-base">Start Focus</span>
-              </Button>
-            ) : (
-              <Button
-                onClick={handlePause}
-                className="flex-1 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white rounded-xl py-6 shadow-lg shadow-amber-500/20 hover:shadow-amber-500/40 transition-all hover:scale-[1.02] active:scale-[0.98]"
-              >
-                <Icons.pause className="w-5 h-5 mr-1.5 fill-current" />
-                <span className="font-bold text-base">Pause Focus</span>
-              </Button>
-            )}
-
-            <div className="flex flex-col gap-2">
-              <Button onClick={handleReset} variant="outline" size="icon" className="w-10 h-10 rounded-lg border-slate-200 dark:border-slate-700 bg-white/50 hover:bg-slate-100 dark:bg-slate-800/50 dark:hover:bg-slate-700 text-slate-500">
-                <Icons.reset className="w-4 h-4" />
-              </Button>
-              <Button onClick={handleSkip} variant="outline" size="icon" className="w-10 h-10 rounded-lg border-slate-200 dark:border-slate-700 bg-white/50 hover:bg-slate-100 dark:bg-slate-800/50 dark:hover:bg-slate-700 text-slate-500">
-                <Icons.chevronRight className="w-5 h-5" />
-              </Button>
-            </div>
+          <div
+            className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest transition-colors duration-500 ${isBreak
+                ? "bg-emerald-100 dark:bg-emerald-900/40 text-emerald-600 dark:text-emerald-400"
+                : "bg-amber-100 dark:bg-amber-900/40 text-amber-600 dark:text-amber-400"
+              }`}
+          >
+            {isBreak ? (sessionCount % 4 === 0 ? "Long Break" : "Rest") : "Deep Work"}
           </div>
         </div>
 
-        {/* Milestone Indicator */}
-        <div className="bg-white/40 dark:bg-slate-900/40 backdrop-blur-sm rounded-xl p-4 border border-slate-100 dark:border-slate-800/60 shadow-inner">
-          <div className="flex items-center justify-between mb-3">
-            <span className="text-sm font-bold text-slate-700 dark:text-slate-300">Daily Milestones</span>
-            <div className="px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-400 text-xs font-bold">
-              {todaySessions} Total
+        {/* Circular Timer */}
+        <div className="flex flex-col items-center">
+          <div className="relative w-52 h-52 flex items-center justify-center">
+            {/* Slow breathing outer glow */}
+            {isActive && (
+              <div
+                className={`absolute inset-0 rounded-full animate-ping opacity-10 ${isBreak ? "bg-emerald-400" : "bg-amber-400"
+                  }`}
+                style={{ animationDuration: "3s" }}
+              />
+            )}
+
+            {/* SVG Ring */}
+            <svg className="absolute inset-0 w-full h-full -rotate-90" viewBox="0 0 120 120">
+              <defs>
+                <linearGradient id="focusGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="#fbbf24" />
+                  <stop offset="100%" stopColor="#f59e0b" />
+                </linearGradient>
+                <linearGradient id="breakGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="#34d399" />
+                  <stop offset="100%" stopColor="#10b981" />
+                </linearGradient>
+              </defs>
+              {/* Track */}
+              <circle cx="60" cy="60" r="54" fill="none" stroke="currentColor" strokeWidth="6"
+                className="text-slate-100 dark:text-slate-800" />
+              {/* Progress */}
+              <circle
+                cx="60" cy="60" r="54" fill="none"
+                stroke={isBreak ? "url(#breakGrad)" : "url(#focusGrad)"}
+                strokeWidth="6" strokeLinecap="round"
+                strokeDasharray={`${2 * Math.PI * 54}`}
+                strokeDashoffset={`${2 * Math.PI * 54 * (1 - progress / 100)}`}
+                style={{ transition: "stroke-dashoffset 1s linear" }}
+              />
+            </svg>
+
+            {/* Frosted inner disc */}
+            <div className={`absolute inset-4 rounded-full transition-colors duration-700 ${isBreak ? "bg-emerald-50/70 dark:bg-emerald-950/30" : "bg-amber-50/70 dark:bg-amber-950/30"
+              }`} />
+
+            {/* Time text */}
+            <div className="relative z-10 text-center">
+              <div className={`text-5xl font-black tabular-nums tracking-tighter ${isBreak ? "text-emerald-700 dark:text-emerald-300" : "text-amber-700 dark:text-amber-300"
+                }`}>
+                {formatTime(timeLeft)}
+              </div>
+              <div className="text-[10px] font-semibold uppercase tracking-[0.15em] text-slate-400 dark:text-slate-500 mt-1">
+                {Math.round(progress)}% complete
+              </div>
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
+          {/* Session leaf dots */}
+          <div className="flex items-center gap-2 mt-4">
             {[...Array(4)].map((_, i) => (
               <div
                 key={i}
-                className={`relative flex-1 h-2 rounded-full overflow-hidden transition-all duration-500 ${i < (sessionCount % 4)
-                    ? "bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]"
-                    : "bg-slate-200 dark:bg-slate-700 shadow-inner"
+                className={`w-6 h-6 rounded-full flex items-center justify-center transition-all duration-500 ${i < sessionCount % 4
+                    ? "bg-emerald-100 dark:bg-emerald-900/60 scale-110"
+                    : "bg-slate-100 dark:bg-slate-800"
                   }`}
               >
-                {i < (sessionCount % 4) && (
-                  <div className="absolute inset-0 bg-gradient-to-r from-emerald-400 to-teal-400 opacity-50" />
-                )}
+                <svg viewBox="0 0 24 24" fill="currentColor"
+                  className={`w-3.5 h-3.5 transition-colors duration-500 ${i < sessionCount % 4 ? "text-emerald-500" : "text-slate-300 dark:text-slate-600"
+                    }`}
+                >
+                  <path d="M12 19c-2.8 2-5 2.5-7 2.5.5-3 1-5.5 3-7.5-2-3.5-2-7.5-2-9.5 4.5 2 6 4 7 7 1-3 2.5-5 7-7 0 2-.5 6-2 9.5 2 2 2.5 4.5 3 7.5-2 0-4.2-.5-7-2.5" />
+                </svg>
               </div>
             ))}
+            <span className="text-[10px] text-slate-400 dark:text-slate-500 font-medium ml-1">
+              {4 - (sessionCount % 4)} until long break
+            </span>
           </div>
-          <p className="text-[10px] font-medium text-slate-400 dark:text-slate-500 mt-2 text-center uppercase tracking-widest">
-            {4 - (sessionCount % 4)} sessions until long break
-          </p>
+        </div>
+
+        {/* Task selector */}
+        {!isBreak && (
+          <div className="relative">
+            <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
+              <Icons.leaf className="w-3.5 h-3.5 text-emerald-400" />
+            </div>
+            <Select value={selectedTask} onValueChange={setSelectedTask}>
+              <SelectTrigger className="w-full pl-8 text-sm bg-white/50 dark:bg-slate-800/50 border-slate-200/60 dark:border-slate-700/60 rounded-xl focus:ring-emerald-500/30 h-10">
+                <SelectValue placeholder="What are we growing today?" />
+              </SelectTrigger>
+              <SelectContent className="rounded-xl border-slate-100 dark:border-slate-800 shadow-xl">
+                <SelectItem value="general" className="font-medium">General Focus</SelectItem>
+                {pendingTasks.map((task) => (
+                  <SelectItem key={task.id} value={task.id}>{task.title}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        )}
+
+        {/* Controls */}
+        <div className="flex items-center gap-2">
+          {!isActive ? (
+            <Button
+              onClick={handleStart}
+              className={`flex-1 h-11 rounded-xl font-bold text-sm text-white shadow-md transition-all hover:scale-[1.02] active:scale-[0.98] ${isBreak
+                  ? "bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 shadow-emerald-500/20"
+                  : "bg-gradient-to-r from-amber-500 to-orange-400 hover:from-amber-600 hover:to-orange-500 shadow-amber-500/20"
+                }`}
+            >
+              <Icons.play className="w-4 h-4 mr-1.5 fill-current" />
+              {isBreak ? "Start Break" : "Start Focus"}
+            </Button>
+          ) : (
+            <Button
+              onClick={handlePause}
+              className="flex-1 h-11 rounded-xl font-bold text-sm text-slate-600 dark:text-slate-300 bg-white/70 dark:bg-slate-800/70 border border-slate-200 dark:border-slate-700 hover:bg-white dark:hover:bg-slate-800 shadow-sm transition-all hover:scale-[1.02] active:scale-[0.98]"
+            >
+              <Icons.pause className="w-4 h-4 mr-1.5" />
+              Pause
+            </Button>
+          )}
+
+          <Button
+            onClick={handleReset}
+            variant="outline"
+            size="icon"
+            className="h-11 w-11 rounded-xl border-slate-200 dark:border-slate-700 bg-white/50 dark:bg-slate-800/50 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 flex-shrink-0"
+            title="Reset"
+          >
+            <Icons.reset className="w-4 h-4" />
+          </Button>
+
+          <Button
+            onClick={handleSkip}
+            variant="outline"
+            size="icon"
+            className="h-11 w-11 rounded-xl border-slate-200 dark:border-slate-700 bg-white/50 dark:bg-slate-800/50 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 flex-shrink-0"
+            title="Skip"
+          >
+            <Icons.chevronRight className="w-4 h-4" />
+          </Button>
         </div>
       </CardContent>
     </Card>

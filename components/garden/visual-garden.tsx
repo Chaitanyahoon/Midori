@@ -628,8 +628,10 @@ export function VisualGarden({ onAddPlant }: { onAddPlant?: () => void }) {
                     </div>
                 </div>
             </CardHeader>
-            <div ref={cont} className="w-full h-72 sm:h-96 relative bg-slate-50 dark:bg-slate-900 transition-colors duration-700 flex-1">
-                <canvas ref={cvs} className="w-full h-full block" />
+            <div className="w-full relative bg-slate-50 dark:bg-slate-900 transition-colors duration-700 flex-1 overflow-x-auto overflow-y-hidden custom-scrollbar">
+                <div ref={cont} className="min-w-[800px] w-full h-72 sm:h-96 relative">
+                    <canvas ref={cvs} className="w-full h-full block" />
+                </div>
             </div>
         </Card>
     )

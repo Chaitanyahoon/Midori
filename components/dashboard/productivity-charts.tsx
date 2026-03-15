@@ -214,9 +214,12 @@ export function ProductivityCharts() {
       <Card className="bg-white/60 dark:bg-slate-900/60 backdrop-blur-xl border border-white/40 dark:border-slate-700/50 shadow-xl shadow-slate-200/50 dark:shadow-slate-950/50 transition-all duration-300 rounded-3xl overflow-hidden relative group">
         <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-400/10 dark:bg-emerald-500/10 rounded-full blur-3xl -z-10 pointer-events-none group-hover:bg-emerald-400/20 transition-colors duration-1000" />
         <CardHeader className="border-b border-white/20 dark:border-slate-700/50 bg-white/40 dark:bg-slate-900/40 backdrop-blur-md z-10 px-6 py-5">
-          <CardTitle className="flex items-center text-xl font-bold bg-gradient-to-r from-emerald-800 to-teal-600 dark:from-emerald-300 dark:to-teal-300 bg-clip-text text-transparent">
-            <Icons.sparkles className="w-5 h-5 mr-2 text-emerald-600 dark:text-emerald-400" />
-            Productivity Summary
+          <CardTitle className="flex items-center justify-between w-full text-xl font-bold bg-gradient-to-r from-emerald-800 to-teal-600 dark:from-emerald-300 dark:to-teal-300 bg-clip-text text-transparent">
+            <div className="flex items-center">
+              <Icons.sparkles className="w-5 h-5 mr-2 text-emerald-600 dark:text-emerald-400" />
+              Productivity Summary
+            </div>
+            <span className="text-sm font-serif opacity-30">総括</span>
           </CardTitle>
         </CardHeader>
         <CardContent className="p-6 relative z-10">

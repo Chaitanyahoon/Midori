@@ -174,11 +174,18 @@ export function WeeklyStats() {
   // Animated streak counter
   const streakCounter = (
     <div className="flex flex-col items-center mb-6">
-      <div className="flex items-center gap-3 bg-white/50 dark:bg-slate-900/40 backdrop-blur-md px-6 py-3 rounded-3xl border border-white/60 dark:border-slate-700/50 shadow-sm">
+      <div className="flex items-center gap-3 bg-white/50 dark:bg-slate-900/40 backdrop-blur-md px-6 py-3 rounded-3xl border border-white/60 dark:border-slate-700/50 shadow-sm relative overflow-hidden group">
         <Icons.sparkles className="w-6 h-6 text-amber-500 dark:text-amber-400 animate-pulse" />
         <span className="text-2xl font-black bg-gradient-to-r from-emerald-600 to-teal-500 dark:from-emerald-400 dark:to-teal-400 bg-clip-text text-transparent animate-pulse-slow">{streak}</span>
-        <span className="text-lg font-bold text-slate-700 dark:text-slate-300">day streak</span>
-        {streak >= 7 && <span className="ml-2 px-3 py-1 rounded-full bg-gradient-to-r from-amber-400 to-orange-500 text-xs font-bold text-white shadow-md shadow-orange-500/20">🔥 Weekly Master!</span>}
+        <div className="flex flex-col -gap-1">
+          <span className="text-sm font-bold text-slate-700 dark:text-slate-300">day streak</span>
+          <span className="text-[10px] font-serif text-slate-400 dark:text-emerald-400/30">連続</span>
+        </div>
+        {streak >= 7 && (
+          <div className="absolute -top-1 -right-2 hanko-seal hanko-seal-filter opacity-40 group-hover:opacity-100 transition-opacity">
+            <span className="text-red-700 dark:text-red-500 font-bold text-[8px]">極</span>
+          </div>
+        )}
       </div>
       <div className="text-xs font-medium text-slate-500 dark:text-slate-400 mt-3 text-center">Complete at least 1 task each day to keep your streak alive!</div>
     </div>

@@ -40,7 +40,9 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
 
   return (
     <DataProvider>
-      <div className="min-h-screen bg-slate-50 dark:bg-slate-900 flex">
+      <div className="min-h-screen bg-slate-50 dark:bg-slate-900 flex relative">
+        {/* Washi Texture Overlay */}
+        <div className="washi-overlay pointer-events-none" />
         {/* ── Desktop Sidebar (always visible ≥ lg) ── */}
         <div className="hidden lg:flex flex-shrink-0">
           <Sidebar />

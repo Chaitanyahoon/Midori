@@ -130,9 +130,12 @@ export function ProductivityTrends() {
       <Card className="bg-white/60 dark:bg-slate-900/60 backdrop-blur-xl border border-white/40 dark:border-slate-700/50 shadow-xl shadow-slate-200/50 dark:shadow-slate-950/50 transition-all duration-300 rounded-3xl overflow-hidden relative group">
         <div className="absolute top-0 right-0 w-64 h-64 bg-purple-400/10 dark:bg-purple-500/10 rounded-full blur-3xl -z-10 pointer-events-none group-hover:bg-purple-400/20 transition-colors duration-1000" />
         <CardHeader className="border-b border-white/20 dark:border-slate-700/50 bg-white/40 dark:bg-slate-900/40 backdrop-blur-md z-10 p-6">
-          <CardTitle className="flex items-center text-xl font-bold bg-gradient-to-r from-purple-800 to-blue-600 dark:from-purple-300 dark:to-blue-300 bg-clip-text text-transparent">
-            <Icons.trendingUp className="w-5 h-5 mr-2 text-purple-600 dark:text-purple-400" />
-            Productivity Insights
+          <CardTitle className="flex items-center justify-between w-full text-xl font-bold bg-gradient-to-r from-purple-800 to-blue-600 dark:from-purple-300 dark:to-blue-300 bg-clip-text text-transparent">
+            <div className="flex items-center">
+              <Icons.trendingUp className="w-5 h-5 mr-2 text-purple-600 dark:text-purple-400" />
+              Productivity Insights
+            </div>
+            <span className="text-sm font-serif opacity-30">洞察</span>
           </CardTitle>
         </CardHeader>
         <CardContent className="p-6 relative z-10">

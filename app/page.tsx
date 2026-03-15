@@ -68,7 +68,7 @@ export default function HomePage() {
     return (
         <div 
             ref={containerRef} 
-            className={`h-screen w-full flex items-center justify-center zen-gradient-bg relative overflow-hidden font-sans ${isActive ? 'active' : ''}`}
+            className={`h-screen w-full flex items-center justify-center zen-gradient-bg relative overflow-hidden font-sans pt-24 ${isActive ? 'active' : ''}`}
         >
             {/* Washi Texture Overlay */}
             <div className="washi-overlay pointer-events-none" />
@@ -87,22 +87,22 @@ export default function HomePage() {
             />
 
             {/* Vertical Decorative Text (Ma) */}
-            <div className="hidden lg:flex fixed left-10 top-1/2 -translate-y-1/2 flex-col items-center gap-12 opacity-[0.12] select-none pointer-events-none" style={getParallaxStyle(30)}>
-                <span className="vertical-text text-7xl font-serif-luxury text-slate-800 dark:text-emerald-100 reveal-staggered delay-1">美どり</span>
-                <div className="w-px h-32 bg-current reveal-staggered delay-2" />
+            <div className="hidden lg:flex fixed left-10 top-1/2 -translate-y-1/2 flex-col items-center gap-10 opacity-[0.08] select-none pointer-events-none" style={getParallaxStyle(20)}>
+                <span className="vertical-text text-5xl font-serif-luxury text-slate-800 dark:text-emerald-100 reveal-staggered delay-1">美どり</span>
+                <div className="w-px h-24 bg-current reveal-staggered delay-2" />
                 <span className="text-[10px] tracking-[1.5em] uppercase font-bold reveal-staggered delay-3">Midori</span>
             </div>
             
-            <div className="hidden lg:flex fixed right-10 top-1/2 -translate-y-1/2 flex-col items-center gap-12 opacity-[0.12] select-none pointer-events-none" style={getParallaxStyle(-30)}>
+            <div className="hidden lg:flex fixed right-10 top-1/2 -translate-y-1/2 flex-col items-center gap-10 opacity-[0.08] select-none pointer-events-none" style={getParallaxStyle(-20)}>
                 <span className="text-[10px] tracking-[1.5em] uppercase font-bold reveal-staggered delay-3">Zen</span>
-                <div className="w-px h-32 bg-current reveal-staggered delay-2" />
-                <span className="vertical-text text-7xl font-serif-luxury text-slate-800 dark:text-emerald-100 reveal-staggered delay-1">静寂</span>
+                <div className="w-px h-24 bg-current reveal-staggered delay-2" />
+                <span className="vertical-text text-5xl font-serif-luxury text-slate-800 dark:text-emerald-100 reveal-staggered delay-1">静寂</span>
             </div>
 
             {/* Floating Kanji Background */}
             <div className="absolute inset-0 pointer-events-none overflow-hidden select-none">
-                <span className="absolute top-[5%] left-[15%] text-[25rem] font-serif opacity-[0.03] dark:opacity-[0.02] animate-float-slow reveal-staggered delay-1" style={getParallaxStyle(120)}>緑</span>
-                <span className="absolute bottom-[2%] right-[10%] text-[30rem] font-serif opacity-[0.03] dark:opacity-[0.02] animate-float-slow [animation-delay:5s] reveal-staggered delay-2" style={getParallaxStyle(-140)}>和</span>
+                <span className="absolute top-[8%] left-[12%] text-[15rem] font-serif opacity-[0.02] dark:opacity-[0.015] animate-float-slow reveal-staggered delay-1" style={getParallaxStyle(80)}>緑</span>
+                <span className="absolute bottom-[5%] right-[10%] text-[18rem] font-serif opacity-[0.02] dark:opacity-[0.015] animate-float-slow [animation-delay:5s] reveal-staggered delay-2" style={getParallaxStyle(-100)}>和</span>
             </div>
 
             {/* Main Content */}
@@ -117,7 +117,7 @@ export default function HomePage() {
                 </div>
 
                 <div className="space-y-3 mb-10 md:mb-12">
-                    <h1 className="text-7xl md:text-9xl font-serif-luxury text-slate-900 dark:text-white tracking-tight leading-[0.9] reveal-staggered delay-2">
+                    <h1 className="text-6xl md:text-8xl font-serif-luxury text-slate-900 dark:text-white tracking-tight leading-[0.9] reveal-staggered delay-2">
                         <span className="reveal-text"><span>Cultivate</span></span>{' '}
                         <span className="italic font-light opacity-80 reveal-text"><span>Focus.</span></span>
                         <br />
@@ -133,7 +133,7 @@ export default function HomePage() {
                 <div className="flex flex-col sm:flex-row gap-6 md:gap-8 justify-center items-center reveal-staggered delay-4">
                     <button 
                         onClick={() => router.push("/dashboard")}
-                        className="h-16 md:h-20 px-12 md:px-16 rounded-full bg-slate-900 dark:bg-emerald-500 text-white dark:text-slate-950 font-black text-lg md:text-xl shadow-2xl transition-all hover:scale-110 active:scale-95 btn-masterpiece group overflow-hidden"
+                        className="h-16 md:h-20 px-12 md:px-16 rounded-full bg-emerald-600 dark:bg-emerald-500 text-white dark:text-slate-950 font-black text-lg md:text-xl shadow-2xl transition-all hover:scale-110 active:scale-95 btn-masterpiece group overflow-hidden"
                     >
                         <span className="relative z-10 flex items-center gap-4">
                             Enter the Garden <span className="text-sm opacity-50 font-serif">/ 入園</span>

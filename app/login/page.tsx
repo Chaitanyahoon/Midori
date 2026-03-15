@@ -11,6 +11,7 @@ import {
     updateProfile,
 } from "firebase/auth"
 import { auth } from "@/lib/firebase/client"
+import { MidoriLogo } from "@/components/dashboard/midori-logo"
 
 export default function LoginPage() {
     const router = useRouter()
@@ -58,37 +59,63 @@ export default function LoginPage() {
     }
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-emerald-50 via-white to-teal-50 dark:from-slate-950 dark:via-slate-900 dark:to-emerald-950 px-4">
-            {/* Decorative blobs */}
-            <div className="fixed top-[-10%] left-[-5%] w-72 h-72 bg-emerald-200/40 dark:bg-emerald-900/30 rounded-full blur-3xl pointer-events-none" />
-            <div className="fixed bottom-[-10%] right-[-5%] w-96 h-96 bg-teal-200/40 dark:bg-teal-900/30 rounded-full blur-3xl pointer-events-none" />
+        <div className="min-h-screen w-full flex items-center justify-center zen-gradient-bg relative overflow-hidden font-sans">
+            {/* Washi Texture Overlay */}
+            <div className="washi-overlay pointer-events-none" />
 
-            <div className="relative w-full max-w-md">
-                {/* Card */}
-                <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border border-emerald-100 dark:border-emerald-900 rounded-3xl shadow-2xl shadow-emerald-100/50 dark:shadow-emerald-950/50 p-8">
-                    {/* Logo */}
-                    <div className="flex flex-col items-center mb-8">
-                        <div className="w-20 h-20 mb-3 drop-shadow-xl relative">
-                            <img src="/icon.svg" alt="Midori logo" className="w-full h-full" />
-                            <span className="absolute -top-1 -right-2 text-emerald-600/40 font-bold text-lg select-none">緑</span>
+            {/* Vertical Decorative Text (Ma) */}
+            <div className="hidden lg:flex fixed left-12 top-1/2 -translate-y-1/2 flex-col items-center gap-12 opacity-[0.08] select-none pointer-events-none">
+                <span className="vertical-text text-6xl font-serif text-slate-800 dark:text-emerald-100">静寂</span>
+                <div className="w-px h-32 bg-current" />
+                <span className="text-sm tracking-[0.5em] uppercase font-medium">Stillness</span>
+            </div>
+            <div className="hidden lg:flex fixed right-12 top-1/2 -translate-y-1/2 flex-col items-center gap-12 opacity-[0.08] select-none pointer-events-none">
+                <span className="text-sm tracking-[0.5em] uppercase font-medium">Growth</span>
+                <div className="w-px h-32 bg-current" />
+                <span className="vertical-text text-6xl font-serif text-slate-800 dark:text-emerald-100">成長</span>
+            </div>
+
+            {/* Floating Floating Kanji Background */}
+            <div className="absolute inset-0 pointer-events-none overflow-hidden select-none">
+                <span className="absolute top-[15%] left-[10%] text-[12rem] font-serif opacity-[0.03] dark:opacity-[0.02] animate-float-slow">緑</span>
+                <span className="absolute bottom-[20%] right-[15%] text-[15rem] font-serif opacity-[0.03] dark:opacity-[0.02] animate-float-slow [animation-delay:4s]">心</span>
+                <span className="absolute top-[40%] right-[10%] text-[10rem] font-serif opacity-[0.02] dark:opacity-[0.01] animate-float-slow [animation-delay:8s]">空</span>
+            </div>
+
+            {/* Main Content */}
+            <div className="relative z-10 w-full max-w-lg px-6 py-12">
+                <div className="bg-white/40 dark:bg-slate-950/40 backdrop-blur-3xl border border-white/20 dark:border-emerald-500/10 rounded-[2.5rem] shadow-[0_32px_64px_-16px_rgba(0,0,0,0.1),inset_0_0_0_1px_rgba(255,255,255,0.3)] dark:shadow-[0_32px_64px_-16px_rgba(0,0,0,0.4),inset_0_0_0_1px_rgba(255,255,255,0.05)] p-10 lg:p-14 animate-bloom">
+                    
+                    {/* Hanko-style Logo Branding */}
+                    <div className="flex flex-col items-center mb-10">
+                        <div className="relative mb-6">
+                            <div className="p-4 bg-white/50 dark:bg-slate-900/50 rounded-2xl shadow-sm border border-white/40 dark:border-white/5 relative group transition-all duration-500 hover:scale-105">
+                                <img src="/icon.svg" alt="Midori logo" className="w-16 h-16 pointer-events-none" />
+                                {/* Hanko Seal Element */}
+                                <div className="absolute -bottom-2 -right-2 hanko-seal animate-pulse-slow">
+                                    <span className="text-red-600 dark:text-red-500 font-serif font-bold text-xs select-none">みどり</span>
+                                </div>
+                            </div>
                         </div>
-                        <h1 className="text-3xl font-bold text-slate-800 dark:text-white flex items-baseline gap-2">
+                        <h1 className="text-4xl font-bold text-slate-900 dark:text-white mb-2 tracking-tight flex items-baseline gap-3">
                             Midori
-                            <span className="text-sm font-medium text-slate-400">みどり</span>
+                            <span className="text-lg font-serif text-slate-400/60 dark:text-emerald-300/30">みどり</span>
                         </h1>
-                        <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">Grow your focus, one task at a time</p>
+                        <p className="text-slate-500 dark:text-emerald-100/40 text-sm font-medium uppercase tracking-widest text-center">
+                            Focus Garden — <span className="text-emerald-600/60 dark:text-emerald-400/40 italic">Kyōei</span>
+                        </p>
                     </div>
 
                     {/* Tabs */}
-                    <div className="flex rounded-xl bg-slate-100 dark:bg-slate-800 p-1 mb-6">
-                        {["Sign In", "Sign Up"].map((label, i) => (
+                    <div className="flex rounded-2xl bg-emerald-900/5 dark:bg-emerald-900/10 p-1.5 mb-8 border border-emerald-500/10 backdrop-blur-sm">
+                        {["Log In", "Sign Up"].map((label, i) => (
                             <button
                                 key={label}
                                 onClick={() => { setIsSignUp(i === 1); setError("") }}
-                                className={`flex-1 py-2 text-sm font-semibold rounded-lg transition-all duration-200
-                  ${(isSignUp ? i === 1 : i === 0)
-                                        ? "bg-white dark:bg-slate-700 text-emerald-700 dark:text-emerald-300 shadow-sm"
-                                        : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
+                                className={`flex-1 py-3 text-sm font-semibold rounded-xl transition-all duration-300
+                                  ${(isSignUp ? i === 1 : i === 0)
+                                        ? "bg-white dark:bg-emerald-500 text-emerald-950 dark:text-emerald-950 shadow-[0_4px_12px_rgba(0,0,0,0.05)]"
+                                        : "text-slate-500 hover:text-slate-800 dark:text-emerald-100/40 dark:hover:text-emerald-100/70"
                                     }`}
                             >
                                 {label}
@@ -100,10 +127,10 @@ export default function LoginPage() {
                     <button
                         onClick={handleGoogle}
                         disabled={loading}
-                        className="w-full flex items-center justify-center gap-3 py-2.5 px-4 rounded-xl border-2 border-slate-200 dark:border-slate-700 hover:border-emerald-300 dark:hover:border-emerald-700 hover:bg-emerald-50/50 dark:hover:bg-emerald-900/20 transition-all duration-200 text-sm font-medium text-slate-700 dark:text-slate-200 mb-4 disabled:opacity-60 disabled:cursor-not-allowed"
+                        className="w-full h-12 flex items-center justify-center gap-3 rounded-2xl bg-white dark:bg-emerald-900/10 border-2 border-slate-100 dark:border-emerald-500/10 hover:border-emerald-300 dark:hover:border-emerald-500/30 hover:bg-slate-50 dark:hover:bg-emerald-500/5 transition-all duration-300 text-sm font-semibold text-slate-700 dark:text-emerald-50/80 mb-6 disabled:opacity-50"
                     >
                         {loading ? (
-                            <Loader2 className="w-5 h-5 animate-spin text-slate-400" />
+                            <Loader2 className="w-5 h-5 animate-spin" />
                         ) : (
                             <svg className="w-5 h-5" viewBox="0 0 24 24">
                                 <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
@@ -115,71 +142,76 @@ export default function LoginPage() {
                         Continue with Google
                     </button>
 
-                    {/* Divider */}
-                    <div className="flex items-center gap-3 mb-4">
-                        <div className="flex-1 h-px bg-slate-200 dark:bg-slate-700" />
-                        <span className="text-xs text-slate-400">or</span>
-                        <div className="flex-1 h-px bg-slate-200 dark:bg-slate-700" />
+                    <div className="relative mb-6">
+                        <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-slate-100 dark:border-white/5"></div></div>
+                        <div className="relative flex justify-center text-xs uppercase tracking-widest"><span className="bg-transparent px-4 text-slate-400/60 font-medium">Or email</span></div>
                     </div>
 
                     {/* Email form */}
-                    <form onSubmit={handleEmailAuth} className="space-y-3">
+                    <form onSubmit={handleEmailAuth} className="space-y-4">
                         {isSignUp && (
-                            <input
-                                type="text"
-                                placeholder="Display Name (e.g. Chaitanya)"
-                                value={name}
-                                onChange={(e) => setName(e.target.value)}
-                                required
-                                className="w-full px-4 py-2.5 rounded-xl border-2 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm text-slate-800 dark:text-slate-100 placeholder:text-slate-400 focus:outline-none focus:border-emerald-400 dark:focus:border-emerald-500 transition-colors"
-                            />
+                            <div className="group space-y-1">
+                                <label className="text-xs font-semibold text-slate-400 dark:text-emerald-100/30 uppercase tracking-widest ml-1">Full Name</label>
+                                <input
+                                    type="text"
+                                    placeholder="your name"
+                                    value={name}
+                                    onChange={(e) => setName(e.target.value)}
+                                    required
+                                    className="w-full h-12 px-5 rounded-2xl bg-white/50 dark:bg-white/5 border-2 border-slate-100 dark:border-white/5 dark:text-white placeholder:text-slate-300 dark:placeholder:text-emerald-100/10 focus:outline-none focus:border-emerald-400 dark:focus:border-emerald-500/50 transition-all font-medium"
+                                />
+                            </div>
                         )}
-                        <input
-                            type="email"
-                            placeholder="Email address"
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
-                            required
-                            className="w-full px-4 py-2.5 rounded-xl border-2 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm text-slate-800 dark:text-slate-100 placeholder:text-slate-400 focus:outline-none focus:border-emerald-400 dark:focus:border-emerald-500 transition-colors"
-                        />
-                        <div className="relative">
+                        <div className="group space-y-1">
+                            <label className="text-xs font-semibold text-slate-400 dark:text-emerald-100/30 uppercase tracking-widest ml-1">Email</label>
                             <input
-                                type={showPassword ? "text" : "password"}
-                                placeholder="Password (min. 6 characters)"
-                                value={password}
-                                onChange={(e) => setPassword(e.target.value)}
+                                type="email"
+                                placeholder="name@example.com"
+                                value={email}
+                                onChange={(e) => setEmail(e.target.value)}
                                 required
-                                minLength={6}
-                                className="w-full px-4 py-2.5 pr-12 rounded-xl border-2 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm text-slate-800 dark:text-slate-100 placeholder:text-slate-400 focus:outline-none focus:border-emerald-400 dark:focus:border-emerald-500 transition-colors"
+                                className="w-full h-12 px-5 rounded-2xl bg-white/50 dark:bg-white/5 border-2 border-slate-100 dark:border-white/5 dark:text-white placeholder:text-slate-300 dark:placeholder:text-emerald-100/10 focus:outline-none focus:border-emerald-400 dark:focus:border-emerald-500/50 transition-all font-medium"
                             />
-                            <button
-                                type="button"
-                                onClick={() => setShowPassword(!showPassword)}
-                                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-emerald-500 transition-colors"
-                                tabIndex={-1}
-                            >
-                                {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                            </button>
+                        </div>
+                        <div className="group space-y-1">
+                            <label className="text-xs font-semibold text-slate-400 dark:text-emerald-100/30 uppercase tracking-widest ml-1">Password</label>
+                            <div className="relative">
+                                <input
+                                    type={showPassword ? "text" : "password"}
+                                    placeholder="••••••••"
+                                    value={password}
+                                    onChange={(e) => setPassword(e.target.value)}
+                                    required
+                                    minLength={6}
+                                    className="w-full h-12 px-5 rounded-2xl bg-white/50 dark:bg-white/5 border-2 border-slate-100 dark:border-white/5 dark:text-white placeholder:text-slate-300 dark:placeholder:text-emerald-100/10 focus:outline-none focus:border-emerald-400 dark:focus:border-emerald-500/50 transition-all font-medium"
+                                />
+                                <button
+                                    type="button"
+                                    onClick={() => setShowPassword(!showPassword)}
+                                    className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300 hover:text-emerald-500 transition-colors"
+                                >
+                                    {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                                </button>
+                            </div>
                         </div>
 
                         {error && (
-                            <p className="text-sm text-red-500 bg-red-50 dark:bg-red-900/20 px-3 py-2 rounded-lg">{error}</p>
+                            <div className="text-sm text-red-500 bg-red-500/5 dark:bg-red-500/10 border border-red-500/20 px-4 py-3 rounded-xl animate-shake">
+                                {error}
+                            </div>
                         )}
 
                         <button
                             type="submit"
                             disabled={loading}
-                            className="w-full py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-semibold text-sm shadow-md shadow-emerald-200 dark:shadow-emerald-900 hover:shadow-lg hover:scale-[1.01] active:scale-[0.99] transition-all duration-200 disabled:opacity-60 flex items-center justify-center gap-2"
+                            className="w-full h-14 rounded-2xl bg-emerald-600 hover:bg-emerald-500 dark:bg-emerald-500 dark:hover:bg-emerald-400 text-white font-bold text-base shadow-xl shadow-emerald-600/20 dark:shadow-emerald-500/20 transition-all hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 flex items-center justify-center gap-2 group mt-4"
                         >
-                            {loading && <Loader2 className="w-4 h-4 animate-spin" />}
-                            {loading ? "Authenticating..." : (isSignUp ? "Create Account / 始めましょう 🌱" : "Sign In / ログイン →")}
+                            {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : (isSignUp ? "Begin Your Journey / 始めましょう" : "Enter the Garden / ログイン")}
                         </button>
                     </form>
 
-                    <p className="text-center text-xs text-slate-400 mt-5">
-                        By signing in, you agree to our{" "}
-                        <span className="text-emerald-600 cursor-pointer hover:underline">Terms</span> and{" "}
-                        <span className="text-emerald-600 cursor-pointer hover:underline">Privacy Policy</span>
+                    <p className="text-center text-[10px] text-slate-400/60 uppercase tracking-widest mt-10">
+                        Midori Sanctuary — Built for <span className="text-emerald-500 dark:text-emerald-400 font-bold">Deep Work</span>
                     </p>
                 </div>
             </div>

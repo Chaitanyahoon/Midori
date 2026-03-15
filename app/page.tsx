@@ -133,17 +133,17 @@ export default function HomePage() {
                 <div className="flex flex-col sm:flex-row gap-6 md:gap-8 justify-center items-center reveal-staggered delay-4">
                     <button 
                         onClick={() => router.push("/dashboard")}
-                        className="h-16 md:h-20 px-12 md:px-16 rounded-full bg-emerald-600 dark:bg-emerald-500 text-white dark:text-slate-950 font-black text-lg md:text-xl shadow-2xl transition-all hover:scale-110 active:scale-95 btn-masterpiece group overflow-hidden"
+                        className="h-16 md:h-20 px-12 md:px-16 rounded-full bg-emerald-600 dark:bg-emerald-500 text-white dark:text-slate-950 font-serif-luxury font-medium text-lg md:text-xl shadow-2xl transition-all hover:scale-110 active:scale-95 btn-masterpiece group overflow-hidden"
                     >
                         <span className="relative z-10 flex items-center gap-4">
-                            Enter the Garden <span className="text-sm opacity-50 font-serif">/ 入園</span>
+                            Enter the Garden <span className="text-sm opacity-50 font-serif italic">/ 入園</span>
                         </span>
                     </button>
                     <button 
                         onClick={() => router.push("/login")}
-                        className="px-6 py-3 text-slate-400 dark:text-emerald-100/20 hover:text-slate-900 dark:hover:text-emerald-400 font-bold uppercase tracking-[0.3em] transition-all hover:tracking-[0.4em] relative"
+                        className="px-6 py-3 text-slate-400 dark:text-emerald-100/20 hover:text-slate-900 dark:hover:text-emerald-400 font-serif-luxury font-medium uppercase tracking-[0.3em] transition-all hover:tracking-[0.4em] relative"
                     >
-                        Sign In <span className="text-[10px] opacity-40 block mt-1 font-serif tracking-normal">/ ログイン</span>
+                        Sign In <span className="text-[10px] opacity-40 block mt-1 font-serif italic tracking-normal">/ ログイン</span>
                     </button>
                 </div>
 

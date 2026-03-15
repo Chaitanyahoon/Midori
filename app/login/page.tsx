@@ -97,15 +97,15 @@ export default function LoginPage() {
             />
 
             {/* Vertical Decorative Text (Ma) with Parallax */}
-            <div className="hidden lg:flex fixed left-12 top-1/2 -translate-y-1/2 flex-col items-center gap-12 opacity-[0.08] select-none pointer-events-none" style={getParallaxStyle(15)}>
-                <span className="vertical-text text-6xl font-serif text-slate-800 dark:text-emerald-100 reveal-staggered delay-3">静寂</span>
-                <div className="w-px h-32 bg-current reveal-staggered delay-4" />
-                <span className="text-sm tracking-[0.5em] uppercase font-medium reveal-staggered delay-5">Stillness</span>
+            <div className="hidden lg:flex fixed left-12 top-1/2 -translate-y-1/2 flex-col items-center gap-10 opacity-[0.08] select-none pointer-events-none" style={getParallaxStyle(15)}>
+                <span className="vertical-text text-5xl font-serif-luxury text-slate-800 dark:text-emerald-100 reveal-staggered delay-3">静寂</span>
+                <div className="w-px h-24 bg-current reveal-staggered delay-4" />
+                <span className="text-[10px] tracking-[1em] uppercase font-bold reveal-staggered delay-5">Stillness</span>
             </div>
-            <div className="hidden lg:flex fixed right-12 top-1/2 -translate-y-1/2 flex-col items-center gap-12 opacity-[0.08] select-none pointer-events-none" style={getParallaxStyle(-15)}>
-                <span className="text-sm tracking-[0.5em] uppercase font-medium reveal-staggered delay-5">Growth</span>
-                <div className="w-px h-32 bg-current reveal-staggered delay-4" />
-                <span className="vertical-text text-6xl font-serif text-slate-800 dark:text-emerald-100 reveal-staggered delay-3">成長</span>
+            <div className="hidden lg:flex fixed right-12 top-1/2 -translate-y-1/2 flex-col items-center gap-10 opacity-[0.08] select-none pointer-events-none" style={getParallaxStyle(-15)}>
+                <span className="text-[10px] tracking-[1em] uppercase font-bold reveal-staggered delay-5">Growth</span>
+                <div className="w-px h-24 bg-current reveal-staggered delay-4" />
+                <span className="vertical-text text-5xl font-serif-luxury text-slate-800 dark:text-emerald-100 reveal-staggered delay-3">成長</span>
             </div>
 
             {/* Floating Kanji Background with Depth Parallax */}
@@ -152,9 +152,9 @@ export default function LoginPage() {
                                 </div>
                             </div>
                         </div>
-                        <h1 className="text-4xl font-bold text-slate-900 dark:text-white mb-2 tracking-tight flex items-baseline gap-3">
+                        <h1 className="text-4xl font-serif-luxury text-slate-900 dark:text-white mb-2 tracking-tight flex items-baseline gap-3">
                             Midori
-                            <span className="text-lg font-serif text-slate-400/60 dark:text-emerald-300/30">みどり</span>
+                            <span className="text-lg font-serif italic text-slate-400/60 dark:text-emerald-300/30">みどり</span>
                         </h1>
                         <p className="text-slate-500 dark:text-emerald-100/40 text-sm font-medium uppercase tracking-widest text-center">
                             Focus Garden — <span className="text-emerald-600/60 dark:text-emerald-400/40 italic">Kyōei</span>
@@ -167,10 +167,10 @@ export default function LoginPage() {
                             <button
                                 key={label}
                                 onClick={() => { setIsSignUp(i === 1); setError("") }}
-                                className={`flex-1 py-3 text-sm font-semibold rounded-xl transition-all duration-500
+                                className={`flex-1 py-3 text-sm font-serif-luxury font-semibold rounded-xl transition-all duration-500
                                   ${(isSignUp ? i === 1 : i === 0)
                                         ? "bg-emerald-500 dark:bg-emerald-500 text-emerald-950 shadow-[0_8px_16px_rgba(16,185,129,0.2)]"
-                                        : "text-slate-500 hover:text-slate-800 dark:text-emerald-100/40 dark:hover:text-emerald-100/70"
+                                        : "text-slate-500 hover:text-slate-800 dark:text-emerald-100/40 dark:hover:text-emerald-100/70 font-medium"
                                     }`}
                             >
                                 {label}
@@ -182,7 +182,7 @@ export default function LoginPage() {
                     <button
                         onClick={handleGoogle}
                         disabled={loading}
-                        className="w-full h-12 flex items-center justify-center gap-3 rounded-2xl bg-white/80 dark:bg-emerald-900/20 border border-slate-100 dark:border-emerald-500/10 hover:border-emerald-300 dark:hover:border-emerald-500/30 hover:bg-slate-50 dark:hover:bg-emerald-500/5 transition-all duration-300 text-sm font-semibold text-slate-700 dark:text-emerald-50/80 mb-6 disabled:opacity-50 btn-masterpiece"
+                        className="w-full h-12 flex items-center justify-center gap-3 rounded-2xl bg-white/80 dark:bg-emerald-900/20 border border-slate-100 dark:border-emerald-500/10 hover:border-emerald-300 dark:hover:border-emerald-500/30 hover:bg-slate-50 dark:hover:bg-emerald-500/5 transition-all duration-300 text-sm font-serif-luxury font-medium text-slate-700 dark:text-emerald-50/80 mb-6 disabled:opacity-50 btn-masterpiece"
                     >
                         {loading ? (
                             <Loader2 className="w-5 h-5 animate-spin" />
@@ -259,7 +259,7 @@ export default function LoginPage() {
                         <button
                             type="submit"
                             disabled={loading}
-                            className="w-full h-14 rounded-2xl bg-emerald-600 hover:bg-emerald-500 dark:bg-emerald-500 dark:hover:bg-emerald-400 text-white font-bold text-base shadow-xl shadow-emerald-600/20 dark:shadow-emerald-500/20 transition-all hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 flex items-center justify-center gap-2 group mt-4 btn-masterpiece"
+                            className="w-full h-14 rounded-2xl bg-emerald-600 hover:bg-emerald-500 dark:bg-emerald-500 dark:hover:bg-emerald-400 text-white font-serif-luxury font-medium text-lg shadow-xl shadow-emerald-600/20 dark:shadow-emerald-500/20 transition-all hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 flex items-center justify-center gap-2 group mt-4 btn-masterpiece"
                         >
                             {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : (isSignUp ? "Begin Your Journey / 始めましょう" : "Enter the Garden / ログイン")}
                         </button>

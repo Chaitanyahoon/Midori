@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect, useRef } from "react"
 import { useRouter } from "next/navigation"
 import { FiEye as Eye, FiEyeOff as EyeOff, FiLoader as Loader2 } from "react-icons/fi"
 import {
@@ -11,7 +11,6 @@ import {
     updateProfile,
 } from "firebase/auth"
 import { auth } from "@/lib/firebase/client"
-import { MidoriLogo } from "@/components/dashboard/midori-logo"
 
 export default function LoginPage() {
     const router = useRouter()
@@ -22,6 +21,24 @@ export default function LoginPage() {
     const [showPassword, setShowPassword] = useState(false)
     const [error, setError] = useState("")
     const [loading, setLoading] = useState(false)
+    
+    // Mouse Parallax Effect
+    const [mousePos, setMousePos] = useState({ x: 0, y: 0 })
+    const containerRef = useRef<HTMLDivElement>(null)
+
+    useEffect(() => {
+        const handleMouseMove = (e: MouseEvent) => {
+            if (!containerRef.current) return
+            const { clientX, clientY } = e
+            const { innerWidth, innerHeight } = window
+            // Normalize to -0.5 to 0.5
+            const x = (clientX / innerWidth) - 0.5
+            const y = (clientY / innerHeight) - 0.5
+            setMousePos({ x, y })
+        }
+        window.addEventListener("mousemove", handleMouseMove)
+        return () => window.removeEventListener("mousemove", handleMouseMove)
+    }, [])
 
     const handleEmailAuth = async (e: React.FormEvent) => {
         e.preventDefault()
@@ -58,42 +75,80 @@ export default function LoginPage() {
         }
     }
 
+    // Parallax Helpers
+    const getParallaxStyle = (strength: number) => ({
+        transform: `translate3d(${mousePos.x * strength}px, ${mousePos.y * strength}px, 0)`,
+        transition: "transform 0.2s cubic-bezier(0.16, 1, 0.3, 1)"
+    })
+
     return (
-        <div className="min-h-screen w-full flex items-center justify-center zen-gradient-bg relative overflow-hidden font-sans">
+        <div ref={containerRef} className="min-h-screen w-full flex items-center justify-center zen-gradient-bg relative overflow-hidden font-sans">
             {/* Washi Texture Overlay */}
             <div className="washi-overlay pointer-events-none" />
 
-            {/* Vertical Decorative Text (Ma) */}
-            <div className="hidden lg:flex fixed left-12 top-1/2 -translate-y-1/2 flex-col items-center gap-12 opacity-[0.08] select-none pointer-events-none">
-                <span className="vertical-text text-6xl font-serif text-slate-800 dark:text-emerald-100">静寂</span>
-                <div className="w-px h-32 bg-current" />
-                <span className="text-sm tracking-[0.5em] uppercase font-medium">Stillness</span>
+            {/* Cinematic Light Leaks (Mouse Driven) */}
+            <div 
+                className="light-leak top-[-10%] left-[-10%] opacity-20 dark:opacity-30" 
+                style={getParallaxStyle(40)}
+            />
+            <div 
+                className="light-leak bottom-[-10%] right-[-10%] opacity-15 dark:opacity-20 bg-teal-500/20" 
+                style={getParallaxStyle(-30)}
+            />
+
+            {/* Vertical Decorative Text (Ma) with Parallax */}
+            <div className="hidden lg:flex fixed left-12 top-1/2 -translate-y-1/2 flex-col items-center gap-12 opacity-[0.08] select-none pointer-events-none" style={getParallaxStyle(15)}>
+                <span className="vertical-text text-6xl font-serif text-slate-800 dark:text-emerald-100 reveal-staggered delay-3">静寂</span>
+                <div className="w-px h-32 bg-current reveal-staggered delay-4" />
+                <span className="text-sm tracking-[0.5em] uppercase font-medium reveal-staggered delay-5">Stillness</span>
             </div>
-            <div className="hidden lg:flex fixed right-12 top-1/2 -translate-y-1/2 flex-col items-center gap-12 opacity-[0.08] select-none pointer-events-none">
-                <span className="text-sm tracking-[0.5em] uppercase font-medium">Growth</span>
-                <div className="w-px h-32 bg-current" />
-                <span className="vertical-text text-6xl font-serif text-slate-800 dark:text-emerald-100">成長</span>
+            <div className="hidden lg:flex fixed right-12 top-1/2 -translate-y-1/2 flex-col items-center gap-12 opacity-[0.08] select-none pointer-events-none" style={getParallaxStyle(-15)}>
+                <span className="text-sm tracking-[0.5em] uppercase font-medium reveal-staggered delay-5">Growth</span>
+                <div className="w-px h-32 bg-current reveal-staggered delay-4" />
+                <span className="vertical-text text-6xl font-serif text-slate-800 dark:text-emerald-100 reveal-staggered delay-3">成長</span>
             </div>
 
-            {/* Floating Floating Kanji Background */}
+            {/* Floating Kanji Background with Depth Parallax */}
             <div className="absolute inset-0 pointer-events-none overflow-hidden select-none">
-                <span className="absolute top-[15%] left-[10%] text-[12rem] font-serif opacity-[0.03] dark:opacity-[0.02] animate-float-slow">緑</span>
-                <span className="absolute bottom-[20%] right-[15%] text-[15rem] font-serif opacity-[0.03] dark:opacity-[0.02] animate-float-slow [animation-delay:4s]">心</span>
-                <span className="absolute top-[40%] right-[10%] text-[10rem] font-serif opacity-[0.02] dark:opacity-[0.01] animate-float-slow [animation-delay:8s]">空</span>
+                <span 
+                    className="absolute top-[15%] left-[10%] text-[12rem] font-serif opacity-[0.03] dark:opacity-[0.02] animate-float-slow reveal-staggered delay-1"
+                    style={getParallaxStyle(50)}
+                >緑</span>
+                <span 
+                    className="absolute bottom-[20%] right-[15%] text-[15rem] font-serif opacity-[0.03] dark:opacity-[0.02] animate-float-slow [animation-delay:4s] reveal-staggered delay-2"
+                    style={getParallaxStyle(-60)}
+                >心</span>
+                <span 
+                    className="absolute top-[40%] right-[10%] text-[10rem] font-serif opacity-[0.02] dark:opacity-[0.01] animate-float-slow [animation-delay:8s] reveal-staggered delay-3"
+                    style={getParallaxStyle(30)}
+                >空</span>
             </div>
+
+            {/* Realistic Hanko Stamp SVG Filter */}
+            <svg className="hidden">
+                <filter id="hanko-ink-spread">
+                    <feGaussianBlur in="SourceAlpha" stdDeviation="0.2" result="blur" />
+                    <feTurbulence type="fractalNoise" baseFrequency="0.05" numOctaves="2" result="noise" />
+                    <feDisplacementMap in="blur" in2="noise" scale="1.5" xChannelSelector="R" yChannelSelector="G" />
+                    <feComposite in="SourceGraphic" operator="atop" />
+                </filter>
+            </svg>
 
             {/* Main Content */}
-            <div className="relative z-10 w-full max-w-lg px-6 py-12">
-                <div className="bg-white/40 dark:bg-slate-950/40 backdrop-blur-3xl border border-white/20 dark:border-emerald-500/10 rounded-[2.5rem] shadow-[0_32px_64px_-16px_rgba(0,0,0,0.1),inset_0_0_0_1px_rgba(255,255,255,0.3)] dark:shadow-[0_32px_64px_-16px_rgba(0,0,0,0.4),inset_0_0_0_1px_rgba(255,255,255,0.05)] p-10 lg:p-14 animate-bloom">
+            <div className="relative z-10 w-full max-w-lg px-6 py-12 reveal-staggered delay-4">
+                <div className="bg-white/40 dark:bg-emerald-950/20 backdrop-blur-3xl border border-white/20 dark:border-emerald-500/10 rounded-[2.5rem] shadow-[0_32px_64px_-16px_rgba(0,0,0,0.1),inset_0_0_0_1px_rgba(255,255,255,0.3)] dark:shadow-[0_32px_64px_-16px_rgba(0,0,0,0.4),inset_0_0_0_1px_rgba(255,255,255,0.05)] p-10 lg:p-14 overflow-hidden relative group/card">
                     
+                    {/* Subtle Internal Light Sweep */}
+                    <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent pointer-events-none opacity-0 group-hover/card:opacity-100 transition-opacity duration-1000" />
+
                     {/* Hanko-style Logo Branding */}
                     <div className="flex flex-col items-center mb-10">
                         <div className="relative mb-6">
-                            <div className="p-4 bg-white/50 dark:bg-slate-900/50 rounded-2xl shadow-sm border border-white/40 dark:border-white/5 relative group transition-all duration-500 hover:scale-105">
+                            <div className="p-4 bg-white/50 dark:bg-emerald-900/40 rounded-2xl shadow-sm border border-white/40 dark:border-white/5 relative group transition-all duration-700 hover:scale-110 hover:-rotate-3">
                                 <img src="/icon.svg" alt="Midori logo" className="w-16 h-16 pointer-events-none" />
-                                {/* Hanko Seal Element */}
-                                <div className="absolute -bottom-2 -right-2 hanko-seal animate-pulse-slow">
-                                    <span className="text-red-600 dark:text-red-500 font-serif font-bold text-xs select-none">みどり</span>
+                                {/* Hanko Seal Element with realistic filter */}
+                                <div className="absolute -bottom-2 -right-3 hanko-seal hanko-seal-filter transition-all hover:scale-110 cursor-default">
+                                    <span className="text-red-600 dark:text-red-500 font-serif font-bold text-xs select-none [text-shadow:0_0_1px_rgba(0,0,0,0.1)]">みどり</span>
                                 </div>
                             </div>
                         </div>
@@ -106,15 +161,15 @@ export default function LoginPage() {
                         </p>
                     </div>
 
-                    {/* Tabs */}
-                    <div className="flex rounded-2xl bg-emerald-900/5 dark:bg-emerald-900/10 p-1.5 mb-8 border border-emerald-500/10 backdrop-blur-sm">
+                    {/* Tabs with Staggered Elements */}
+                    <div className="flex rounded-2xl bg-emerald-900/5 dark:bg-emerald-900/20 p-1.5 mb-8 border border-emerald-500/10 backdrop-blur-sm">
                         {["Log In", "Sign Up"].map((label, i) => (
                             <button
                                 key={label}
                                 onClick={() => { setIsSignUp(i === 1); setError("") }}
-                                className={`flex-1 py-3 text-sm font-semibold rounded-xl transition-all duration-300
+                                className={`flex-1 py-3 text-sm font-semibold rounded-xl transition-all duration-500
                                   ${(isSignUp ? i === 1 : i === 0)
-                                        ? "bg-white dark:bg-emerald-500 text-emerald-950 dark:text-emerald-950 shadow-[0_4px_12px_rgba(0,0,0,0.05)]"
+                                        ? "bg-emerald-500 dark:bg-emerald-500 text-emerald-950 shadow-[0_8px_16px_rgba(16,185,129,0.2)]"
                                         : "text-slate-500 hover:text-slate-800 dark:text-emerald-100/40 dark:hover:text-emerald-100/70"
                                     }`}
                             >
@@ -127,7 +182,7 @@ export default function LoginPage() {
                     <button
                         onClick={handleGoogle}
                         disabled={loading}
-                        className="w-full h-12 flex items-center justify-center gap-3 rounded-2xl bg-white dark:bg-emerald-900/10 border-2 border-slate-100 dark:border-emerald-500/10 hover:border-emerald-300 dark:hover:border-emerald-500/30 hover:bg-slate-50 dark:hover:bg-emerald-500/5 transition-all duration-300 text-sm font-semibold text-slate-700 dark:text-emerald-50/80 mb-6 disabled:opacity-50"
+                        className="w-full h-12 flex items-center justify-center gap-3 rounded-2xl bg-white/80 dark:bg-emerald-900/20 border border-slate-100 dark:border-emerald-500/10 hover:border-emerald-300 dark:hover:border-emerald-500/30 hover:bg-slate-50 dark:hover:bg-emerald-500/5 transition-all duration-300 text-sm font-semibold text-slate-700 dark:text-emerald-50/80 mb-6 disabled:opacity-50 btn-masterpiece"
                     >
                         {loading ? (
                             <Loader2 className="w-5 h-5 animate-spin" />
@@ -144,37 +199,37 @@ export default function LoginPage() {
 
                     <div className="relative mb-6">
                         <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-slate-100 dark:border-white/5"></div></div>
-                        <div className="relative flex justify-center text-xs uppercase tracking-widest"><span className="bg-transparent px-4 text-slate-400/60 font-medium">Or email</span></div>
+                        <div className="relative flex justify-center text-[10px] uppercase tracking-[0.2em] font-bold"><span className="bg-transparent px-4 text-emerald-600/40 dark:text-emerald-400/30">Haimen — Entry</span></div>
                     </div>
 
                     {/* Email form */}
                     <form onSubmit={handleEmailAuth} className="space-y-4">
                         {isSignUp && (
                             <div className="group space-y-1">
-                                <label className="text-xs font-semibold text-slate-400 dark:text-emerald-100/30 uppercase tracking-widest ml-1">Full Name</label>
+                                <label className="text-[10px] font-bold text-slate-400 dark:text-emerald-100/20 uppercase tracking-[0.1em] ml-1">Namae — Full Name</label>
                                 <input
                                     type="text"
-                                    placeholder="your name"
+                                    placeholder="Enter your name"
                                     value={name}
                                     onChange={(e) => setName(e.target.value)}
                                     required
-                                    className="w-full h-12 px-5 rounded-2xl bg-white/50 dark:bg-white/5 border-2 border-slate-100 dark:border-white/5 dark:text-white placeholder:text-slate-300 dark:placeholder:text-emerald-100/10 focus:outline-none focus:border-emerald-400 dark:focus:border-emerald-500/50 transition-all font-medium"
+                                    className="w-full h-12 px-5 rounded-2xl bg-white/40 dark:bg-emerald-950/40 border border-slate-100 dark:border-white/5 dark:text-white placeholder:text-slate-300 dark:placeholder:text-emerald-100/10 focus:outline-none focus:border-emerald-400 dark:focus:border-emerald-500/50 transition-all font-medium"
                                 />
                             </div>
                         )}
                         <div className="group space-y-1">
-                            <label className="text-xs font-semibold text-slate-400 dark:text-emerald-100/30 uppercase tracking-widest ml-1">Email</label>
+                            <label className="text-[10px] font-bold text-slate-400 dark:text-emerald-100/20 uppercase tracking-[0.1em] ml-1">Yūbin — Email</label>
                             <input
                                 type="email"
                                 placeholder="name@example.com"
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}
                                 required
-                                className="w-full h-12 px-5 rounded-2xl bg-white/50 dark:bg-white/5 border-2 border-slate-100 dark:border-white/5 dark:text-white placeholder:text-slate-300 dark:placeholder:text-emerald-100/10 focus:outline-none focus:border-emerald-400 dark:focus:border-emerald-500/50 transition-all font-medium"
+                                className="w-full h-12 px-5 rounded-2xl bg-white/40 dark:bg-emerald-950/40 border border-slate-100 dark:border-white/5 dark:text-white placeholder:text-slate-300 dark:placeholder:text-emerald-100/10 focus:outline-none focus:border-emerald-400 dark:focus:border-emerald-500/50 transition-all font-medium"
                             />
                         </div>
                         <div className="group space-y-1">
-                            <label className="text-xs font-semibold text-slate-400 dark:text-emerald-100/30 uppercase tracking-widest ml-1">Password</label>
+                            <label className="text-[10px] font-bold text-slate-400 dark:text-emerald-100/20 uppercase tracking-[0.1em] ml-1">Aikotoba — Password</label>
                             <div className="relative">
                                 <input
                                     type={showPassword ? "text" : "password"}
@@ -183,7 +238,7 @@ export default function LoginPage() {
                                     onChange={(e) => setPassword(e.target.value)}
                                     required
                                     minLength={6}
-                                    className="w-full h-12 px-5 rounded-2xl bg-white/50 dark:bg-white/5 border-2 border-slate-100 dark:border-white/5 dark:text-white placeholder:text-slate-300 dark:placeholder:text-emerald-100/10 focus:outline-none focus:border-emerald-400 dark:focus:border-emerald-500/50 transition-all font-medium"
+                                    className="w-full h-12 px-5 rounded-2xl bg-white/40 dark:bg-emerald-950/40 border border-slate-100 dark:border-white/5 dark:text-white placeholder:text-slate-300 dark:placeholder:text-emerald-100/10 focus:outline-none focus:border-emerald-400 dark:focus:border-emerald-500/50 transition-all font-medium"
                                 />
                                 <button
                                     type="button"
@@ -196,7 +251,7 @@ export default function LoginPage() {
                         </div>
 
                         {error && (
-                            <div className="text-sm text-red-500 bg-red-500/5 dark:bg-red-500/10 border border-red-500/20 px-4 py-3 rounded-xl animate-shake">
+                            <div className="text-xs text-red-500 bg-red-500/5 dark:bg-red-500/10 border border-red-500/20 px-4 py-3 rounded-xl animate-shake font-medium">
                                 {error}
                             </div>
                         )}
@@ -204,14 +259,14 @@ export default function LoginPage() {
                         <button
                             type="submit"
                             disabled={loading}
-                            className="w-full h-14 rounded-2xl bg-emerald-600 hover:bg-emerald-500 dark:bg-emerald-500 dark:hover:bg-emerald-400 text-white font-bold text-base shadow-xl shadow-emerald-600/20 dark:shadow-emerald-500/20 transition-all hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 flex items-center justify-center gap-2 group mt-4"
+                            className="w-full h-14 rounded-2xl bg-emerald-600 hover:bg-emerald-500 dark:bg-emerald-500 dark:hover:bg-emerald-400 text-white font-bold text-base shadow-xl shadow-emerald-600/20 dark:shadow-emerald-500/20 transition-all hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 flex items-center justify-center gap-2 group mt-4 btn-masterpiece"
                         >
                             {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : (isSignUp ? "Begin Your Journey / 始めましょう" : "Enter the Garden / ログイン")}
                         </button>
                     </form>
 
-                    <p className="text-center text-[10px] text-slate-400/60 uppercase tracking-widest mt-10">
-                        Midori Sanctuary — Built for <span className="text-emerald-500 dark:text-emerald-400 font-bold">Deep Work</span>
+                    <p className="text-center text-[9px] text-slate-400 dark:text-emerald-100/20 uppercase tracking-[0.3em] mt-10 font-bold">
+                        Midori Sanctuary — Built for <span className="text-emerald-500 dark:text-emerald-400">Deep Work</span>
                     </p>
                 </div>
             </div>

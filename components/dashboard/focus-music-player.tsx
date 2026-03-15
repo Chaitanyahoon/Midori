@@ -795,7 +795,8 @@ export function FocusMusicPlayer({
       <CardContent className="px-5 py-4 space-y-4 relative z-10">
         {/* Category Tabs */}
         <Tabs value={activeCategory} onValueChange={(v) => setActiveCategory(v as MusicTrack["category"] | "custom")}>
-          <TabsList className="flex w-full gap-1 h-auto p-1 bg-slate-100/60 dark:bg-slate-800/50 rounded-xl">
+          <div className="overflow-x-auto scrollbar-hide -mx-1 px-1 mb-3">
+            <TabsList className="flex items-center gap-1 h-auto p-1 bg-slate-100/60 dark:bg-slate-800/50 rounded-xl min-w-max">
             {(["focus", "zen", "relax", "energy", "instrumental"] as const).map((cat) => {
               const colors: Record<string, string> = {
                 focus: "data-[state=active]:text-emerald-600 dark:data-[state=active]:text-emerald-400",
@@ -809,7 +810,7 @@ export function FocusMusicPlayer({
                   key={cat}
                   value={cat}
                   title={categoryLabels[cat]}
-                  className={`flex-1 text-[10px] py-1.5 flex flex-col items-center gap-0.5 rounded-lg transition-all
+                  className={`flex-1 min-w-[60px] text-[10px] py-1.5 flex flex-col items-center gap-0.5 rounded-lg transition-all
                     data-[state=active]:bg-white dark:data-[state=active]:bg-slate-700 data-[state=active]:shadow-sm
                     text-slate-400 ${colors[cat]} font-bold uppercase tracking-wider`}
                 >
@@ -821,7 +822,7 @@ export function FocusMusicPlayer({
             <TabsTrigger
               value="custom"
               title="Custom Mix"
-              className="flex-1 text-[10px] py-1.5 flex flex-col items-center gap-0.5 rounded-lg transition-all
+              className="flex-1 min-w-[60px] text-[10px] py-1.5 flex flex-col items-center gap-0.5 rounded-lg transition-all
                 data-[state=active]:bg-white dark:data-[state=active]:bg-slate-700 data-[state=active]:shadow-sm
                 text-slate-400 data-[state=active]:text-slate-700 dark:data-[state=active]:text-slate-200 font-bold uppercase tracking-wider"
             >
@@ -829,6 +830,7 @@ export function FocusMusicPlayer({
               <span className="hidden sm:block">Custom</span>
             </TabsTrigger>
           </TabsList>
+        </div>
 
           {(["focus", "zen", "relax", "energy", "instrumental"] as const).map((cat) => (
             <TabsContent key={cat} value={cat} className="mt-3 focus-visible:outline-none">

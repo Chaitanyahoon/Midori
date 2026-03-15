@@ -82,7 +82,7 @@ export default function LoginPage() {
     })
 
     return (
-        <div ref={containerRef} className="min-h-screen w-full flex items-center justify-center zen-gradient-bg relative overflow-hidden font-sans">
+        <div ref={containerRef} className="h-screen w-full flex items-center justify-center zen-gradient-bg relative overflow-hidden font-sans">
             {/* Washi Texture Overlay */}
             <div className="washi-overlay pointer-events-none" />
 
@@ -135,15 +135,15 @@ export default function LoginPage() {
             </svg>
 
             {/* Main Content */}
-            <div className="relative z-10 w-full max-w-lg px-6 py-12 reveal-staggered delay-4">
-                <div className="bg-white/40 dark:bg-emerald-950/20 backdrop-blur-3xl border border-white/20 dark:border-emerald-500/10 rounded-[2.5rem] shadow-[0_32px_64px_-16px_rgba(0,0,0,0.1),inset_0_0_0_1px_rgba(255,255,255,0.3)] dark:shadow-[0_32px_64px_-16px_rgba(0,0,0,0.4),inset_0_0_0_1px_rgba(255,255,255,0.05)] p-10 lg:p-14 overflow-hidden relative group/card">
+            <div className="relative z-10 w-full max-w-lg px-6 py-4 md:py-8 reveal-staggered delay-4">
+                <div className="bg-white/40 dark:bg-emerald-950/20 backdrop-blur-3xl border border-white/20 dark:border-emerald-500/10 rounded-[2rem] md:rounded-[2.5rem] shadow-[0_32px_64px_-16px_rgba(0,0,0,0.1),inset_0_0_0_1px_rgba(255,255,255,0.3)] dark:shadow-[0_32px_64px_-16px_rgba(0,0,0,0.4),inset_0_0_0_1px_rgba(255,255,255,0.05)] p-8 md:p-12 overflow-hidden relative group/card">
                     
                     {/* Subtle Internal Light Sweep */}
                     <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent pointer-events-none opacity-0 group-hover/card:opacity-100 transition-opacity duration-1000" />
 
                     {/* Hanko-style Logo Branding */}
-                    <div className="flex flex-col items-center mb-10">
-                        <div className="relative mb-6">
+                    <div className="flex flex-col items-center mb-6 md:mb-8">
+                        <div className="relative mb-4 md:mb-6">
                             <div className="p-4 bg-white/50 dark:bg-emerald-900/40 rounded-2xl shadow-sm border border-white/40 dark:border-white/5 relative group transition-all duration-700 hover:scale-110 hover:-rotate-3">
                                 <img src="/icon.svg" alt="Midori logo" className="w-16 h-16 pointer-events-none" />
                                 {/* Hanko Seal Element with realistic filter */}
@@ -162,7 +162,7 @@ export default function LoginPage() {
                     </div>
 
                     {/* Tabs with Staggered Elements */}
-                    <div className="flex rounded-2xl bg-emerald-900/5 dark:bg-emerald-900/20 p-1.5 mb-8 border border-emerald-500/10 backdrop-blur-sm">
+                    <div className="flex rounded-2xl bg-emerald-900/5 dark:bg-emerald-900/20 p-1 mb-6 md:mb-8 border border-emerald-500/10 backdrop-blur-sm">
                         {["Log In", "Sign Up"].map((label, i) => (
                             <button
                                 key={label}
@@ -197,7 +197,7 @@ export default function LoginPage() {
                         Continue with Google
                     </button>
 
-                    <div className="relative mb-6">
+                    <div className="relative mb-4 md:mb-6">
                         <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-slate-100 dark:border-white/5"></div></div>
                         <div className="relative flex justify-center text-[10px] uppercase tracking-[0.2em] font-bold"><span className="bg-transparent px-4 text-emerald-600/40 dark:text-emerald-400/30">Haimen — Entry</span></div>
                     </div>
@@ -265,7 +265,7 @@ export default function LoginPage() {
                         </button>
                     </form>
 
-                    <p className="text-center text-[9px] text-slate-400 dark:text-emerald-100/20 uppercase tracking-[0.3em] mt-10 font-bold">
+                    <p className="text-center text-[9px] text-slate-400 dark:text-emerald-100/20 uppercase tracking-[0.3em] mt-6 md:mt-10 font-bold">
                         Midori Sanctuary — Built for <span className="text-emerald-500 dark:text-emerald-400">Deep Work</span>
                     </p>
                 </div>

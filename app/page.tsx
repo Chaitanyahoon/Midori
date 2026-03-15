@@ -68,7 +68,7 @@ export default function HomePage() {
     return (
         <div 
             ref={containerRef} 
-            className={`min-h-screen w-full flex items-center justify-center zen-gradient-bg relative overflow-hidden font-sans ${isActive ? 'active' : ''}`}
+            className={`h-screen w-full flex items-center justify-center zen-gradient-bg relative overflow-hidden font-sans ${isActive ? 'active' : ''}`}
         >
             {/* Washi Texture Overlay */}
             <div className="washi-overlay pointer-events-none" />
@@ -107,16 +107,16 @@ export default function HomePage() {
 
             {/* Main Content */}
             <div className="relative z-10 text-center max-w-5xl px-6">
-                <div className="mb-16 flex flex-col items-center reveal-staggered delay-1">
-                    <div className="p-10 bg-white/20 dark:bg-emerald-950/10 backdrop-blur-3xl rounded-[4rem] border border-white/40 dark:border-emerald-500/10 shadow-organic-2xl mb-12 transition-all hover:scale-105 duration-1000 relative group cursor-pointer">
-                        <img src="/icon.svg" alt="Midori" className="w-28 h-28 pointer-events-none transition-transform group-hover:rotate-12 duration-700" />
-                        <div className="absolute -bottom-4 -right-4 hanko-seal hanko-seal-filter animate-pulse-slow scale-125">
-                            <span className="text-red-700 dark:text-red-500 font-serif font-black text-xl select-none">緑</span>
+                <div className="mb-8 md:mb-12 flex flex-col items-center reveal-staggered delay-1">
+                    <div className="p-6 md:p-8 bg-white/20 dark:bg-emerald-950/10 backdrop-blur-3xl rounded-[3rem] border border-white/40 dark:border-emerald-500/10 shadow-organic-2xl mb-8 md:mb-10 transition-all hover:scale-105 duration-1000 relative group cursor-pointer">
+                        <img src="/icon.svg" alt="Midori" className="w-20 h-20 md:w-24 md:h-24 pointer-events-none transition-transform group-hover:rotate-12 duration-700" />
+                        <div className="absolute -bottom-3 -right-3 hanko-seal hanko-seal-filter animate-pulse-slow scale-110">
+                            <span className="text-red-700 dark:text-red-500 font-serif font-black text-lg select-none">緑</span>
                         </div>
                     </div>
                 </div>
 
-                <div className="space-y-4 mb-16">
+                <div className="space-y-3 mb-10 md:mb-12">
                     <h1 className="text-7xl md:text-9xl font-serif-luxury text-slate-900 dark:text-white tracking-tight leading-[0.9] reveal-staggered delay-2">
                         <span className="reveal-text"><span>Cultivate</span></span>{' '}
                         <span className="italic font-light opacity-80 reveal-text"><span>Focus.</span></span>
@@ -126,14 +126,14 @@ export default function HomePage() {
                     </h1>
                 </div>
 
-                <p className="text-lg md:text-xl text-slate-500 dark:text-emerald-100/30 mb-16 font-medium tracking-[1em] uppercase reveal-staggered delay-3 ml-[1em]">
+                <p className="text-lg md:text-xl text-slate-500 dark:text-emerald-100/30 mb-10 md:mb-12 font-medium tracking-[1em] uppercase reveal-staggered delay-3 ml-[1em]">
                     Your Digital Zen Sanctuary
                 </p>
 
-                <div className="flex flex-col sm:flex-row gap-8 justify-center items-center reveal-staggered delay-4">
+                <div className="flex flex-col sm:flex-row gap-6 md:gap-8 justify-center items-center reveal-staggered delay-4">
                     <button 
                         onClick={() => router.push("/dashboard")}
-                        className="h-20 px-16 rounded-full bg-slate-900 dark:bg-emerald-500 text-white dark:text-slate-950 font-black text-xl shadow-2xl transition-all hover:scale-110 active:scale-95 btn-masterpiece group overflow-hidden"
+                        className="h-16 md:h-20 px-12 md:px-16 rounded-full bg-slate-900 dark:bg-emerald-500 text-white dark:text-slate-950 font-black text-lg md:text-xl shadow-2xl transition-all hover:scale-110 active:scale-95 btn-masterpiece group overflow-hidden"
                     >
                         <span className="relative z-10 flex items-center gap-4">
                             Enter the Garden <span className="text-sm opacity-50 font-serif">/ 入園</span>
@@ -141,13 +141,13 @@ export default function HomePage() {
                     </button>
                     <button 
                         onClick={() => router.push("/login")}
-                        className="px-8 py-4 text-slate-400 dark:text-emerald-100/20 hover:text-slate-900 dark:hover:text-emerald-400 font-bold uppercase tracking-[0.3em] transition-all hover:tracking-[0.4em] relative"
+                        className="px-6 py-3 text-slate-400 dark:text-emerald-100/20 hover:text-slate-900 dark:hover:text-emerald-400 font-bold uppercase tracking-[0.3em] transition-all hover:tracking-[0.4em] relative"
                     >
                         Sign In <span className="text-[10px] opacity-40 block mt-1 font-serif tracking-normal">/ ログイン</span>
                     </button>
                 </div>
 
-                <div className="mt-32 flex items-center justify-center gap-12 opacity-10 reveal-staggered delay-5">
+                <div className="mt-16 md:mt-24 flex items-center justify-center gap-8 md:gap-12 opacity-10 reveal-staggered delay-5">
                     <span className="text-[10px] font-bold uppercase tracking-[1em]">Minimal</span>
                     <div className="w-1.5 h-1.5 bg-current rounded-full" />
                     <span className="text-[10px] font-bold uppercase tracking-[1em]">Focused</span>

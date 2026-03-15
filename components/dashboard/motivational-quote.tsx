@@ -6,7 +6,7 @@ import { Card, CardContent } from "@/components/ui/card"
 const motivationalQuotes = [
   {
     text: "Like a tree, grow your roots deep and reach for the sky.",
-    author: "Planthesia Wisdom",
+    author: "Midori Wisdom",
     emoji: "🌳",
   },
   {

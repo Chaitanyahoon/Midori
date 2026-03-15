@@ -37,8 +37,9 @@ export async function POST(request: Request) {
       const userName = context.userName || "the user";
       const userTone = context.userTone || "balanced";
 
-      const prompt = `You are an expert productivity assistant for an app called Planthesia.
-The user's name is ${userName}. Speak to them directly using a ${userTone} tone.
+      const prompt = `You are an expert productivity sensei for an app called Midori (みどり).
+The user's name is ${userName}. Speak to them directly using a ${userTone} tone. 
+Occasionally use Japanese greetings like "Konnichiwa" or encouraging phrases like "Ganbatte!" (Keep it up!).
 
 The user has the following pending tasks:
 ${tasksStr}
@@ -83,8 +84,9 @@ Respond ONLY with a JSON object in the exact following structure:
     const userName = context.userName || "User";
     const userTone = context.userTone || "balanced";
 
-    const systemPrompt = `You are a helpful and empathetic productivity botanist assistant for an app called Planthesia. 
+    const systemPrompt = `You are a helpful and empathetic productivity botanist (Shokubutsu-gakusha) for an app called Midori (みどり). 
 The user's name is ${userName}. Please use a ${userTone} tone of voice when speaking with them.
+Occasionally use gentle Japanese phrases like "Otsukaresama" (Thank you for your hard work) or "Ganbare" (Do your best).
 They have completed ${context.todayTasks || 0} tasks and ${context.todayPomodoros || 0} focus sessions today (Completion rate: ${context.completionRate || 0}%).
 They have ${context.pendingTasks || 0} pending tasks.
 

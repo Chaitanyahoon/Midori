@@ -35,7 +35,7 @@ export function SettingsModal({ isOpen, onCloseAction }: SettingsModalProps) {
       const a = document.createElement("a")
       a.href = url
       const dateStr = new Date().toISOString().split("T")[0]
-      a.download = `planthesia-backup-${dateStr}.json`
+      a.download = `midori-backup-${dateStr}.json`
       document.body.appendChild(a)
       a.click()
       document.body.removeChild(a)
@@ -125,7 +125,7 @@ export function SettingsModal({ isOpen, onCloseAction }: SettingsModalProps) {
               <span>Settings</span>
             </DialogTitle>
             <DialogDescription className="text-slate-600 dark:text-slate-400 mt-1.5">
-              Customize your BloomMind experience
+              Customize your Midori experience
             </DialogDescription>
           </DialogHeader>
         </div>
@@ -150,7 +150,7 @@ export function SettingsModal({ isOpen, onCloseAction }: SettingsModalProps) {
             <div className="space-y-3">
               <div className="space-y-1.5">
                 <label className="text-sm font-medium text-slate-900 dark:text-slate-100">AI Communication Style</label>
-                <p className="text-xs text-slate-500 dark:text-slate-400">Choose how BloomMind communicates with you</p>
+                <p className="text-xs text-slate-500 dark:text-slate-400">Choose how Midori communicates with you</p>
               </div>
               <div className="grid grid-cols-1 gap-2">
                 {[

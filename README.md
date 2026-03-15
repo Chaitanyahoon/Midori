@@ -1,6 +1,6 @@
 <div align="center">
 
-# 🌱 Planthesia: Your Productive Garden
+# 🌱 Midori: Your Productive Garden
 
 *A nature-inspired productivity app for deep work, smart tasks, and AI-powered growth.*
 
@@ -12,11 +12,11 @@
 
 <br/>
 
-![Planthesia Demo Animation](./public/assets/download.gif)
+![Midori Demo Animation](./public/assets/download.gif)
 
 <br/>
 
-> **Planthesia** is a web-based productivity sanctuary that gamifies your workflow — treating every task like a seed in your thriving digital garden.
+> **Midori** is a web-based productivity sanctuary that gamifies your workflow — treating every task like a seed in your thriving digital garden.
 
 </div>
 
@@ -63,8 +63,8 @@
 
 ```bash
 # 1. Clone the repository
-git clone https://github.com/Chaitanyahoon/Planthesia.git
-cd planthesia
+git clone https://github.com/Chaitanyahoon/Midori.git
+cd midori
 
 # 2. Install dependencies
 npm install
@@ -77,7 +77,7 @@ cp .env.example .env.local
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) to see Planthesia in action. 🌿
+Open [http://localhost:3000](http://localhost:3000) to see Midori in action. 🌿
 
 ---
 

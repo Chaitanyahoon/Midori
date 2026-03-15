@@ -68,10 +68,14 @@ export default function LoginPage() {
                 <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border border-emerald-100 dark:border-emerald-900 rounded-3xl shadow-2xl shadow-emerald-100/50 dark:shadow-emerald-950/50 p-8">
                     {/* Logo */}
                     <div className="flex flex-col items-center mb-8">
-                        <div className="w-20 h-20 mb-3 drop-shadow-xl">
-                            <img src="/icon.svg" alt="Planthesia logo" className="w-full h-full" />
+                        <div className="w-20 h-20 mb-3 drop-shadow-xl relative">
+                            <img src="/icon.svg" alt="Midori logo" className="w-full h-full" />
+                            <span className="absolute -top-1 -right-2 text-emerald-600/40 font-bold text-lg select-none">緑</span>
                         </div>
-                        <h1 className="text-2xl font-bold text-slate-800 dark:text-white">Planthesia</h1>
+                        <h1 className="text-3xl font-bold text-slate-800 dark:text-white flex items-baseline gap-2">
+                            Midori
+                            <span className="text-sm font-medium text-slate-400">みどり</span>
+                        </h1>
                         <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">Grow your focus, one task at a time</p>
                     </div>
 
@@ -168,7 +172,7 @@ export default function LoginPage() {
                             className="w-full py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-semibold text-sm shadow-md shadow-emerald-200 dark:shadow-emerald-900 hover:shadow-lg hover:scale-[1.01] active:scale-[0.99] transition-all duration-200 disabled:opacity-60 flex items-center justify-center gap-2"
                         >
                             {loading && <Loader2 className="w-4 h-4 animate-spin" />}
-                            {loading ? "Authenticating..." : (isSignUp ? "Create Account 🌱" : "Sign In →")}
+                            {loading ? "Authenticating..." : (isSignUp ? "Create Account / 始めましょう 🌱" : "Sign In / ログイン →")}
                         </button>
                     </form>
 

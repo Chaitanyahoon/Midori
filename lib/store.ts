@@ -38,7 +38,7 @@ export const useUIStore = create<UIStore>((set) => ({
     notifications: [
         {
             id: "1",
-            title: "Welcome to Planthesia!",
+            title: "Welcome to Midori! / ようこそ",
             message: "Start by setting up your first task or pomodoro session.",
             time: new Date().toISOString(),
             isRead: false,

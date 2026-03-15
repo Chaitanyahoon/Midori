@@ -10,9 +10,9 @@ import { Analytics } from "@vercel/analytics/next"
 const outfit = Outfit({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
-  title: "Planthesia - Your Productive Garden",
+  title: "Midori - Your Productive Garden",
   description: "Grow your tasks, cultivate your focus.",
-  generator: 'Planthesia',
+  generator: 'Midori',
   icons: {
     icon: '/icon.svg',
     apple: '/icon.svg',

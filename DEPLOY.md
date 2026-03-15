@@ -1,4 +1,4 @@
-# Planthesia — Hostinger VPS Deployment Guide
+# Midori — Hostinger VPS Deployment Guide
 **Domain:** `planthesia.in` · **VPS IP:** `2.57.91.91`
 
 ---
@@ -45,8 +45,8 @@ sudo apt install nginx -y && sudo systemctl enable nginx
 ## Step 4 — Clone Repo + Build
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/planthesia.git /var/www/planthesia
-cd /var/www/planthesia
+git clone https://github.com/YOUR_USERNAME/midori.git /var/www/midori
+cd /var/www/midori
 
 npm install
 npm run build
@@ -55,7 +55,7 @@ pm2 save
 pm2 startup  # Run the command it prints
 ```
 
-Test: Open `http://2.57.91.91:3000` — Planthesia should load.
+Test: Open `http://2.57.91.91:3000` — Midori should load.
 
 ---
 
@@ -108,7 +108,7 @@ Follow the prompts. Auto-renews every 90 days. 🔒
 ```bash
 cd /var/www/planthesia
 git pull
-npm run build && pm2 restart planthesia
+npm run build && pm2 restart midori
 ```
 
 ---
@@ -118,6 +118,6 @@ npm run build && pm2 restart planthesia
 ```bash
 pm2 list
 pm2 logs planthesia
-pm2 restart planthesia
+pm2 restart midori
 pm2 stop planthesia
 ```

@@ -17,8 +17,8 @@ export default function Loading() {
 
             {/* Loading text */}
             <div className="mt-8 flex flex-col items-center space-y-2">
-                <h3 className="text-xl font-semibold bg-gradient-to-r from-emerald-600 to-teal-600 dark:from-emerald-400 dark:to-teal-400 bg-clip-text text-transparent">
-                    Planthesia
+                <h3 className="text-xl font-semibold bg-gradient-to-r from-emerald-600 to-teal-600 dark:from-emerald-400 dark:to-teal-400 bg-clip-text text-transparent flex items-baseline gap-2">
+                    Midori <span className="text-xs font-normal text-slate-400">みどり</span>
                 </h3>
                 <p className="text-sm text-slate-500 dark:text-slate-400 animate-pulse">
                     Cultivating your workspace...

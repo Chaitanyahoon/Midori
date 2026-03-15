@@ -3,7 +3,7 @@
 module.exports = {
     apps: [
         {
-            name: "planthesia",
+            name: "midori",
             script: ".next/standalone/server.js",
             instances: 1,
             autorestart: true,

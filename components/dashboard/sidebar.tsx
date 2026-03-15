@@ -5,16 +5,16 @@ import { cn } from "@/lib/utils"
 import { Icons } from "@/components/icons"
 import { Button } from "@/components/ui/button"
 import { SettingsDialog } from "@/components/dashboard/settings-dialog"
-import { PlanthesiaLogo } from "@/components/dashboard/planthesia-logo"
+import { MidoriLogo } from "@/components/dashboard/midori-logo"
 import { useData } from "@/components/local-data-provider"
 import { useAuth } from "@/components/auth-provider"
 
 const navigation = [
-  { name: "Growth Hub", href: "/dashboard", icon: Icons.seedling, description: "Your productivity overview" },
-  { name: "Tasks Garden", href: "/dashboard/tasks", icon: Icons.leaf, description: "Manage your task ecosystem" },
-  { name: "Time Planner", href: "/dashboard/calendar", icon: Icons.sun, description: "Schedule your growth" },
-  { name: "Focus Grove", href: "/dashboard/pomodoro", icon: Icons.tree, description: "Deep work sessions" },
-  { name: "Growth Insights", href: "/dashboard/insights", icon: Icons.sprout, description: "Track your progress" },
+  { name: "Growth Hub", href: "/dashboard", icon: Icons.seedling, description: "Your productivity overview", japanese: "成長" },
+  { name: "Tasks Garden", href: "/dashboard/tasks", icon: Icons.leaf, description: "Manage your task ecosystem", japanese: "庭" },
+  { name: "Time Planner", href: "/dashboard/calendar", icon: Icons.sun, description: "Schedule your growth", japanese: "計画" },
+  { name: "Focus Grove", href: "/dashboard/pomodoro", icon: Icons.tree, description: "Deep work sessions", japanese: "集中" },
+  { name: "Growth Insights", href: "/dashboard/insights", icon: Icons.sprout, description: "Track your progress", japanese: "悟り" },
 ]
 
 interface SidebarProps {
@@ -38,7 +38,7 @@ export function Sidebar({ onClose }: SidebarProps) {
           <div className="absolute top-0 left-0 w-full h-32 bg-gradient-to-br from-emerald-500/10 to-amber-500/10 rounded-b-[3rem] -z-10" />
 
           <div className="flex items-center justify-between mb-6 animate-bloom">
-            <PlanthesiaLogo size="lg" />
+            <MidoriLogo size="lg" />
             {/* Mobile close button */}
             {onClose && (
               <button
@@ -78,8 +78,11 @@ export function Sidebar({ onClose }: SidebarProps) {
                   "w-5 h-5 transition-colors",
                   isActive ? "text-emerald-600 dark:text-emerald-400" : "text-slate-400 dark:text-slate-500 group-hover:text-emerald-500"
                 )} />
-                <div className="flex-1">
+                <div className="flex-1 flex items-baseline gap-2">
                   <span>{item.name}</span>
+                  <span className="text-[10px] opacity-0 group-hover:opacity-40 transition-opacity font-jp font-medium">
+                    {item.japanese}
+                  </span>
                 </div>
               </Link>
             )
@@ -92,7 +95,9 @@ export function Sidebar({ onClose }: SidebarProps) {
           <div className="bg-gradient-to-br from-amber-50 to-orange-50 dark:from-emerald-900/20 dark:to-teal-900/20 rounded-2xl p-4 border border-amber-100 dark:border-emerald-800/30 text-center relative overflow-hidden group">
             <div className="absolute -top-6 -right-6 w-12 h-12 bg-amber-400/20 rounded-full blur-xl group-hover:scale-150 transition-transform duration-700" />
             <h3 className="text-sm font-semibold text-amber-800 dark:text-emerald-100 mb-1">Weekly Growth</h3>
-            <p className="text-xs text-amber-600/80 dark:text-emerald-300/70 mb-3">You're glowing! ✨</p>
+            <p className="text-xs text-amber-600/80 dark:text-emerald-300/70 mb-3 italic">
+              Ganbatte! / <span className="font-jp">頑張って!</span> ✨
+            </p>
             <div className="h-1.5 w-full bg-amber-100 dark:bg-emerald-900/50 rounded-full overflow-hidden">
               <div className="h-full bg-gradient-to-r from-amber-400 to-orange-400 w-[70%]" />
             </div>

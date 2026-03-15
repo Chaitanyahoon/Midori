@@ -14,7 +14,7 @@ import { useToast } from "@/hooks/use-toast"
 interface MusicTrack {
   name: string
   url: string
-  category: "focus" | "relax" | "energy" | "nature" | "instrumental"
+  category: "focus" | "relax" | "energy" | "nature" | "instrumental" | "zen"
   description?: string
   icon?: string
 }
@@ -303,6 +303,50 @@ export function FocusMusicPlayer({
       description: "Peaceful piano compositions",
       icon: "🎹",
     },
+    
+    // Zen Category - Japanese Soothing Study
+    {
+      name: "Deep Focus Koto",
+      url: "https://www.youtube.com/embed/S2pEToi-1Vw",
+      category: "zen",
+      description: "Traditional string melodies for deep study",
+      icon: "🗾",
+    },
+    {
+      name: "Shakuhachi Meditation",
+      url: "https://www.youtube.com/embed/zH0Fp1jrvIs",
+      category: "zen",
+      description: "Zen bamboo flute for mental clarity",
+      icon: "🎍",
+    },
+    {
+      name: "Japanese Zen Lofi",
+      url: "https://www.youtube.com/embed/jfKfPfyJRdk",
+      category: "zen",
+      description: "Atmospheric beats with Japanese accents",
+      icon: "🗼",
+    },
+    {
+      name: "Zen Temple Ambient",
+      url: "https://www.youtube.com/embed/1ZYbU82GVz4",
+      category: "zen",
+      description: "Serene monastic soundscapes",
+      icon: "⛩️",
+    },
+    {
+      name: "Shinrin-yoku Melody",
+      url: "https://www.youtube.com/embed/4oSt4AbW4hI",
+      category: "zen",
+      description: "Forest bathing melodic environment",
+      icon: "🌲",
+    },
+    {
+      name: "Midnight Kyoto",
+      url: "https://www.youtube.com/embed/Dx5qFachd3A",
+      category: "zen",
+      description: "Slow jazz-infused Japanese beats",
+      icon: "🌙",
+    },
   ]
 
   // Auto-play music based on timer state
@@ -570,6 +614,7 @@ export function FocusMusicPlayer({
     relax: "🧘",
     energy: "⚡",
     nature: "🌲",
+    zen: "⛩️",
     instrumental: "🎵",
   }
 
@@ -578,6 +623,7 @@ export function FocusMusicPlayer({
     relax: "from-blue-500 to-cyan-500",
     energy: "from-orange-500 to-red-500",
     nature: "from-green-500 to-emerald-500",
+    zen: "from-emerald-700 to-teal-800",
     instrumental: "from-purple-500 to-pink-500",
   }
 
@@ -586,6 +632,7 @@ export function FocusMusicPlayer({
     relax: "Relax & Unwind",
     energy: "Boost Energy",
     nature: "Nature Sounds",
+    zen: "Zen Journey",
     instrumental: "Pure Instrumental",
   }
 
@@ -623,7 +670,8 @@ export function FocusMusicPlayer({
                 { name: "Rain Sounds", icon: <Icons.cloudRain className="w-5 h-5" /> },
                 { name: "Forest Sounds", icon: <Icons.tree className="w-5 h-5" /> },
                 { name: "Ocean Waves", icon: <Icons.droplets className="w-5 h-5" /> },
-                { name: "Fireplace Sounds", icon: <Icons.sun className="w-5 h-5" /> }
+                { name: "Fireplace Sounds", icon: <Icons.sun className="w-5 h-5" /> },
+                { name: "Zen Temple Ambient", icon: <Icons.sprout className="w-5 h-5" /> }
               ].map((scape) => {
                 const track = MUSIC_OPTIONS.find(t => t.name === scape.name)
                 const isActive = isAmbientPlaying && ambientTrack?.name === scape.name
@@ -748,9 +796,10 @@ export function FocusMusicPlayer({
         {/* Category Tabs */}
         <Tabs value={activeCategory} onValueChange={(v) => setActiveCategory(v as MusicTrack["category"] | "custom")}>
           <TabsList className="flex w-full gap-1 h-auto p-1 bg-slate-100/60 dark:bg-slate-800/50 rounded-xl">
-            {(["focus", "relax", "energy", "instrumental"] as const).map((cat) => {
+            {(["focus", "zen", "relax", "energy", "instrumental"] as const).map((cat) => {
               const colors: Record<string, string> = {
                 focus: "data-[state=active]:text-emerald-600 dark:data-[state=active]:text-emerald-400",
+                zen: "data-[state=active]:text-teal-600 dark:data-[state=active]:text-teal-400",
                 relax: "data-[state=active]:text-blue-600 dark:data-[state=active]:text-blue-400",
                 energy: "data-[state=active]:text-orange-600 dark:data-[state=active]:text-orange-400",
                 instrumental: "data-[state=active]:text-purple-600 dark:data-[state=active]:text-purple-400",
@@ -781,7 +830,7 @@ export function FocusMusicPlayer({
             </TabsTrigger>
           </TabsList>
 
-          {(["focus", "relax", "energy", "instrumental"] as const).map((cat) => (
+          {(["focus", "zen", "relax", "energy", "instrumental"] as const).map((cat) => (
             <TabsContent key={cat} value={cat} className="mt-3 focus-visible:outline-none">
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 max-h-[220px] overflow-y-auto pr-1">
                 {filteredMusic.map((music) => {

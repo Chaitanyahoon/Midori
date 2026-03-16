@@ -26,12 +26,12 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-slate-950 dark:to-emerald-950">
-        <div className="flex flex-col items-center gap-4">
-          <div className="w-16 h-16 animate-pulse drop-shadow-xl">
-            <img src="/icon.svg" alt="Planthesia" className="w-full h-full" />
+          <div className="flex flex-col items-center gap-3">
+            <div className="w-12 h-12 animate-pulse drop-shadow-md">
+              <img src="/midori_logo.png" alt="Midori" className="w-full h-full" />
+            </div>
+            <p className="text-sm text-emerald-600 font-medium animate-pulse">Growing your garden...</p>
           </div>
-          <p className="text-sm text-emerald-600 font-medium animate-pulse">Growing your garden...</p>
-        </div>
       </div>
     )
   }

@@ -19,7 +19,7 @@ export function MidoriLogo({ size = "md", showText = true, className = "" }: Mid
     <div className={`flex items-center gap-3 ${className}`}>
       <div className="relative group">
         <img
-          src="/icon.svg"
+          src="/midori_logo.png"
           alt="Midori logo"
           className={`${sizes.img} drop-shadow-lg group-hover:rotate-6 group-hover:scale-110 transition-all duration-300 cursor-pointer`}
         />

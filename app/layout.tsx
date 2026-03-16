@@ -14,8 +14,8 @@ export const metadata: Metadata = {
   description: "Grow your tasks, cultivate your focus.",
   generator: 'Midori',
   icons: {
-    icon: '/icon.svg',
-    apple: '/icon.svg',
+    icon: '/midori_logo.png',
+    apple: '/midori_logo.png',
   },
 }
 

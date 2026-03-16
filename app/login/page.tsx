@@ -44,6 +44,15 @@ export default function LoginPage() {
         e.preventDefault()
         setError("")
         setLoading(true)
+
+        // Diagnostic check
+        if (!process.env.NEXT_PUBLIC_FIREBASE_API_KEY) {
+            console.error("Firebase API Key is missing from environment variables.")
+            setError("Configuration error: API Key is missing. Check your .env setup.")
+            setLoading(false)
+            return
+        }
+
         try {
             if (isSignUp) {
                 const userCredential = await createUserWithEmailAndPassword(auth, email, password)
@@ -55,6 +64,7 @@ export default function LoginPage() {
             }
             router.push("/dashboard")
         } catch (err: any) {
+            console.error("Email auth error:", err)
             const msg = err.code?.replace("auth/", "").replace(/-/g, " ") ?? "Something went wrong"
             setError(msg.charAt(0).toUpperCase() + msg.slice(1))
         } finally {
@@ -65,11 +75,33 @@ export default function LoginPage() {
     const handleGoogle = async () => {
         setError("")
         setLoading(true)
+
+        // Diagnostic check
+        if (!process.env.NEXT_PUBLIC_FIREBASE_API_KEY) {
+            console.error("Firebase API Key is missing from environment variables.")
+            setError("Configuration error: API Key is missing.")
+            setLoading(false)
+            return
+        }
+
         try {
             await signInWithPopup(auth, new GoogleAuthProvider())
             router.push("/dashboard")
         } catch (err: any) {
-            setError("Google sign-in failed. Please try again.")
+            console.error("Google sign-in error details:", {
+                code: err.code,
+                message: err.message,
+                customData: err.customData,
+                email: err.customData?.email
+            })
+            
+            if (err.code === "auth/operation-not-allowed") {
+                setError("Google sign-in is not enabled in Firebase Console.")
+            } else if (err.code === "auth/unauthorized-domain") {
+                setError("This domain is not authorized for Firebase Authentication.")
+            } else {
+                setError("Google sign-in failed. Check the console for more details.")
+            }
         } finally {
             setLoading(false)
         }

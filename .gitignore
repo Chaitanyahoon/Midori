@@ -29,3 +29,6 @@ build_*.txt
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# avoid committing lockfile when using multiple workspace roots (optional)
+package-lock.json

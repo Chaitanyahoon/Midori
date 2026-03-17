@@ -21,6 +21,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const router = useRouter()
 
     useEffect(() => {
+        // auth is null during SSR (Firebase only initializes on the client)
+        if (!auth) {
+            setLoading(false)
+            return
+        }
         const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
             setUser(firebaseUser)
             setLoading(false)
@@ -29,7 +34,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }, [])
 
     const signOut = async () => {
-        await firebaseSignOut(auth)
+        if (auth) {
+            await firebaseSignOut(auth)
+        }
         router.push("/login")
     }
 

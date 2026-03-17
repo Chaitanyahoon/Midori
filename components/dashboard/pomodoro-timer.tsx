@@ -1,150 +1,27 @@
 "use client"
 
-import { useState, useEffect, useRef, useCallback } from "react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Icons } from "@/components/icons"
-import { useData } from "@/components/local-data-provider"
-import { useToast } from "@/hooks/use-toast"
+import { usePomodoro } from "@/lib/hooks/usePomodoro"
 
 export function PomodoroTimer() {
-  const [timeLeft, setTimeLeft] = useState(25 * 60)
-  const [isActive, setIsActive] = useState(false)
-  const [isBreak, setIsBreak] = useState(false)
-  const [sessionStartTime, setSessionStartTime] = useState<string | null>(null)
-  const [sessionCount, setSessionCount] = useState(0)
-  const [selectedTask, setSelectedTask] = useState<string>("general")
-  const intervalRef = useRef<NodeJS.Timeout | null>(null)
-
-  const { addPomodoro, pomodoros, tasks } = useData()
-  const { toast } = useToast()
-
-  const pendingTasks = tasks.filter((task) => !task.completed)
-  const todaySessions = pomodoros.filter((session) => {
-    const today = new Date().toISOString().split("T")[0]
-    return session.startTime.split("T")[0] === today && session.completed
-  }).length
-
-  const clearCurrentInterval = useCallback(() => {
-    if (intervalRef.current) {
-      clearInterval(intervalRef.current)
-      intervalRef.current = null
-    }
-  }, [])
-
-  useEffect(() => {
-    return () => { clearCurrentInterval() }
-  }, [clearCurrentInterval])
-
-  const handleTimerComplete = useCallback(() => {
-    if (!isBreak && sessionStartTime) {
-      addPomodoro({
-        startTime: sessionStartTime,
-        endTime: new Date().toISOString(),
-        duration: 25,
-        taskId: selectedTask === "general" ? undefined : selectedTask,
-        completed: true,
-      })
-
-      const newSessionCount = sessionCount + 1
-      setSessionCount(newSessionCount)
-      toast({
-        title: "Focus session completed! 🎉",
-        description: `Great job! You've completed ${newSessionCount} sessions today.`,
-      })
-
-      setIsBreak(true)
-      const breakDuration = newSessionCount % 4 === 0 ? 15 : 5
-      setTimeLeft(breakDuration * 60)
-      setSessionStartTime(null)
-    } else if (isBreak) {
-      const isLongBreak = sessionCount % 4 === 0
-      toast({
-        title: isLongBreak ? "Long break over! 💪" : "Break time over! ⚡",
-        description: "Ready for another focused session?",
-      })
-      setIsBreak(false)
-      setTimeLeft(25 * 60)
-    }
-  }, [isBreak, sessionStartTime, sessionCount, selectedTask, addPomodoro, toast])
-
-  useEffect(() => {
-    if (isActive && timeLeft > 0) {
-      intervalRef.current = setInterval(() => {
-        setTimeLeft((prevTime) => {
-          if (prevTime <= 1) {
-            setIsActive(false)
-            handleTimerComplete()
-            return 0
-          }
-          return prevTime - 1
-        })
-      }, 1000)
-    } else {
-      clearCurrentInterval()
-    }
-
-    return () => { clearCurrentInterval() }
-  }, [isActive, timeLeft, handleTimerComplete, clearCurrentInterval])
-
-  const formatTime = (seconds: number) => {
-    const mins = Math.floor(seconds / 60)
-    const secs = seconds % 60
-    return `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`
-  }
-
-  const getTotalTime = () => {
-    if (isBreak) return sessionCount % 4 === 0 ? 15 * 60 : 5 * 60
-    return 25 * 60
-  }
-
-  const totalTime = getTotalTime()
-  const progress = ((totalTime - timeLeft) / totalTime) * 100
-
-  const handleStart = () => {
-    setIsActive(true)
-    if (!sessionStartTime && !isBreak) {
-      setSessionStartTime(new Date().toISOString())
-    }
-  }
-
-  const handlePause = () => { setIsActive(false) }
-
-  const handleReset = () => {
-    setIsActive(false)
-    clearCurrentInterval()
-    if (isBreak) {
-      const breakDuration = sessionCount % 4 === 0 ? 15 : 5
-      setTimeLeft(breakDuration * 60)
-    } else {
-      setTimeLeft(25 * 60)
-      setSessionStartTime(null)
-    }
-  }
-
-  const handleSkip = () => {
-    setIsActive(false)
-    clearCurrentInterval()
-    if (isBreak) {
-      setIsBreak(false)
-      setTimeLeft(25 * 60)
-    } else {
-      if (sessionStartTime) {
-        addPomodoro({
-          startTime: sessionStartTime,
-          endTime: new Date().toISOString(),
-          duration: Math.round((25 * 60 - timeLeft) / 60),
-          taskId: selectedTask === "general" ? undefined : selectedTask,
-          completed: false,
-        })
-      }
-      setIsBreak(true)
-      const breakDuration = (sessionCount + 1) % 4 === 0 ? 15 : 5
-      setTimeLeft(breakDuration * 60)
-      setSessionStartTime(null)
-    }
-  }
+  const {
+    timeLeft,
+    isActive,
+    isBreak,
+    sessionCount,
+    selectedTask,
+    pendingTasks,
+    progress,
+    formatTime,
+    handleStart,
+    handlePause,
+    handleReset,
+    handleSkip,
+    setSelectedTask,
+  } = usePomodoro()
 
   return (
     <Card className="relative overflow-hidden bg-white/60 dark:bg-slate-900/60 backdrop-blur-xl border border-white/40 dark:border-slate-700/50 shadow-xl shadow-emerald-500/5 rounded-2xl">

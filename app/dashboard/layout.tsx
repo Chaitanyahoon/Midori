@@ -7,9 +7,7 @@ import { DataProvider } from "@/components/local-data-provider"
 import { Sidebar } from "@/components/dashboard/sidebar"
 import { TopNav } from "@/components/dashboard/top-nav"
 import { PlantAIAssistant } from "@/components/dashboard/plant-ai-assistant"
-import { useAuth } from "@/components/auth-provider"
-import { useUIStore } from "@/lib/store"
-import { Icons } from "@/components/icons"
+import { ErrorBoundary } from "@/components/error-boundary"
 
 function DashboardContent({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth()
@@ -106,5 +104,13 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
 }
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
-  return <DashboardContent>{children}</DashboardContent>
+  return (
+    <ErrorBoundary
+      onError={(error, info) => {
+        console.error("Dashboard error:", error, info)
+      }}
+    >
+      <DashboardContent>{children}</DashboardContent>
+    </ErrorBoundary>
+  )
 }

@@ -20,6 +20,14 @@ export interface Task {
   completedAt?: string
   dueDate?: string
   scheduledTime?: string
+  recurrence?: {
+    type: "none" | "daily" | "weekly" | "biweekly" | "monthly" | "custom"
+    interval?: number
+    dayOfMonth?: number
+    endDate?: string
+    maxOccurrences?: number
+  }
+  parentTaskId?: string
 }
 
 export interface PomodoroSession {

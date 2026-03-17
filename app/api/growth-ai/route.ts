@@ -4,6 +4,35 @@ export const runtime = "nodejs";
 
 const MODEL = "gemini-2.5-flash";
 
+// Simple in-memory rate limiter: track requests per IP/user
+const requestLog = new Map<string, number[]>();
+const RATE_LIMIT_WINDOW = 60 * 1000; // 1 minute
+const MAX_REQUESTS_PER_WINDOW = 10; // 10 requests per minute
+
+/**
+ * Check if a request should be rate limited based on IP/identifier
+ */
+function checkRateLimit(identifier: string): { allowed: boolean; retryAfter?: number } {
+  const now = Date.now();
+  const userRequests = requestLog.get(identifier) || [];
+
+  // Remove requests older than the window
+  const recentRequests = userRequests.filter(timestamp => now - timestamp < RATE_LIMIT_WINDOW);
+
+  if (recentRequests.length >= MAX_REQUESTS_PER_WINDOW) {
+    // Calculate retry-after time
+    const oldestRequest = recentRequests[0];
+    const retryAfter = Math.ceil((oldestRequest + RATE_LIMIT_WINDOW - now) / 1000);
+    return { allowed: false, retryAfter: Math.max(1, retryAfter) };
+  }
+
+  // Add current request timestamp
+  recentRequests.push(now);
+  requestLog.set(identifier, recentRequests);
+
+  return { allowed: true };
+}
+
 function cleanJsonResponse(text: string): string {
   // Remove markdown code blocks if the model wrapped the JSON in them
   let cleaned = text.trim();
@@ -21,6 +50,28 @@ function cleanJsonResponse(text: string): string {
 
 export async function POST(request: Request) {
   try {
+    // Extract client identifier (IP address or user ID if available)
+    const clientIp = request.headers.get('x-forwarded-for') ||
+                     request.headers.get('x-real-ip') ||
+                     'unknown';
+
+    // Check rate limit
+    const rateLimitCheck = checkRateLimit(clientIp);
+    if (!rateLimitCheck.allowed) {
+      return Response.json(
+        {
+          error: "Rate limit exceeded",
+          message: `Too many requests. Please try again in ${rateLimitCheck.retryAfter} seconds.`
+        },
+        {
+          status: 429,
+          headers: {
+            'Retry-After': (rateLimitCheck.retryAfter || 60).toString(),
+          }
+        }
+      );
+    }
+
     const { message, context, intent } = await request.json();
 
     const apiKey = process.env.GEMINI_API_KEY;

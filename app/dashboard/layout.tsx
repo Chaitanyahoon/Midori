@@ -8,6 +8,9 @@ import { Sidebar } from "@/components/dashboard/sidebar"
 import { TopNav } from "@/components/dashboard/top-nav"
 import { PlantAIAssistant } from "@/components/dashboard/plant-ai-assistant"
 import { ErrorBoundary } from "@/components/error-boundary"
+import { useAuth } from "@/components/auth-provider"
+import { useUIStore } from "@/lib/store"
+import { Icons } from "@/components/icons"
 
 function DashboardContent({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth()

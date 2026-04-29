@@ -496,10 +496,10 @@ export function VisualGarden({ onAddPlant }: { onAddPlant?: () => void }) {
 
             // ── PLANTS ──
             pRef.current.forEach((plant: Plant) => {
-                if (t > plant.delay && plant.growth < 1) plant.growth += 0.008
+                if (t > plant.delay && plant.growth < 1) plant.growth += 0.005
                 if (plant.growth <= 0) return
                 const px = plant.x * W, py = plant.y * H, s = plant.scale * plant.growth
-                const wind = Math.sin(t * 0.008) * 0.015 + Math.sin(t * plant.swaySpeed + plant.swayOffset) * 0.02
+                const wind = Math.sin(t * 0.003) * 0.005 + Math.sin(t * (plant.swaySpeed * 0.4) + plant.swayOffset) * 0.008
                 ctx.save(); ctx.translate(px, py)
                 if (night) ctx.filter = "brightness(0.3) saturate(0.6)"
                 else if (eve) ctx.filter = "brightness(0.72) saturate(1.15)"
@@ -513,14 +513,14 @@ export function VisualGarden({ onAddPlant }: { onAddPlant?: () => void }) {
                 const img = assets.current[plant.subtype] || assets.current['sakura']
                 if (img) {
                     if (plant.type === 'tree') {
-                        ctx.rotate(wind * 2); const sz = 180 * s; 
+                        ctx.rotate(wind * 0.8); const sz = 180 * s; 
                         ctx.shadowColor = night ? 'rgba(255, 255, 255, 0.1)' : 'rgba(255, 255, 255, 0.5)';
                         ctx.shadowBlur = 20;
                         try { ctx.drawImage(img, -sz / 2, -sz, sz, sz) } catch (e) { }
                         ctx.shadowBlur = 0;
                     } else {
-                        ctx.rotate(wind * 8); const p2 = 1 + Math.sin(t * 0.05 + plant.seed) * 0.04; ctx.scale(p2, p2)
-                        ctx.translate(0, Math.sin(t * 0.1 + plant.seed) * 2); const sz = 85 * s
+                        ctx.rotate(wind * 2.5); const p2 = 1 + Math.sin(t * 0.03 + plant.seed) * 0.02; ctx.scale(p2, p2)
+                        ctx.translate(0, Math.sin(t * 0.05 + plant.seed) * 1); const sz = 85 * s
                         
                         ctx.shadowColor = night ? 'rgba(255, 255, 255, 0.2)' : 'rgba(255, 255, 255, 0.6)';
                         ctx.shadowBlur = 12;
@@ -540,10 +540,10 @@ export function VisualGarden({ onAddPlant }: { onAddPlant?: () => void }) {
 
             // ── PARTICLES ──
             const rnd = Math.random()
-            if (vs === 'spring' && rnd < 0.18) parts.current.push({ x: Math.random() * W * 1.1, y: -15, vx: (Math.random() - 0.4) * 0.8, vy: Math.random() * 0.6 + 0.4, rot: Math.random() * Math.PI * 2, size: Math.random() * 5 + 3, color: ["#FBCFE8", "#F9A8D4", "#FDE68A", "#E879F9"][Math.floor(Math.random() * 4)], op: 0.75, type: "petal", life: 0 })
-            if (vs === 'autumn' && rnd < 0.15) parts.current.push({ x: Math.random() * W * 1.1, y: -15, vx: (Math.random() - 0.4) * 1.2, vy: Math.random() * 0.8 + 0.5, rot: Math.random() * Math.PI * 2, size: Math.random() * 7 + 4, color: ["#EA580C", "#F59E0B", "#DC2626", "#D97706"][Math.floor(Math.random() * 4)], op: 0.85, type: "leaf", life: 0 })
-            if (vs === 'winter' && rnd < 0.35) parts.current.push({ x: Math.random() * W, y: -10, vx: (Math.random() - 0.5) * 0.5, vy: Math.random() * 0.8 + 0.4, rot: 0, size: Math.random() * 3.5 + 1, color: "#F0F9FF", op: 0.7 + Math.random() * 0.3, type: "snow", life: 0 })
-            if (vs === 'summer' && !night && rnd < 0.12) parts.current.push({ x: Math.random() * W, y: H * 0.5 + Math.random() * H * 0.4, vx: (Math.random() - 0.5) * 0.4, vy: -Math.random() * 0.5 - 0.1, rot: 0, size: Math.random() * 2.5 + 0.5, color: "#FDE047", op: 0, type: "pollen", life: 0 })
+            if (vs === 'spring' && rnd < 0.02) parts.current.push({ x: Math.random() * W * 1.1, y: -15, vx: (Math.random() - 0.4) * 0.6, vy: Math.random() * 0.4 + 0.3, rot: Math.random() * Math.PI * 2, size: Math.random() * 4 + 2, color: ["#FBCFE8", "#F9A8D4", "#FDE68A", "#E879F9"][Math.floor(Math.random() * 4)], op: 0.75, type: "petal", life: 0 })
+            if (vs === 'autumn' && rnd < 0.02) parts.current.push({ x: Math.random() * W * 1.1, y: -15, vx: (Math.random() - 0.4) * 0.8, vy: Math.random() * 0.5 + 0.3, rot: Math.random() * Math.PI * 2, size: Math.random() * 6 + 3, color: ["#EA580C", "#F59E0B", "#DC2626", "#D97706"][Math.floor(Math.random() * 4)], op: 0.85, type: "leaf", life: 0 })
+            if (vs === 'winter' && rnd < 0.06) parts.current.push({ x: Math.random() * W, y: -10, vx: (Math.random() - 0.5) * 0.4, vy: Math.random() * 0.6 + 0.3, rot: 0, size: Math.random() * 3 + 1, color: "#F0F9FF", op: 0.7 + Math.random() * 0.3, type: "snow", life: 0 })
+            if (vs === 'summer' && !night && rnd < 0.01) parts.current.push({ x: Math.random() * W, y: H * 0.5 + Math.random() * H * 0.4, vx: (Math.random() - 0.5) * 0.3, vy: -Math.random() * 0.3 - 0.1, rot: 0, size: Math.random() * 2 + 0.5, color: "#FDE047", op: 0, type: "pollen", life: 0 })
 
             for (let i = parts.current.length - 1; i >= 0; i--) {
                 const p = parts.current[i]; p.life++

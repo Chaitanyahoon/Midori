@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useRef } from "react"
+import { useState } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { FiEye as Eye, FiEyeOff as EyeOff, FiLoader as Loader2 } from "react-icons/fi"
@@ -11,40 +11,21 @@ import {
     signInWithPopup,
     GoogleAuthProvider,
     updateProfile,
-    sendSignInLinkToEmail,
 } from "firebase/auth"
 import { auth } from "@/lib/firebase/client"
 
 export default function LoginPage() {
     const router = useRouter()
-    const [activeTab, setActiveTab] = useState(0) // 0: Log In, 1: Sign Up, 2: Magic Link
+    const [activeTab, setActiveTab] = useState(0) // 0: Log In, 1: Sign Up
     const isSignUp = activeTab === 1
-    const isMagicLink = activeTab === 2
     
     const [name, setName] = useState("")
     const [email, setEmail] = useState("")
     const [password, setPassword] = useState("")
     const [showPassword, setShowPassword] = useState(false)
     const [loading, setLoading] = useState(false)
-    
-    // Performance: Use ref for parallax to prevent React state re-renders
-    const cardRef = useRef<HTMLDivElement>(null)
 
-    useEffect(() => {
-        const handleMouseMove = (e: MouseEvent) => {
-            if (!cardRef.current) return
-            const { clientX, clientY } = e
-            const { innerWidth, innerHeight } = window
-            // Normalize to -0.5 to 0.5
-            const x = (clientX / innerWidth) - 0.5
-            const y = (clientY / innerHeight) - 0.5
-            
-            // Apply parallax effect directly to the DOM element
-            cardRef.current.style.transform = `translate3d(${x * 15}px, ${y * 15}px, 0)`
-        }
-        window.addEventListener("mousemove", handleMouseMove, { passive: true })
-        return () => window.removeEventListener("mousemove", handleMouseMove)
-    }, [])
+
 
     const handleEmailAuth = async (e: React.FormEvent) => {
         e.preventDefault()
@@ -59,17 +40,7 @@ export default function LoginPage() {
         }
 
         try {
-            if (isMagicLink) {
-                const actionCodeSettings = {
-                    url: `${window.location.origin}/verify-email`,
-                    handleCodeInApp: true,
-                }
-                await sendSignInLinkToEmail(auth, email, actionCodeSettings)
-                window.localStorage.setItem('emailForSignIn', email)
-                toast.success("Magic link sent! Check your inbox.")
-                setLoading(false)
-                return // Don't redirect, just show the toast
-            } else if (isSignUp) {
+            if (isSignUp) {
                 const userCredential = await createUserWithEmailAndPassword(auth, email, password)
                 if (name.trim() && userCredential.user) {
                     await updateProfile(userCredential.user, { displayName: name.trim() })
@@ -138,9 +109,7 @@ export default function LoginPage() {
 
             {/* Main Content */}
             <div 
-                ref={cardRef}
-                className="relative z-10 w-full max-w-sm px-4 py-2 reveal-staggered delay-4 transition-transform duration-200 ease-out"
-                style={{ transform: "translate3d(0, 0, 0)" }}
+                className="relative z-10 w-full max-w-sm px-4 py-2 reveal-staggered delay-4"
             >
                 <div className="bg-white/40 dark:bg-emerald-950/14 backdrop-blur-sm border border-white/8 dark:border-emerald-500/6 rounded-xl p-4 overflow-hidden relative">
                     
@@ -158,7 +127,7 @@ export default function LoginPage() {
 
                     {/* Tabs with Staggered Elements */}
                     <div className="flex rounded-lg bg-emerald-900/5 dark:bg-emerald-900/12 p-1 mb-4 border border-emerald-500/6">
-                        {["Log In", "Sign Up", "Magic Link"].map((label, i) => (
+                        {["Log In", "Sign Up"].map((label, i) => (
                             <button
                                 key={label}
                                 onClick={() => setActiveTab(i)}
@@ -231,14 +200,12 @@ export default function LoginPage() {
                             />
                         </div>
                         <div 
-                            className={`group space-y-1 transition-all duration-300 ease-in-out overflow-hidden origin-top ${
-                                !isMagicLink ? "max-h-[80px] opacity-100" : "max-h-0 opacity-0 pointer-events-none"
-                            }`}
-                            aria-hidden={isMagicLink}
+                            className="group space-y-1"
+                            aria-hidden={false}
                         >
                             <div className="flex items-center justify-between">
                                 <label className="text-[10px] font-semibold text-slate-400 dark:text-emerald-100/30 uppercase tracking-[0.08em]" htmlFor="password">Password</label>
-                                {!isSignUp && !isMagicLink && (
+                                {!isSignUp && (
                                     <Link 
                                         href="/forgot-password" 
                                         className="text-[10px] font-medium text-emerald-600 dark:text-emerald-400 hover:underline transition-colors"
@@ -254,8 +221,8 @@ export default function LoginPage() {
                                     placeholder="Password"
                                     value={password}
                                     onChange={(e) => setPassword(e.target.value)}
-                                    required={!isMagicLink}
-                                    tabIndex={!isMagicLink ? 0 : -1}
+                                    required
+                                    tabIndex={0}
                                     minLength={6}
                                     className="w-full h-10 px-3 rounded-lg bg-white/40 dark:bg-emerald-950/40 border border-slate-100 dark:border-white/6 dark:text-white placeholder:text-slate-300 focus:outline-none focus:border-emerald-400 focus:ring-4 focus:ring-emerald-500/10 transition-all text-sm"
                                 />
@@ -263,7 +230,7 @@ export default function LoginPage() {
                                     type="button"
                                     aria-label={showPassword ? "Hide password" : "Show password"}
                                     onClick={() => setShowPassword(!showPassword)}
-                                    tabIndex={!isMagicLink ? 0 : -1}
+                                    tabIndex={0}
                                     className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300 hover:text-emerald-500 transition-colors"
                                 >
                                     {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
@@ -276,7 +243,7 @@ export default function LoginPage() {
                             disabled={loading}
                             className="w-full h-10 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-medium text-sm shadow-sm transition-transform active:scale-95 disabled:opacity-50 flex items-center justify-center gap-2 mt-3"
                         >
-                            {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : (isMagicLink ? "Send Magic Link" : isSignUp ? "Sign up" : "Sign in")}
+                            {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : (isSignUp ? "Sign up" : "Sign in")}
                         </button>
                     </form>
 

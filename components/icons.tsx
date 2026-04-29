@@ -39,6 +39,8 @@ import {
   FiTag,
   FiCloudRain,
   FiDownloadCloud,
+  FiMinus,
+  FiMousePointer,
 } from "react-icons/fi"
 
 import {
@@ -64,6 +66,8 @@ export const Icons = {
   bell: FiBell,
   search: FiSearch,
   plus: FiPlus,
+  minus: FiMinus,
+  mousePointer: FiMousePointer,
   play: FiPlay,
   pause: FiPause,
   reset: FiRotateCcw,

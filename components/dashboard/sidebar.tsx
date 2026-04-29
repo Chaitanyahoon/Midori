@@ -5,7 +5,6 @@ import { cn } from "@/lib/utils"
 import { Icons } from "@/components/icons"
 import { Button } from "@/components/ui/button"
 import { SettingsDialog } from "@/components/dashboard/settings-dialog"
-import { CoopGardenManager } from "@/components/garden/coop-garden-manager"
 import { MidoriLogo } from "@/components/dashboard/midori-logo"
 import { useData } from "@/components/local-data-provider"
 import { useAuth } from "@/components/auth-provider"
@@ -16,6 +15,7 @@ const navigation = [
   { name: "Time Planner", href: "/dashboard/calendar", icon: Icons.sun, description: "Schedule your growth", japanese: "計画" },
   { name: "Focus Grove", href: "/dashboard/pomodoro", icon: Icons.tree, description: "Deep work sessions", japanese: "集中" },
   { name: "Growth Insights", href: "/dashboard/insights", icon: Icons.sprout, description: "Track your progress", japanese: "悟り" },
+  { name: "Kyōei Co-op", href: "/dashboard/coop", icon: Icons.heart, description: "Shared garden with friends", japanese: "共栄" },
 ]
 
 interface SidebarProps {
@@ -24,7 +24,7 @@ interface SidebarProps {
 
 export function Sidebar({ onClose }: SidebarProps) {
   const pathname = usePathname()
-  const { settings } = useData()
+  const { settings, sharedGarden } = useData()
   const { user } = useAuth()
 
   const userName = settings.userName || user?.displayName || user?.email?.split('@')[0] || "My Profile"
@@ -59,6 +59,7 @@ export function Sidebar({ onClose }: SidebarProps) {
         <nav className="flex-1 px-4 space-y-1.5 overflow-y-auto custom-scrollbar">
           {navigation.map((item, index) => {
             const isActive = pathname === item.href
+            const isCoop = item.href === "/dashboard/coop"
             return (
               <Link
                 key={item.name}
@@ -85,11 +86,13 @@ export function Sidebar({ onClose }: SidebarProps) {
                     {item.japanese}
                   </span>
                 </div>
+                {/* Show green dot if in a shared garden */}
+                {isCoop && sharedGarden && (
+                  <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse flex-shrink-0" />
+                )}
               </Link>
             )
           })}
-          
-          <CoopGardenManager />
         </nav>
 
         {/* Footer / User Settings */}

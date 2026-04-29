@@ -80,8 +80,8 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
           {[
             { href: "/dashboard", icon: Icons.seedling, label: "Home" },
             { href: "/dashboard/tasks", icon: Icons.leaf, label: "Tasks" },
-            { href: "/dashboard/calendar", icon: Icons.calendar, label: "Plan" },
             { href: "/dashboard/pomodoro", icon: Icons.timer, label: "Focus" },
+            { href: "/dashboard/coop", icon: Icons.heart, label: "Co-op" },
             { href: "/dashboard/insights", icon: Icons.sprout, label: "Insights" },
           ].map((item) => {
             const isActive = pathname === item.href

@@ -7,7 +7,7 @@ import { useTheme } from "next-themes"
 import { useWeather } from "@/hooks/use-weather"
 import { toast } from "sonner"
 
-interface Plant { x: number; y: number; type: "flower" | "tree"; subtype: string; color: string; scale: number; growth: number; delay: number; swayOffset: number; swaySpeed: number; seed: number }
+interface Plant { id?: string; x: number; y: number; type: "flower" | "tree"; subtype: string; color: string; scale: number; growth: number; delay: number; swayOffset: number; swaySpeed: number; seed: number }
 interface Star { x: number; y: number; size: number; ts: number; to: number }
 interface Cloud { x: number; y: number; w: number; h: number; spd: number; op: number }
 interface Firefly { x: number; y: number; vx: number; vy: number; phase: number; spd: number; maxOp: number }
@@ -20,6 +20,9 @@ export function VisualGarden({ onAddPlant }: { onAddPlant?: () => void }) {
     const cont = useRef<HTMLDivElement>(null)
     const { tasks, pomodoros, stats, settings, updateSettings } = useData()
     const [showStore, setShowStore] = useState(false)
+    const [editMode, setEditMode] = useState(false)
+    const [plantToPlace, setPlantToPlace] = useState<any>(null)
+    const [selectedPlantId, setSelectedPlantId] = useState<string | null>(null)
     const { theme } = useTheme()
     const { season, weather } = useWeather()
     const { condition, isDay, temperature } = weather
@@ -77,42 +80,17 @@ export function VisualGarden({ onAddPlant }: { onAddPlant?: () => void }) {
 
     useEffect(() => {
         const np: Plant[] = []; const today = new Date().toISOString().split("T")[0]; let seed = stats.streak + 1
-        let tt = "sakura", tc = "#FBCFE8"
-        if (mSeason === 'summer') { tt = "jacaranda"; tc = "#A78BFA" }
-        else if (mSeason === 'autumn') { tt = "maple"; tc = "#EA580C" }
-        else if (mSeason === 'winter') { tt = "pine"; tc = "#CBD5E1" }
-        np.push({ x: 0.85, y: 0.82, type: "tree", subtype: tt, color: tc, scale: 1, growth: 1, delay: 0, swayOffset: 0, swaySpeed: 0.005, seed: 9999 })
-        const done = tasks.filter((t: any) => t.completedAt && t.completedAt.split("T")[0] === today).slice(0, 8)
-        const amb = Math.max(0, 6 - done.length)
-        const ap = (x: number, type: "flower" | "tree", sub: string, col: string, sm: number, d: number) => {
-            np.push({ x, y: 0.82 + sr(seed + np.length * 11) * 0.06, type, subtype: sub, color: col, scale: (0.35 + sr(seed + np.length * 99) * 0.15) * sm, growth: 0, delay: d, swayOffset: sr(seed) * 10, swaySpeed: 0.015, seed: seed + np.length })
-        }
-        done.forEach((t: any, i: number) => {
-            let fs = "lily", fc = "#F8FAFC"
-            if (mSeason === 'spring') { fs = t.priority === 'high' ? "tulip" : "orchid"; fc = t.priority === 'high' ? "#F43F5E" : "#E879F9" }
-            else if (mSeason === 'summer') { fs = t.priority === 'high' ? "sunflower" : "lily"; fc = t.priority === 'high' ? "#FBBF24" : "#F43F5E" }
-            else if (mSeason === 'autumn') { fs = t.priority === 'high' ? "chrysanthemum" : "marigold"; fc = t.priority === 'high' ? "#EA580C" : "#F59E0B" }
-            else { fs = "snowflower"; fc = "#8B5CF6" }
-            ap(0.1 + (i + 1) / (done.length + 1) * 0.8 + (sr(seed + i) * 0.08 - 0.04), "flower", fs, fc, 0.8, i * 100)
-        })
-        for (let i = 0; i < amb; i++) {
-            let avail = ['tulip'], fc = "#A78BFA"
-            if (mSeason === 'spring') { avail = ['tulip', 'orchid']; fc = "#F472B6" }
-            if (mSeason === 'summer') { avail = ['sunflower', 'lily']; fc = "#FBBF24" }
-            if (mSeason === 'autumn') { avail = ['marigold', 'chrysanthemum']; fc = "#EA580C" }
-            if (mSeason === 'winter') { avail = ['snowflower']; fc = "#E0F2FE" }
-            ap(0.15 + sr(seed + i * 77) * 0.7, "flower", avail[Math.floor(sr(seed + i * 33) * avail.length)], fc, 0.6, 500 + i * 100)
-        }
-        pomodoros.filter(p => p.completed && p.startTime.split("T")[0] === today).slice(0, 3).forEach((_, i) => {
-            ap(0.2 + sr(seed + i + 500) * 0.6, "tree", tt, tc, 0.8, 800 + i * 200)
-        })
-
+        
+        // Remove random auto-spawning to allow full user customization.
+        // We only render plants explicitly purchased and placed from settings.
+        
         // Add purchased nursery plants
         const customPlants = settings?.gardenPlants || []
         customPlants.forEach((cp: any, i: number) => {
             np.push({
+                id: cp.id || `plant-${i}`,
                 x: cp.x, y: cp.y, type: cp.type as "flower" | "tree", subtype: cp.subtype,
-                color: "#A78BFA", scale: cp.type === "tree" ? 0.75 : 0.5,
+                color: "#A78BFA", scale: cp.scale || (cp.type === "tree" ? 0.75 : 0.5),
                 growth: 1, delay: i * 50, swayOffset: sr(999 + i) * 10, swaySpeed: 0.015, seed: 999 + i
             })
         })
@@ -501,6 +479,10 @@ export function VisualGarden({ onAddPlant }: { onAddPlant?: () => void }) {
                 const px = plant.x * W, py = plant.y * H, s = plant.scale * plant.growth
                 const wind = Math.sin(t * 0.003) * 0.005 + Math.sin(t * (plant.swaySpeed * 0.4) + plant.swayOffset) * 0.008
                 ctx.save(); ctx.translate(px, py)
+                if (editMode && plant.id === selectedPlantId) {
+                    ctx.shadowColor = '#10B981'; // Emerald glow for selection
+                    ctx.shadowBlur = 20;
+                }
                 if (night) ctx.filter = "brightness(0.3) saturate(0.6)"
                 else if (eve) ctx.filter = "brightness(0.72) saturate(1.15)"
                 else if (morn) ctx.filter = "brightness(0.9) saturate(0.85)"
@@ -514,16 +496,20 @@ export function VisualGarden({ onAddPlant }: { onAddPlant?: () => void }) {
                 if (img) {
                     if (plant.type === 'tree') {
                         ctx.rotate(wind * 0.8); const sz = 180 * s; 
-                        ctx.shadowColor = night ? 'rgba(255, 255, 255, 0.1)' : 'rgba(255, 255, 255, 0.5)';
-                        ctx.shadowBlur = 20;
+                        if (!editMode || plant.id !== selectedPlantId) {
+                            ctx.shadowColor = night ? 'rgba(255, 255, 255, 0.1)' : 'rgba(255, 255, 255, 0.5)';
+                            ctx.shadowBlur = 20;
+                        }
                         try { ctx.drawImage(img, -sz / 2, -sz, sz, sz) } catch (e) { }
                         ctx.shadowBlur = 0;
                     } else {
                         ctx.rotate(wind * 2.5); const p2 = 1 + Math.sin(t * 0.03 + plant.seed) * 0.02; ctx.scale(p2, p2)
                         ctx.translate(0, Math.sin(t * 0.05 + plant.seed) * 1); const sz = 85 * s
                         
-                        ctx.shadowColor = night ? 'rgba(255, 255, 255, 0.2)' : 'rgba(255, 255, 255, 0.6)';
-                        ctx.shadowBlur = 12;
+                        if (!editMode || plant.id !== selectedPlantId) {
+                            ctx.shadowColor = night ? 'rgba(255, 255, 255, 0.2)' : 'rgba(255, 255, 255, 0.6)';
+                            ctx.shadowBlur = 12;
+                        }
                         try { ctx.drawImage(img, -sz / 2, -sz, sz, sz) } catch (e) { }
                         ctx.shadowBlur = 0;
 
@@ -600,33 +586,74 @@ export function VisualGarden({ onAddPlant }: { onAddPlant?: () => void }) {
         return () => { cancelAnimationFrame(raf); ro.disconnect() }
     }, [mSeason, condition, loaded])
 
-    const handlePurchase = (item: any) => {
-        const currentSun = settings?.sunlight || 0
-        const currentWater = settings?.waterdrops || 0
+    const startPlacement = (item: any) => {
+        setPlantToPlace(item)
+        setEditMode(true)
+        setShowStore(false)
+        toast.info(`Click anywhere in the garden to plant your ${item.name}!`)
+    }
 
-        if (currentSun >= item.costSunlight && currentWater >= item.costWater) {
-            const newSun = currentSun - item.costSunlight
-            const newWater = currentWater - item.costWater
-            
-            const newPlant = {
-                id: Date.now().toString(),
-                type: item.type,
-                subtype: item.id,
-                x: 0.1 + Math.random() * 0.8,
-                y: 0.75 + Math.random() * 0.12
+    const handlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+        if (!cont.current) return
+        const rect = cont.current.getBoundingClientRect()
+        const x = (e.clientX - rect.left) / rect.width
+        const y = (e.clientY - rect.top) / rect.height
+
+        if (plantToPlace) {
+            // Check affordability at placement time
+            const currentSun = settings?.sunlight || 0
+            const currentWater = settings?.waterdrops || 0
+            if (currentSun >= plantToPlace.costSunlight && currentWater >= plantToPlace.costWater) {
+                const newSun = currentSun - plantToPlace.costSunlight
+                const newWater = currentWater - plantToPlace.costWater
+                
+                const newPlant = {
+                    id: Date.now().toString(),
+                    type: plantToPlace.type,
+                    subtype: plantToPlace.id,
+                    x, y,
+                    scale: plantToPlace.type === 'tree' ? 0.75 : 0.5
+                }
+                const currentPlants = settings?.gardenPlants || []
+                updateSettings({ sunlight: newSun, waterdrops: newWater, gardenPlants: [...currentPlants, newPlant] })
+                toast.success(`Planted ${plantToPlace.name}!`)
+                setPlantToPlace(null)
+            } else {
+                toast.error("Not enough resources!")
+                setPlantToPlace(null)
             }
-            const currentPlants = settings?.gardenPlants || []
-            
-            updateSettings({
-                sunlight: newSun,
-                waterdrops: newWater,
-                gardenPlants: [...currentPlants, newPlant]
-            })
-            
-            toast.success(`Planted a new ${item.name}!`)
-        } else {
-            toast.error("Not enough resources!")
+            return
         }
+
+        if (editMode) {
+            // Select existing plant
+            for (let i = plants.length - 1; i >= 0; i--) {
+                const p = plants[i]
+                if (!p.id) continue
+                const dx = p.x - x; const dy = p.y - y; const dist = Math.sqrt(dx * dx + dy * dy)
+                const threshold = p.type === 'tree' ? 0.1 : 0.05
+                if (dist < threshold) {
+                    setSelectedPlantId(p.id)
+                    return
+                }
+            }
+            setSelectedPlantId(null)
+        }
+    }
+
+    const updateSelectedPlant = (updates: any) => {
+        if (!selectedPlantId) return
+        const currentPlants = settings?.gardenPlants || []
+        const newPlants = currentPlants.map((p: any) => p.id === selectedPlantId ? { ...p, ...updates } : p)
+        updateSettings({ gardenPlants: newPlants })
+    }
+
+    const removeSelectedPlant = () => {
+        if (!selectedPlantId) return
+        const currentPlants = settings?.gardenPlants || []
+        updateSettings({ gardenPlants: currentPlants.filter((p: any) => p.id !== selectedPlantId) })
+        setSelectedPlantId(null)
+        toast.success("Plant removed from garden.")
     }
 
     const hour = new Date().getHours()
@@ -636,37 +663,39 @@ export function VisualGarden({ onAddPlant }: { onAddPlant?: () => void }) {
 
     return (
         <Card className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-sm rounded-3xl overflow-hidden h-full flex flex-col relative group">
-            <CardHeader className="pb-2 absolute top-0 left-0 z-10 w-full bg-transparent p-4 sm:p-6 flex flex-row items-center justify-between pointer-events-none">
+            <CardHeader className="pb-2 absolute top-0 left-0 z-10 w-full bg-gradient-to-b from-slate-900/40 to-transparent p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between pointer-events-none gap-4">
                 <div className="flex items-center gap-3 pointer-events-auto">
-                    <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-white/30 dark:bg-slate-900/30 shadow-sm border border-slate-400/20 backdrop-blur-md">
-                        <Icons.tree className="w-5 h-5 text-slate-700 dark:text-slate-300" />
+                    <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-white/20 dark:bg-slate-900/50 shadow-sm border border-white/10 backdrop-blur-md">
+                        <Icons.tree className="w-5 h-5 text-white" />
                     </div>
-                    <div className="bg-white/30 dark:bg-slate-900/30 px-3 py-1.5 rounded-xl backdrop-blur-md border border-slate-400/10">
-                        <CardTitle className="text-lg font-bold text-slate-800 dark:text-slate-100">Visual Garden</CardTitle>
-                        <p className="text-xs text-slate-600 dark:text-slate-300 font-medium capitalize flex items-center gap-1.5">
-                            <span>{mSeason}</span><span className="opacity-50">•</span>
-                            <span>{todLabel}</span><span className="opacity-50">•</span>
+                    <div className="bg-white/20 dark:bg-slate-900/50 px-3 py-1.5 rounded-xl backdrop-blur-md border border-white/10 shadow-sm">
+                        <CardTitle className="text-lg font-bold text-white drop-shadow-md">Visual Garden</CardTitle>
+                        <p className="text-xs text-white/90 font-medium capitalize flex items-center gap-1.5 drop-shadow">
+                            <span>{mSeason}</span><span className="opacity-70">•</span>
+                            <span>{todLabel}</span><span className="opacity-70">•</span>
                             <span>{temperature != null ? Math.round(temperature) : '--'}°C</span>
                         </p>
                     </div>
                 </div>
-                <div className="flex gap-2 flex-wrap justify-end pointer-events-auto">
-                    <div className="flex items-center gap-2 mr-2 bg-white/40 dark:bg-slate-900/40 backdrop-blur-md px-3 py-1.5 rounded-full border border-slate-200/50 dark:border-slate-700/50 shadow-sm">
-                        <div className="flex items-center gap-1.5 text-amber-500 font-bold text-xs" title="Sunlight">
+                <div className="flex gap-2 flex-wrap justify-end pointer-events-auto w-full sm:w-auto">
+                    <div className="flex items-center gap-2 mr-0 sm:mr-2 bg-white/30 dark:bg-slate-900/50 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/20 shadow-sm">
+                        <div className="flex items-center gap-1.5 text-amber-300 font-bold text-xs drop-shadow" title="Sunlight">
                             <Icons.sun className="w-3.5 h-3.5" />
                             <span>{settings?.sunlight || 0}</span>
                         </div>
-                        <div className="w-px h-3 bg-slate-300 dark:bg-slate-600 mx-1" />
-                        <div className="flex items-center gap-1.5 text-blue-500 font-bold text-xs" title="Waterdrops">
+                        <div className="w-px h-3 bg-white/30 mx-1" />
+                        <div className="flex items-center gap-1.5 text-blue-300 font-bold text-xs drop-shadow" title="Waterdrops">
                             <Icons.droplets className="w-3.5 h-3.5" />
                             <span>{settings?.waterdrops || 0}</span>
                         </div>
                     </div>
-                    <button onClick={() => setShowStore(!showStore)} className="h-9 px-4 rounded-full flex items-center gap-2 bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-200 dark:hover:bg-emerald-800/60 shadow-sm transition-all active:scale-95" title="Open Nursery">
-                        <Icons.flower className="w-4 h-4" /><span className="text-sm font-bold hidden sm:inline">Nursery</span>
+                    
+                    <button onClick={() => { setEditMode(!editMode); setSelectedPlantId(null); setPlantToPlace(null) }} className={`h-9 px-4 rounded-full flex items-center gap-2 shadow-sm transition-all active:scale-95 border ${editMode ? 'bg-emerald-500 text-white border-emerald-400 shadow-emerald-500/30' : 'bg-white/20 text-white border-white/20 hover:bg-white/30 backdrop-blur-md'}`} title="Toggle Build Mode">
+                        <Icons.mousePointer className="w-4 h-4" /><span className="text-sm font-bold">{editMode ? 'Done' : 'Edit Garden'}</span>
                     </button>
-                    <button onClick={onAddPlant} className="h-9 px-4 rounded-full flex items-center gap-2 bg-emerald-500 hover:bg-emerald-600 text-white shadow-lg hover:shadow-emerald-500/30 transition-all active:scale-95" title="Plant a New Task">
-                        <Icons.plus className="w-4 h-4" /><span className="text-sm font-bold hidden sm:inline">New Task</span>
+                    
+                    <button onClick={() => setShowStore(!showStore)} className="h-9 px-4 rounded-full flex items-center gap-2 bg-white/20 backdrop-blur-md border border-white/20 text-white hover:bg-white/30 shadow-sm transition-all active:scale-95" title="Open Nursery">
+                        <Icons.flower className="w-4 h-4" /><span className="text-sm font-bold hidden sm:inline">Nursery</span>
                     </button>
                     <div className="flex bg-white/80 dark:bg-slate-900/80 rounded-full p-1 border border-slate-200/50 dark:border-slate-700/50 shadow-md backdrop-blur-md">
                         {(['auto', 'morning', 'afternoon', 'evening', 'night'] as const).map(t2 => (
@@ -724,11 +753,11 @@ export function VisualGarden({ onAddPlant }: { onAddPlant?: () => void }) {
                                                     <span className="text-xs font-bold text-blue-500 flex items-center gap-1"><Icons.droplets className="w-3 h-3"/>{item.costWater}</span>
                                                 </div>
                                                 <button 
-                                                    onClick={() => handlePurchase(item)}
+                                                    onClick={() => startPlacement(item)}
                                                     disabled={!canAfford}
                                                     className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${canAfford ? 'bg-emerald-500 hover:bg-emerald-600 text-white shadow-md hover:shadow-emerald-500/30 active:scale-95' : 'bg-slate-200 dark:bg-slate-800 text-slate-400 cursor-not-allowed'}`}
                                                 >
-                                                    Plant
+                                                    Select
                                                 </button>
                                             </div>
                                         </div>
@@ -752,8 +781,30 @@ export function VisualGarden({ onAddPlant }: { onAddPlant?: () => void }) {
             )}
 
             <div className="w-full relative bg-slate-50 dark:bg-slate-900 transition-colors duration-700 flex-1 overflow-x-auto overflow-y-hidden custom-scrollbar">
-                <div ref={cont} className="min-w-[800px] w-full h-72 sm:h-96 relative">
+                <div ref={cont} onPointerDown={handlePointerDown} className={`min-w-[800px] w-full h-72 sm:h-96 relative ${plantToPlace ? 'cursor-crosshair' : editMode ? 'cursor-pointer' : ''}`}>
                     <canvas ref={cvs} className="w-full h-full block" />
+                    
+                    {editMode && selectedPlantId && (() => {
+                        const p = plants.find(p => p.id === selectedPlantId)
+                        if (!p) return null
+                        return (
+                            <div className="absolute z-20 flex gap-1 bg-white/90 dark:bg-slate-800/90 p-1.5 rounded-xl shadow-lg border border-slate-200 dark:border-slate-700 backdrop-blur-md transform -translate-x-1/2 -translate-y-full animate-in zoom-in duration-200" style={{ left: `${p.x * 100}%`, top: `${p.y * 100}%`, marginTop: '-20px' }}>
+                                <button onClick={(e) => { e.stopPropagation(); updateSelectedPlant({ scale: Math.min((p.scale || 1) + 0.1, 1.5) }) }} className="w-8 h-8 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center justify-center text-slate-700 dark:text-slate-300" title="Make Bigger">
+                                    <Icons.plus className="w-4 h-4" />
+                                </button>
+                                <button onClick={(e) => { e.stopPropagation(); updateSelectedPlant({ scale: Math.max((p.scale || 1) - 0.1, 0.3) }) }} className="w-8 h-8 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center justify-center text-slate-700 dark:text-slate-300" title="Make Smaller">
+                                    <Icons.minus className="w-4 h-4" />
+                                </button>
+                                <div className="w-px h-6 bg-slate-200 dark:bg-slate-700 my-auto mx-1" />
+                                <button onClick={(e) => { e.stopPropagation(); removeSelectedPlant() }} className="w-8 h-8 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/30 flex items-center justify-center text-red-500" title="Remove">
+                                    <Icons.trash className="w-4 h-4" />
+                                </button>
+                                <button onClick={(e) => { e.stopPropagation(); setSelectedPlantId(null) }} className="w-8 h-8 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center justify-center text-slate-500" title="Deselect">
+                                    <Icons.close className="w-4 h-4" />
+                                </button>
+                            </div>
+                        )
+                    })()}
                 </div>
             </div>
         </Card>

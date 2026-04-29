@@ -40,6 +40,15 @@ export function VisualGarden({ onAddPlant }: { onAddPlant?: () => void }) {
     const [loaded, setLoaded] = useState(false)
     const mTimeRef = useRef(mTime)
 
+    const NURSERY_ITEMS = [
+        { id: "sakura", name: "Sakura Tree", type: "tree", costSunlight: 100, costWater: 20, icon: "🌸", desc: "A beautiful cherry blossom." },
+        { id: "maple", name: "Maple Tree", type: "tree", costSunlight: 120, costWater: 25, icon: "🍁", desc: "Vibrant autumn leaves." },
+        { id: "pine", name: "Pine Tree", type: "tree", costSunlight: 80, costWater: 15, icon: "🌲", desc: "Evergreen and sturdy." },
+        { id: "sunflower", name: "Sunflower", type: "flower", costSunlight: 50, costWater: 10, icon: "🌻", desc: "Always faces the sun." },
+        { id: "tulip", name: "Tulip", type: "flower", costSunlight: 40, costWater: 5, icon: "🌷", desc: "A colorful spring bloom." },
+        { id: "orchid", name: "Orchid", type: "flower", costSunlight: 60, costWater: 12, icon: "🌸", desc: "Elegant and exotic." },
+    ]
+
     const sr = (s: number) => { const x = Math.sin(s++) * 10000; return x - Math.floor(x) }
 
     useEffect(() => {
@@ -523,11 +532,20 @@ export function VisualGarden({ onAddPlant }: { onAddPlant?: () => void }) {
                 const img = assets.current[plant.subtype] || assets.current['sakura']
                 if (img) {
                     if (plant.type === 'tree') {
-                        ctx.rotate(wind * 2); const sz = 180 * s; try { ctx.drawImage(img, -sz / 2, -sz, sz, sz) } catch (e) { }
+                        ctx.rotate(wind * 2); const sz = 180 * s; 
+                        ctx.shadowColor = night ? 'rgba(255, 255, 255, 0.1)' : 'rgba(255, 255, 255, 0.5)';
+                        ctx.shadowBlur = 20;
+                        try { ctx.drawImage(img, -sz / 2, -sz, sz, sz) } catch (e) { }
+                        ctx.shadowBlur = 0;
                     } else {
                         ctx.rotate(wind * 8); const p2 = 1 + Math.sin(t * 0.05 + plant.seed) * 0.04; ctx.scale(p2, p2)
                         ctx.translate(0, Math.sin(t * 0.1 + plant.seed) * 2); const sz = 85 * s
+                        
+                        ctx.shadowColor = night ? 'rgba(255, 255, 255, 0.2)' : 'rgba(255, 255, 255, 0.6)';
+                        ctx.shadowBlur = 12;
                         try { ctx.drawImage(img, -sz / 2, -sz, sz, sz) } catch (e) { }
+                        ctx.shadowBlur = 0;
+
                         if (night) {
                             ctx.filter = "none"; ctx.globalAlpha = 0.22
                             const fg = ctx.createRadialGradient(0, -sz * 0.5, 0, 0, -sz * 0.5, sz * 0.6)
@@ -663,7 +681,6 @@ export function VisualGarden({ onAddPlant }: { onAddPlant?: () => void }) {
                             <span>{settings?.waterdrops || 0}</span>
                         </div>
                     </div>
-                    <CoopGardenManager />
                     <button onClick={() => setShowStore(!showStore)} className="h-9 px-4 rounded-full flex items-center gap-2 bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-200 dark:hover:bg-emerald-800/60 shadow-sm transition-all active:scale-95" title="Open Nursery">
                         <Icons.flower className="w-4 h-4" /><span className="text-sm font-bold hidden sm:inline">Nursery</span>
                     </button>
@@ -686,6 +703,72 @@ export function VisualGarden({ onAddPlant }: { onAddPlant?: () => void }) {
                     </div>
                 </div>
             </CardHeader>
+
+            {showStore && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/20 dark:bg-slate-900/60 backdrop-blur-sm animate-in fade-in" onClick={() => setShowStore(false)}>
+                    <div 
+                        className="relative w-full max-w-md bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border border-slate-200 dark:border-slate-700 rounded-3xl shadow-2xl mx-4 animate-in zoom-in-95 overflow-hidden flex flex-col max-h-[80vh]"
+                        onClick={e => e.stopPropagation()}
+                    >
+                        <div className="p-4 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center bg-emerald-50/50 dark:bg-emerald-950/20">
+                            <div>
+                                <h3 className="font-bold text-emerald-900 dark:text-emerald-100 flex items-center gap-2">
+                                    <Icons.flower className="w-5 h-5" /> The Nursery
+                                </h3>
+                                <p className="text-xs text-emerald-600 dark:text-emerald-400">Spend resources to customize your garden</p>
+                            </div>
+                            <button onClick={() => setShowStore(false)} className="w-8 h-8 rounded-full bg-white dark:bg-slate-800 flex items-center justify-center text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 shadow-sm border border-slate-200 dark:border-slate-700">
+                                <Icons.close className="w-4 h-4" />
+                            </button>
+                        </div>
+                        
+                        <div className="p-4 overflow-y-auto custom-scrollbar flex-1">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                {NURSERY_ITEMS.map(item => {
+                                    const canAfford = (settings?.sunlight || 0) >= item.costSunlight && (settings?.waterdrops || 0) >= item.costWater
+                                    return (
+                                        <div key={item.id} className={`flex flex-col p-3 rounded-xl border ${canAfford ? 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:border-emerald-300 dark:hover:border-emerald-700' : 'bg-slate-50 dark:bg-slate-900/50 border-slate-100 dark:border-slate-800 opacity-70'} transition-all`}>
+                                            <div className="flex items-start justify-between mb-2">
+                                                <div className="flex items-center gap-2">
+                                                    <span className="text-2xl">{item.icon}</span>
+                                                    <div>
+                                                        <h4 className="font-bold text-sm text-slate-800 dark:text-slate-200">{item.name}</h4>
+                                                        <p className="text-[10px] text-slate-500">{item.desc}</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div className="mt-auto pt-3 flex items-center justify-between border-t border-slate-100 dark:border-slate-700/50">
+                                                <div className="flex gap-2">
+                                                    <span className="text-xs font-bold text-amber-500 flex items-center gap-1"><Icons.sun className="w-3 h-3"/>{item.costSunlight}</span>
+                                                    <span className="text-xs font-bold text-blue-500 flex items-center gap-1"><Icons.droplets className="w-3 h-3"/>{item.costWater}</span>
+                                                </div>
+                                                <button 
+                                                    onClick={() => handlePurchase(item)}
+                                                    disabled={!canAfford}
+                                                    className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${canAfford ? 'bg-emerald-500 hover:bg-emerald-600 text-white shadow-md hover:shadow-emerald-500/30 active:scale-95' : 'bg-slate-200 dark:bg-slate-800 text-slate-400 cursor-not-allowed'}`}
+                                                >
+                                                    Plant
+                                                </button>
+                                            </div>
+                                        </div>
+                                    )
+                                })}
+                            </div>
+                            
+                            {/* Developer Testing Button */}
+                            {process.env.NODE_ENV === "development" && (
+                                <button 
+                                    onClick={() => updateSettings({ sunlight: (settings?.sunlight || 0) + 500, waterdrops: (settings?.waterdrops || 0) + 100 })}
+                                    className="w-full mt-4 p-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-xs font-mono rounded"
+                                >
+                                    [DEV] +500☀️ +100💧
+                                </button>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            )}
+
             <div className="w-full relative bg-slate-50 dark:bg-slate-900 transition-colors duration-700 flex-1 overflow-x-auto overflow-y-hidden custom-scrollbar">
                 <div ref={cont} className="min-w-[800px] w-full h-72 sm:h-96 relative">
                     <canvas ref={cvs} className="w-full h-full block" />

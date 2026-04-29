@@ -5,6 +5,7 @@ import { cn } from "@/lib/utils"
 import { Icons } from "@/components/icons"
 import { Button } from "@/components/ui/button"
 import { SettingsDialog } from "@/components/dashboard/settings-dialog"
+import { CoopGardenManager } from "@/components/garden/coop-garden-manager"
 import { MidoriLogo } from "@/components/dashboard/midori-logo"
 import { useData } from "@/components/local-data-provider"
 import { useAuth } from "@/components/auth-provider"
@@ -87,6 +88,8 @@ export function Sidebar({ onClose }: SidebarProps) {
               </Link>
             )
           })}
+          
+          <CoopGardenManager />
         </nav>
 
         {/* Footer / User Settings */}

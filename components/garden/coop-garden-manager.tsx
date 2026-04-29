@@ -41,18 +41,25 @@ export function CoopGardenManager() {
     }
 
     return (
-        <div className="relative">
+        <>
             <button 
                 onClick={() => setIsOpen(!isOpen)}
-                className={`h-9 px-4 rounded-full flex items-center gap-2 shadow-sm transition-all active:scale-95 border ${sharedGarden ? 'bg-indigo-500 hover:bg-indigo-600 text-white border-indigo-400' : 'bg-white/40 dark:bg-slate-900/40 backdrop-blur-md text-slate-700 dark:text-slate-300 border-slate-200/50 hover:bg-white/60'}`}
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 ${sharedGarden ? 'bg-indigo-500/10 text-indigo-700 dark:text-indigo-300 shadow-sm border border-indigo-200/50 dark:border-indigo-800/50' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50 hover:text-indigo-600 dark:hover:text-indigo-400'}`}
                 title="Kyōei Co-op Garden"
             >
-                <Icons.heart className={`w-4 h-4 ${sharedGarden ? 'animate-pulse' : ''}`} />
-                <span className="text-sm font-bold hidden sm:inline">{sharedGarden ? 'Shared Garden' : 'Co-op'}</span>
+                <Icons.heart className={`w-5 h-5 ${sharedGarden ? 'animate-pulse text-indigo-500' : 'group-hover:text-indigo-500'}`} />
+                <div className="flex-1 flex items-baseline gap-2">
+                    <span className="font-medium">{sharedGarden ? 'Shared Garden' : 'Kyōei Co-op'}</span>
+                    <span className="text-[10px] opacity-40 font-jp font-medium">共栄</span>
+                </div>
             </button>
 
             {isOpen && (
-                <Card className="absolute top-12 right-0 w-80 bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border border-slate-200 dark:border-slate-700 shadow-2xl z-50 animate-in fade-in slide-in-from-top-2">
+                <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/20 dark:bg-slate-900/60 backdrop-blur-sm animate-in fade-in" onClick={() => setIsOpen(false)}>
+                <Card 
+                    className="relative w-full max-w-sm bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border border-slate-200 dark:border-slate-700 shadow-2xl mx-4 animate-in zoom-in-95"
+                    onClick={(e) => e.stopPropagation()}
+                >
                     <CardHeader className="pb-3 border-b border-slate-100 dark:border-slate-800 flex flex-row items-center justify-between">
                         <CardTitle className="text-lg font-bold flex items-center gap-2">
                             <Icons.heart className="w-5 h-5 text-indigo-500" />
@@ -140,7 +147,8 @@ export function CoopGardenManager() {
                         )}
                     </CardContent>
                 </Card>
+                </div>
             )}
-        </div>
+        </>
     )
 }

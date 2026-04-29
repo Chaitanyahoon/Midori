@@ -6,7 +6,6 @@ import { Icons } from "@/components/icons"
 import { useTheme } from "next-themes"
 import { useWeather } from "@/hooks/use-weather"
 import { toast } from "sonner"
-import { CoopGardenManager } from "@/components/garden/coop-garden-manager"
 
 interface Plant { x: number; y: number; type: "flower" | "tree"; subtype: string; color: string; scale: number; growth: number; delay: number; swayOffset: number; swaySpeed: number; seed: number }
 interface Star { x: number; y: number; size: number; ts: number; to: number }
@@ -755,15 +754,16 @@ export function VisualGarden({ onAddPlant }: { onAddPlant?: () => void }) {
                                 })}
                             </div>
                             
-                            {/* Developer Testing Button */}
-                            {process.env.NODE_ENV === "development" && (
-                                <button 
-                                    onClick={() => updateSettings({ sunlight: (settings?.sunlight || 0) + 500, waterdrops: (settings?.waterdrops || 0) + 100 })}
-                                    className="w-full mt-4 p-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-xs font-mono rounded"
-                                >
-                                    [DEV] +500☀️ +100💧
-                                </button>
-                            )}
+                            {/* Quick resource boost for testing */}
+                            <button 
+                                onClick={() => {
+                                    updateSettings({ sunlight: (settings?.sunlight || 0) + 500, waterdrops: (settings?.waterdrops || 0) + 100 })
+                                    toast.success("Added +500 ☀️ and +100 💧!")
+                                }}
+                                className="w-full mt-4 p-2.5 bg-gradient-to-r from-amber-50 to-blue-50 dark:from-amber-950/20 dark:to-blue-950/20 hover:from-amber-100 hover:to-blue-100 dark:hover:from-amber-950/40 dark:hover:to-blue-950/40 text-xs font-semibold rounded-xl border border-amber-200/50 dark:border-amber-800/30 text-slate-600 dark:text-slate-300 transition-colors"
+                            >
+                                🎁 Bonus: +500 ☀️  +100 💧
+                            </button>
                         </div>
                     </div>
                 </div>

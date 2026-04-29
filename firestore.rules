@@ -1,0 +1,17 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // User data — only the owner can read/write their own data
+    match /users/{userId}/{document=**} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+
+    // Shared gardens — any authenticated user can read/write
+    // (In production, tighten this to only allow members)
+    match /shared_gardens/{gardenId} {
+      allow read, write: if request.auth != null;
+    }
+  }
+}

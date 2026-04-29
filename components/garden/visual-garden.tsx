@@ -82,10 +82,10 @@ export function VisualGarden({ onAddPlant }: { onAddPlant?: () => void }) {
         else if (mSeason === 'autumn') { tt = "maple"; tc = "#EA580C" }
         else if (mSeason === 'winter') { tt = "pine"; tc = "#CBD5E1" }
         np.push({ x: 0.85, y: 0.82, type: "tree", subtype: tt, color: tc, scale: 1, growth: 1, delay: 0, swayOffset: 0, swaySpeed: 0.005, seed: 9999 })
-        const done = tasks.filter((t: any) => t.completedAt && t.completedAt.split("T")[0] === today).slice(0, 12)
-        const amb = Math.max(0, 5 - done.length) + 2
+        const done = tasks.filter((t: any) => t.completedAt && t.completedAt.split("T")[0] === today).slice(0, 8)
+        const amb = Math.max(0, 6 - done.length)
         const ap = (x: number, type: "flower" | "tree", sub: string, col: string, sm: number, d: number) => {
-            np.push({ x, y: 0.8 + sr(seed + np.length * 11) * 0.08, type, subtype: sub, color: col, scale: (0.4 + sr(seed + np.length * 99) * 0.25) * sm, growth: 0, delay: d, swayOffset: sr(seed) * 10, swaySpeed: 0.015, seed: seed + np.length })
+            np.push({ x, y: 0.82 + sr(seed + np.length * 11) * 0.06, type, subtype: sub, color: col, scale: (0.35 + sr(seed + np.length * 99) * 0.15) * sm, growth: 0, delay: d, swayOffset: sr(seed) * 10, swaySpeed: 0.015, seed: seed + np.length })
         }
         done.forEach((t: any, i: number) => {
             let fs = "lily", fc = "#F8FAFC"
@@ -93,7 +93,7 @@ export function VisualGarden({ onAddPlant }: { onAddPlant?: () => void }) {
             else if (mSeason === 'summer') { fs = t.priority === 'high' ? "sunflower" : "lily"; fc = t.priority === 'high' ? "#FBBF24" : "#F43F5E" }
             else if (mSeason === 'autumn') { fs = t.priority === 'high' ? "chrysanthemum" : "marigold"; fc = t.priority === 'high' ? "#EA580C" : "#F59E0B" }
             else { fs = "snowflower"; fc = "#8B5CF6" }
-            ap((i + 1) / (done.length + 1) + (sr(seed + i) * 0.1 - 0.05), "flower", fs, fc, 1, i * 100)
+            ap(0.1 + (i + 1) / (done.length + 1) * 0.8 + (sr(seed + i) * 0.08 - 0.04), "flower", fs, fc, 0.8, i * 100)
         })
         for (let i = 0; i < amb; i++) {
             let avail = ['tulip'], fc = "#A78BFA"
@@ -101,10 +101,10 @@ export function VisualGarden({ onAddPlant }: { onAddPlant?: () => void }) {
             if (mSeason === 'summer') { avail = ['sunflower', 'lily']; fc = "#FBBF24" }
             if (mSeason === 'autumn') { avail = ['marigold', 'chrysanthemum']; fc = "#EA580C" }
             if (mSeason === 'winter') { avail = ['snowflower']; fc = "#E0F2FE" }
-            ap(sr(seed + i * 77), "flower", avail[Math.floor(sr(seed + i * 33) * avail.length)], fc, 0.7, 500 + i * 100)
+            ap(0.15 + sr(seed + i * 77) * 0.7, "flower", avail[Math.floor(sr(seed + i * 33) * avail.length)], fc, 0.6, 500 + i * 100)
         }
         pomodoros.filter(p => p.completed && p.startTime.split("T")[0] === today).slice(0, 3).forEach((_, i) => {
-            ap(0.1 + sr(seed + i + 500) * 0.8, "tree", tt, tc, 1.2, 800 + i * 200)
+            ap(0.2 + sr(seed + i + 500) * 0.6, "tree", tt, tc, 0.8, 800 + i * 200)
         })
 
         // Add purchased nursery plants
@@ -112,7 +112,7 @@ export function VisualGarden({ onAddPlant }: { onAddPlant?: () => void }) {
         customPlants.forEach((cp: any, i: number) => {
             np.push({
                 x: cp.x, y: cp.y, type: cp.type as "flower" | "tree", subtype: cp.subtype,
-                color: "#A78BFA", scale: cp.type === "tree" ? 1.0 : 0.6,
+                color: "#A78BFA", scale: cp.type === "tree" ? 0.75 : 0.5,
                 growth: 1, delay: i * 50, swayOffset: sr(999 + i) * 10, swaySpeed: 0.015, seed: 999 + i
             })
         })
@@ -189,20 +189,13 @@ export function VisualGarden({ onAddPlant }: { onAddPlant?: () => void }) {
                     ctx.fillStyle = "#FFFFFF"
                     ctx.beginPath(); ctx.arc(sx, sy, s.size * 0.9, 0, Math.PI * 2); ctx.fill()
                     // 4-point cross spike for brighter stars
-                    if (s.size > 1.1) {
-                        ctx.globalAlpha = Math.max(0, a * 0.7)
-                        ctx.strokeStyle = "rgba(255,255,255,0.8)"; ctx.lineWidth = 0.6
-                        const arm = s.size * 4.5
+                    if (s.size > 1.4) {
+                        ctx.globalAlpha = Math.max(0, a * 0.4)
+                        ctx.strokeStyle = "rgba(255,255,255,0.6)"; ctx.lineWidth = 0.5
+                        const arm = s.size * 3.0
                         ctx.beginPath()
                         ctx.moveTo(sx - arm, sy); ctx.lineTo(sx + arm, sy)
                         ctx.moveTo(sx, sy - arm); ctx.lineTo(sx, sy + arm)
-                        ctx.stroke()
-                        // Diagonal mini arms
-                        ctx.strokeStyle = "rgba(255,255,255,0.35)"; ctx.lineWidth = 0.4
-                        const darm = s.size * 2.5
-                        ctx.beginPath()
-                        ctx.moveTo(sx - darm, sy - darm); ctx.lineTo(sx + darm, sy + darm)
-                        ctx.moveTo(sx + darm, sy - darm); ctx.lineTo(sx - darm, sy + darm)
                         ctx.stroke()
                     }
                     ctx.restore()
@@ -230,14 +223,10 @@ export function VisualGarden({ onAddPlant }: { onAddPlant?: () => void }) {
                     ctx.fillStyle = halo; ctx.beginPath(); ctx.arc(hx, hy, 12, 0, Math.PI * 2); ctx.fill()
                     ctx.globalAlpha = alpha
                     const tg = ctx.createLinearGradient(hx, hy, tx2, ty2)
-                    tg.addColorStop(0, 'rgba(255,255,255,0.95)'); tg.addColorStop(0.15, 'rgba(200,230,255,0.7)'); tg.addColorStop(0.5, 'rgba(180,210,255,0.25)'); tg.addColorStop(1, 'rgba(150,200,255,0)')
-                    ctx.strokeStyle = tg; ctx.lineWidth = 3.5; ctx.lineCap = 'round'
+                    tg.addColorStop(0, 'rgba(255,255,255,0.9)'); tg.addColorStop(0.2, 'rgba(200,230,255,0.4)'); tg.addColorStop(1, 'rgba(150,200,255,0)')
+                    ctx.strokeStyle = tg; ctx.lineWidth = 1.5; ctx.lineCap = 'round'
                     ctx.beginPath(); ctx.moveTo(hx, hy); ctx.lineTo(tx2, ty2); ctx.stroke()
-                    const tg2 = ctx.createLinearGradient(hx, hy, hx - ss.trail * 0.4 * ss.vx * W, hy - ss.trail * 0.4 * ss.vy * H * 0.72)
-                    tg2.addColorStop(0, 'rgba(255,255,255,1)'); tg2.addColorStop(1, 'rgba(255,255,255,0)')
-                    ctx.strokeStyle = tg2; ctx.lineWidth = 1.2
-                    ctx.beginPath(); ctx.moveTo(hx, hy); ctx.lineTo(hx - ss.trail * 0.4 * ss.vx * W, hy - ss.trail * 0.4 * ss.vy * H * 0.72); ctx.stroke()
-                    ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(hx, hy, 2.5, 0, Math.PI * 2); ctx.fill()
+                    ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(hx, hy, 1.2, 0, Math.PI * 2); ctx.fill()
                     ctx.restore()
                 }
 
@@ -273,34 +262,27 @@ export function VisualGarden({ onAddPlant }: { onAddPlant?: () => void }) {
                 mh2.addColorStop(0, "rgba(220,235,255,0.15)"); mh2.addColorStop(1, "rgba(220,235,255,0)")
                 ctx.fillStyle = mh2; ctx.beginPath(); ctx.arc(0, 0, ms * 2.5, 0, Math.PI * 2); ctx.fill()
 
-                // ── CRESCENT MOON via offscreen canvas (destination-out is isolated, never touches main canvas) ──
+                // ── ETHEREAL FULL MOON ──
                 const ms2 = Math.ceil(ms * 2.4)
                 const oc = document.createElement('canvas')
                 oc.width = ms2; oc.height = ms2
                 const ox = ms2 / 2; const oy = ms2 / 2
                 const octx = oc.getContext('2d')!
 
-                // Fill full moon sphere with gradient
-                const mb = octx.createRadialGradient(ox - ms * 0.22, oy - ms * 0.22, 0, ox, oy, ms)
-                mb.addColorStop(0, '#FEFCE8')
-                mb.addColorStop(0.35, '#F1F5F9')
-                mb.addColorStop(0.7, '#CBD5E1')
-                mb.addColorStop(1, '#94A3B8')
+                // Soft glowing sphere
+                const mb = octx.createRadialGradient(ox - ms * 0.15, oy - ms * 0.15, 0, ox, oy, ms)
+                mb.addColorStop(0, '#FFFFFF')
+                mb.addColorStop(0.3, '#FEFCE8')
+                mb.addColorStop(0.7, '#F1F5F9')
+                mb.addColorStop(1, '#E2E8F0')
                 octx.fillStyle = mb
                 octx.beginPath(); octx.arc(ox, oy, ms, 0, Math.PI * 2); octx.fill()
 
-                // Cut the shadow bite — isolated to the offscreen canvas
-                octx.globalCompositeOperation = 'destination-out'
-                octx.beginPath()
-                octx.arc(ox + ms * 0.44, oy - ms * 0.04, ms * 0.82, 0, Math.PI * 2)
-                octx.fillStyle = 'rgba(0,0,0,1)'; octx.fill()
-                octx.globalCompositeOperation = 'source-over'
-
-                // Subtle craters on lit side
-                octx.globalAlpha = 0.12; octx.fillStyle = '#64748B'
-                octx.beginPath(); octx.arc(ox - ms * 0.42, oy - ms * 0.28, ms * 0.1, 0, Math.PI * 2); octx.fill()
-                octx.beginPath(); octx.arc(ox - ms * 0.62, oy + ms * 0.16, ms * 0.075, 0, Math.PI * 2); octx.fill()
-                octx.beginPath(); octx.arc(ox - ms * 0.2, oy + ms * 0.46, ms * 0.06, 0, Math.PI * 2); octx.fill()
+                // Subtle craters/texture for realism
+                octx.globalAlpha = 0.06; octx.fillStyle = '#94A3B8'
+                octx.beginPath(); octx.arc(ox - ms * 0.25, oy + ms * 0.2, ms * 0.35, 0, Math.PI * 2); octx.fill()
+                octx.beginPath(); octx.arc(ox + ms * 0.3, oy - ms * 0.2, ms * 0.2, 0, Math.PI * 2); octx.fill()
+                octx.beginPath(); octx.arc(ox + ms * 0.1, oy + ms * 0.35, ms * 0.25, 0, Math.PI * 2); octx.fill()
                 octx.globalAlpha = 1
 
                 // Stamp the moon onto the main canvas, centred at origin (already translated to cx2,cy2)

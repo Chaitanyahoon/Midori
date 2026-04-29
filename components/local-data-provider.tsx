@@ -56,6 +56,9 @@ export interface UserSettings {
   dailyGoalTasks: number
   dailyGoalPomodoros: number
   dailyGoalHours: number
+  sunlight: number
+  waterdrops: number
+  gardenPlants?: any[]
 }
 
 export interface CustomTrack {
@@ -94,6 +97,8 @@ const DEFAULT_SETTINGS: UserSettings = {
   dailyGoalTasks: 3,
   dailyGoalPomodoros: 4,
   dailyGoalHours: 2,
+  sunlight: 0,
+  waterdrops: 0,
 }
 
 export function DataProvider({ children }: { children: React.ReactNode }) {
@@ -175,7 +180,14 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     if (!uid) return
     const ref = doc(db, "users", uid, "tasks", id)
     const extra: Partial<Task> = {}
-    if (updates.completed === true) extra.completedAt = new Date().toISOString()
+    if (updates.completed === true) {
+        extra.completedAt = new Date().toISOString()
+        setSettings(prev => {
+            const newSunlight = (prev.sunlight || 0) + 10
+            updateDoc(doc(db, "users", uid, "meta", "settings"), { sunlight: newSunlight }).catch(() => {})
+            return { ...prev, sunlight: newSunlight }
+        })
+    }
     if (updates.completed === false) extra.completedAt = undefined
     await updateDoc(ref, { ...updates, ...extra })
   }, [uid])
@@ -188,6 +200,16 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
   const addPomodoro = useCallback(async (pomodoroData: Omit<PomodoroSession, "id">) => {
     if (!uid) return
     await addDoc(collection(db, "users", uid, "pomodoros"), pomodoroData)
+    
+    // Award waterdrops if completed
+    if (pomodoroData.completed) {
+      setSettings(prev => {
+        const earned = Math.floor(pomodoroData.duration / 60) || 1
+        const newWaterdrops = (prev.waterdrops || 0) + earned
+        updateDoc(doc(db, "users", uid, "meta", "settings"), { waterdrops: newWaterdrops }).catch(() => {})
+        return { ...prev, waterdrops: newWaterdrops }
+      })
+    }
   }, [uid])
 
   const updateSettings = useCallback(async (updates: Partial<UserSettings>) => {

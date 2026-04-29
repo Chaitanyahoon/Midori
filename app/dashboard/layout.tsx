@@ -7,6 +7,7 @@ import { DataProvider } from "@/components/local-data-provider"
 import { Sidebar } from "@/components/dashboard/sidebar"
 import { TopNav } from "@/components/dashboard/top-nav"
 import { PlantAIAssistant } from "@/components/dashboard/plant-ai-assistant"
+import { AmbientPlayer } from "@/components/dashboard/ambient-player"
 import { ErrorBoundary } from "@/components/error-boundary"
 import { useAuth } from "@/components/auth-provider"
 import { useUIStore } from "@/lib/store"
@@ -100,6 +101,7 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
           })}
         </nav>
 
+        <AmbientPlayer />
         <PlantAIAssistant />
       </div>
     </DataProvider>

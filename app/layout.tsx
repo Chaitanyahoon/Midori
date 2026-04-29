@@ -4,6 +4,7 @@ import { Outfit } from "next/font/google"
 import "./globals.css"
 import { ThemeProvider } from "@/components/theme-provider"
 import { Toaster } from "@/components/ui/toaster"
+import { Toaster as Sonner } from "@/components/ui/sonner"
 import { AuthProvider } from "@/components/auth-provider"
 import { Analytics } from "@vercel/analytics/next"
 
@@ -31,6 +32,7 @@ export default function RootLayout({
           <AuthProvider>
             {children}
             <Toaster />
+            <Sonner position="top-center" richColors />
           </AuthProvider>
         </ThemeProvider>
         <Analytics />

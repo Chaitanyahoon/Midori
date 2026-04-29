@@ -2,90 +2,107 @@
 
 import { useState, useEffect, useRef } from "react"
 import { useRouter } from "next/navigation"
+import Link from "next/link"
 import { FiEye as Eye, FiEyeOff as EyeOff, FiLoader as Loader2 } from "react-icons/fi"
+import { toast } from "sonner"
 import {
     signInWithEmailAndPassword,
     createUserWithEmailAndPassword,
     signInWithPopup,
     GoogleAuthProvider,
     updateProfile,
+    sendSignInLinkToEmail,
 } from "firebase/auth"
 import { auth } from "@/lib/firebase/client"
 
 export default function LoginPage() {
     const router = useRouter()
-    const [isSignUp, setIsSignUp] = useState(false)
+    const [activeTab, setActiveTab] = useState(0) // 0: Log In, 1: Sign Up, 2: Magic Link
+    const isSignUp = activeTab === 1
+    const isMagicLink = activeTab === 2
+    
     const [name, setName] = useState("")
     const [email, setEmail] = useState("")
     const [password, setPassword] = useState("")
     const [showPassword, setShowPassword] = useState(false)
-    const [error, setError] = useState("")
     const [loading, setLoading] = useState(false)
     
-    // Mouse Parallax Effect
-    const [mousePos, setMousePos] = useState({ x: 0, y: 0 })
-    const containerRef = useRef<HTMLDivElement>(null)
+    // Performance: Use ref for parallax to prevent React state re-renders
+    const cardRef = useRef<HTMLDivElement>(null)
 
     useEffect(() => {
         const handleMouseMove = (e: MouseEvent) => {
-            if (!containerRef.current) return
+            if (!cardRef.current) return
             const { clientX, clientY } = e
             const { innerWidth, innerHeight } = window
             // Normalize to -0.5 to 0.5
             const x = (clientX / innerWidth) - 0.5
             const y = (clientY / innerHeight) - 0.5
-            setMousePos({ x, y })
+            
+            // Apply parallax effect directly to the DOM element
+            cardRef.current.style.transform = `translate3d(${x * 15}px, ${y * 15}px, 0)`
         }
-        window.addEventListener("mousemove", handleMouseMove)
+        window.addEventListener("mousemove", handleMouseMove, { passive: true })
         return () => window.removeEventListener("mousemove", handleMouseMove)
     }, [])
 
     const handleEmailAuth = async (e: React.FormEvent) => {
         e.preventDefault()
-        setError("")
         setLoading(true)
 
         // Diagnostic check
         if (!process.env.NEXT_PUBLIC_FIREBASE_API_KEY) {
             console.error("Firebase API Key is missing from environment variables.")
-            setError("Configuration error: API Key is missing. Check your .env setup.")
+            toast.error("Configuration error: API Key is missing. Check your .env setup.")
             setLoading(false)
             return
         }
 
         try {
-            if (isSignUp) {
+            if (isMagicLink) {
+                const actionCodeSettings = {
+                    url: `${window.location.origin}/verify-email`,
+                    handleCodeInApp: true,
+                }
+                await sendSignInLinkToEmail(auth, email, actionCodeSettings)
+                window.localStorage.setItem('emailForSignIn', email)
+                toast.success("Magic link sent! Check your inbox.")
+                setLoading(false)
+                return // Don't redirect, just show the toast
+            } else if (isSignUp) {
                 const userCredential = await createUserWithEmailAndPassword(auth, email, password)
                 if (name.trim() && userCredential.user) {
                     await updateProfile(userCredential.user, { displayName: name.trim() })
                 }
+                toast.success("Account created successfully!")
             } else {
                 await signInWithEmailAndPassword(auth, email, password)
+                toast.success("Welcome back!")
             }
             router.push("/dashboard")
         } catch (err: any) {
             console.error("Email auth error:", err)
             const msg = err.code?.replace("auth/", "").replace(/-/g, " ") ?? "Something went wrong"
-            setError(msg.charAt(0).toUpperCase() + msg.slice(1))
+            toast.error(msg.charAt(0).toUpperCase() + msg.slice(1))
         } finally {
             setLoading(false)
         }
     }
 
     const handleGoogle = async () => {
-        setError("")
         setLoading(true)
 
         // Diagnostic check
         if (!process.env.NEXT_PUBLIC_FIREBASE_API_KEY) {
             console.error("Firebase API Key is missing from environment variables.")
-            setError("Configuration error: API Key is missing.")
+            toast.error("Configuration error: API Key is missing.")
             setLoading(false)
             return
         }
 
         try {
             await signInWithPopup(auth, new GoogleAuthProvider())
+            toast.success("Successfully signed in with Google")
             router.push("/dashboard")
         } catch (err: any) {
             console.error("Google sign-in error details:", {
@@ -96,25 +113,19 @@ export default function LoginPage() {
             })
             
             if (err.code === "auth/operation-not-allowed") {
-                setError("Google sign-in is not enabled in Firebase Console.")
+                toast.error("Google sign-in is not enabled in Firebase Console.")
             } else if (err.code === "auth/unauthorized-domain") {
-                setError("This domain is not authorized for Firebase Authentication.")
+                toast.error("This domain is not authorized for Firebase Authentication.")
             } else {
-                setError("Google sign-in failed. Check the console for more details.")
+                toast.error("Google sign-in failed. Check the console for more details.")
             }
         } finally {
             setLoading(false)
         }
     }
 
-    // Parallax Helpers
-    const getParallaxStyle = (strength: number) => ({
-        transform: `translate3d(${mousePos.x * strength}px, ${mousePos.y * strength}px, 0)`,
-        transition: "transform 0.2s cubic-bezier(0.16, 1, 0.3, 1)"
-    })
-
     return (
-        <div ref={containerRef} className="h-screen w-full flex items-center justify-center zen-gradient-bg relative overflow-hidden font-sans">
+        <div className="h-screen w-full flex items-center justify-center zen-gradient-bg relative overflow-hidden font-sans">
             {/* Washi Texture Overlay */}
             <div className="washi-overlay pointer-events-none" />
 
@@ -126,7 +137,11 @@ export default function LoginPage() {
             {/* minimal svg placeholder kept for future small effects */}
 
             {/* Main Content */}
-            <div className="relative z-10 w-full max-w-sm px-4 py-2 reveal-staggered delay-4">
+            <div 
+                ref={cardRef}
+                className="relative z-10 w-full max-w-sm px-4 py-2 reveal-staggered delay-4 transition-transform duration-200 ease-out"
+                style={{ transform: "translate3d(0, 0, 0)" }}
+            >
                 <div className="bg-white/40 dark:bg-emerald-950/14 backdrop-blur-sm border border-white/8 dark:border-emerald-500/6 rounded-xl p-4 overflow-hidden relative">
                     
                     {/* Subtle Internal Light Sweep */}
@@ -143,12 +158,12 @@ export default function LoginPage() {
 
                     {/* Tabs with Staggered Elements */}
                     <div className="flex rounded-lg bg-emerald-900/5 dark:bg-emerald-900/12 p-1 mb-4 border border-emerald-500/6">
-                        {["Log In", "Sign Up"].map((label, i) => (
+                        {["Log In", "Sign Up", "Magic Link"].map((label, i) => (
                             <button
                                 key={label}
-                                onClick={() => { setIsSignUp(i === 1); setError("") }}
-                                className={`flex-1 py-3 text-sm font-serif-luxury font-semibold rounded-xl transition-all duration-500
-                                  ${(isSignUp ? i === 1 : i === 0)
+                                onClick={() => setActiveTab(i)}
+                                className={`flex-1 py-3 text-xs sm:text-sm font-serif-luxury font-semibold rounded-xl transition-all duration-500
+                                  ${activeTab === i
                                         ? "bg-emerald-500 dark:bg-emerald-500 text-emerald-950 shadow-[0_8px_16px_rgba(16,185,129,0.2)]"
                                         : "text-slate-500 hover:text-slate-800 dark:text-emerald-100/40 dark:hover:text-emerald-100/70 font-medium"
                                     }`}
@@ -183,46 +198,72 @@ export default function LoginPage() {
                     </div>
 
                     {/* Email form */}
-                    <form onSubmit={handleEmailAuth} className="space-y-3">
-                        {isSignUp && (
-                            <div className="group space-y-1">
-                                <label className="text-[10px] font-semibold text-slate-400 dark:text-emerald-100/30 uppercase tracking-[0.08em]">Full name</label>
-                                <input
-                                    type="text"
-                                    placeholder="Name"
-                                    value={name}
-                                    onChange={(e) => setName(e.target.value)}
-                                    required
-                                    className="w-full h-10 px-3 rounded-lg bg-white/40 dark:bg-emerald-950/40 border border-slate-100 dark:border-white/6 dark:text-white placeholder:text-slate-300 focus:outline-none focus:border-emerald-400 transition-all text-sm"
-                                />
-                            </div>
-                        )}
-                        <div className="group space-y-1">
-                            <label className="text-[10px] font-semibold text-slate-400 dark:text-emerald-100/30 uppercase tracking-[0.08em]">Email</label>
+                    <form onSubmit={handleEmailAuth} className="space-y-3 flex flex-col">
+                        <div 
+                            className={`group space-y-1 transition-all duration-300 ease-in-out overflow-hidden origin-top ${
+                                isSignUp ? "max-h-[72px] opacity-100" : "max-h-0 opacity-0 pointer-events-none"
+                            }`}
+                            aria-hidden={!isSignUp}
+                        >
+                            <label className="text-[10px] font-semibold text-slate-400 dark:text-emerald-100/30 uppercase tracking-[0.08em]" htmlFor="fullName">Full name</label>
                             <input
+                                id="fullName"
+                                type="text"
+                                placeholder="Name"
+                                value={name}
+                                onChange={(e) => setName(e.target.value)}
+                                required={isSignUp}
+                                tabIndex={isSignUp ? 0 : -1}
+                                className="w-full h-10 px-3 rounded-lg bg-white/40 dark:bg-emerald-950/40 border border-slate-100 dark:border-white/6 dark:text-white placeholder:text-slate-300 focus:outline-none focus:border-emerald-400 focus:ring-4 focus:ring-emerald-500/10 transition-all text-sm"
+                            />
+                        </div>
+
+                        <div className="group space-y-1">
+                            <label className="text-[10px] font-semibold text-slate-400 dark:text-emerald-100/30 uppercase tracking-[0.08em]" htmlFor="email">Email</label>
+                            <input
+                                id="email"
                                 type="email"
                                 placeholder="name@example.com"
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}
                                 required
-                                className="w-full h-12 px-5 rounded-2xl bg-white/40 dark:bg-emerald-950/40 border border-slate-100 dark:border-white/5 dark:text-white placeholder:text-slate-300 dark:placeholder:text-emerald-100/10 focus:outline-none focus:border-emerald-400 dark:focus:border-emerald-500/50 transition-all font-medium"
+                                className="w-full h-12 px-5 rounded-2xl bg-white/40 dark:bg-emerald-950/40 border border-slate-100 dark:border-white/5 dark:text-white placeholder:text-slate-300 dark:placeholder:text-emerald-100/10 focus:outline-none focus:border-emerald-400 dark:focus:border-emerald-500/50 focus:ring-4 focus:ring-emerald-500/10 transition-all font-medium"
                             />
                         </div>
-                        <div className="group space-y-1">
-                            <label className="text-[10px] font-semibold text-slate-400 dark:text-emerald-100/30 uppercase tracking-[0.08em]">Password</label>
-                            <div className="relative">
+                        <div 
+                            className={`group space-y-1 transition-all duration-300 ease-in-out overflow-hidden origin-top ${
+                                !isMagicLink ? "max-h-[80px] opacity-100" : "max-h-0 opacity-0 pointer-events-none"
+                            }`}
+                            aria-hidden={isMagicLink}
+                        >
+                            <div className="flex items-center justify-between">
+                                <label className="text-[10px] font-semibold text-slate-400 dark:text-emerald-100/30 uppercase tracking-[0.08em]" htmlFor="password">Password</label>
+                                {!isSignUp && !isMagicLink && (
+                                    <Link 
+                                        href="/forgot-password" 
+                                        className="text-[10px] font-medium text-emerald-600 dark:text-emerald-400 hover:underline transition-colors"
+                                    >
+                                        Forgot Password?
+                                    </Link>
+                                )}
+                            </div>
+                            <div className="relative mt-1">
                                 <input
+                                    id="password"
                                     type={showPassword ? "text" : "password"}
                                     placeholder="Password"
                                     value={password}
                                     onChange={(e) => setPassword(e.target.value)}
-                                    required
+                                    required={!isMagicLink}
+                                    tabIndex={!isMagicLink ? 0 : -1}
                                     minLength={6}
-                                    className="w-full h-10 px-3 rounded-lg bg-white/40 dark:bg-emerald-950/40 border border-slate-100 dark:border-white/6 dark:text-white placeholder:text-slate-300 focus:outline-none focus:border-emerald-400 transition-all text-sm"
+                                    className="w-full h-10 px-3 rounded-lg bg-white/40 dark:bg-emerald-950/40 border border-slate-100 dark:border-white/6 dark:text-white placeholder:text-slate-300 focus:outline-none focus:border-emerald-400 focus:ring-4 focus:ring-emerald-500/10 transition-all text-sm"
                                 />
                                 <button
                                     type="button"
+                                    aria-label={showPassword ? "Hide password" : "Show password"}
                                     onClick={() => setShowPassword(!showPassword)}
+                                    tabIndex={!isMagicLink ? 0 : -1}
                                     className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300 hover:text-emerald-500 transition-colors"
                                 >
                                     {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
@@ -230,18 +271,12 @@ export default function LoginPage() {
                             </div>
                         </div>
 
-                        {error && (
-                            <div className="text-sm text-red-600 bg-red-500/5 dark:bg-red-500/8 border border-red-500/20 px-3 py-2 rounded-md font-medium">
-                                {error}
-                            </div>
-                        )}
-
                         <button
                             type="submit"
                             disabled={loading}
                             className="w-full h-10 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-medium text-sm shadow-sm transition-transform active:scale-95 disabled:opacity-50 flex items-center justify-center gap-2 mt-3"
                         >
-                            {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : (isSignUp ? "Sign up" : "Sign in")}
+                            {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : (isMagicLink ? "Send Magic Link" : isSignUp ? "Sign up" : "Sign in")}
                         </button>
                     </form>
 

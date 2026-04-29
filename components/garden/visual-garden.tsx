@@ -5,6 +5,7 @@ import { Card, CardHeader, CardTitle } from "@/components/ui/card"
 import { Icons } from "@/components/icons"
 import { useTheme } from "next-themes"
 import { useWeather } from "@/hooks/use-weather"
+import { toast } from "sonner"
 
 interface Plant { x: number; y: number; type: "flower" | "tree"; subtype: string; color: string; scale: number; growth: number; delay: number; swayOffset: number; swaySpeed: number; seed: number }
 interface Star { x: number; y: number; size: number; ts: number; to: number }
@@ -17,7 +18,8 @@ interface ShootingStar { x: number; y: number; vx: number; vy: number; life: num
 export function VisualGarden({ onAddPlant }: { onAddPlant?: () => void }) {
     const cvs = useRef<HTMLCanvasElement>(null)
     const cont = useRef<HTMLDivElement>(null)
-    const { tasks, pomodoros, stats } = useData()
+    const { tasks, pomodoros, stats, settings, updateSettings } = useData()
+    const [showStore, setShowStore] = useState(false)
     const { theme } = useTheme()
     const { season, weather } = useWeather()
     const { condition, isDay, temperature } = weather
@@ -95,8 +97,19 @@ export function VisualGarden({ onAddPlant }: { onAddPlant?: () => void }) {
         pomodoros.filter(p => p.completed && p.startTime.split("T")[0] === today).slice(0, 3).forEach((_, i) => {
             ap(0.1 + sr(seed + i + 500) * 0.8, "tree", tt, tc, 1.2, 800 + i * 200)
         })
+
+        // Add purchased nursery plants
+        const customPlants = settings?.gardenPlants || []
+        customPlants.forEach((cp: any, i: number) => {
+            np.push({
+                x: cp.x, y: cp.y, type: cp.type as "flower" | "tree", subtype: cp.subtype,
+                color: "#A78BFA", scale: cp.type === "tree" ? 1.0 : 0.6,
+                growth: 1, delay: i * 50, swayOffset: sr(999 + i) * 10, swaySpeed: 0.015, seed: 999 + i
+            })
+        })
+
         np.sort((a, b) => a.y - b.y); setPlants(np)
-    }, [tasks, pomodoros, season, mSeason])
+    }, [tasks, pomodoros, season, mSeason, settings?.gardenPlants])
 
     useEffect(() => { pRef.current = plants }, [plants])
 
@@ -587,6 +600,35 @@ export function VisualGarden({ onAddPlant }: { onAddPlant?: () => void }) {
         return () => { cancelAnimationFrame(raf); ro.disconnect() }
     }, [mSeason, condition, loaded])
 
+    const handlePurchase = (item: any) => {
+        const currentSun = settings?.sunlight || 0
+        const currentWater = settings?.waterdrops || 0
+
+        if (currentSun >= item.costSunlight && currentWater >= item.costWater) {
+            const newSun = currentSun - item.costSunlight
+            const newWater = currentWater - item.costWater
+            
+            const newPlant = {
+                id: Date.now().toString(),
+                type: item.type,
+                subtype: item.id,
+                x: 0.1 + Math.random() * 0.8,
+                y: 0.75 + Math.random() * 0.12
+            }
+            const currentPlants = settings?.gardenPlants || []
+            
+            updateSettings({
+                sunlight: newSun,
+                waterdrops: newWater,
+                gardenPlants: [...currentPlants, newPlant]
+            })
+            
+            toast.success(`Planted a new ${item.name}!`)
+        } else {
+            toast.error("Not enough resources!")
+        }
+    }
+
     const hour = new Date().getHours()
     let todLabel = "Night"
     if (mTime !== 'auto') todLabel = mTime.charAt(0).toUpperCase() + mTime.slice(1)
@@ -609,8 +651,22 @@ export function VisualGarden({ onAddPlant }: { onAddPlant?: () => void }) {
                     </div>
                 </div>
                 <div className="flex gap-2 flex-wrap justify-end pointer-events-auto">
+                    <div className="flex items-center gap-2 mr-2 bg-white/40 dark:bg-slate-900/40 backdrop-blur-md px-3 py-1.5 rounded-full border border-slate-200/50 dark:border-slate-700/50 shadow-sm">
+                        <div className="flex items-center gap-1.5 text-amber-500 font-bold text-xs" title="Sunlight">
+                            <Icons.sun className="w-3.5 h-3.5" />
+                            <span>{settings?.sunlight || 0}</span>
+                        </div>
+                        <div className="w-px h-3 bg-slate-300 dark:bg-slate-600 mx-1" />
+                        <div className="flex items-center gap-1.5 text-blue-500 font-bold text-xs" title="Waterdrops">
+                            <Icons.droplets className="w-3.5 h-3.5" />
+                            <span>{settings?.waterdrops || 0}</span>
+                        </div>
+                    </div>
+                    <button onClick={() => setShowStore(!showStore)} className="h-9 px-4 rounded-full flex items-center gap-2 bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-200 dark:hover:bg-emerald-800/60 shadow-sm transition-all active:scale-95" title="Open Nursery">
+                        <Icons.flower className="w-4 h-4" /><span className="text-sm font-bold hidden sm:inline">Nursery</span>
+                    </button>
                     <button onClick={onAddPlant} className="h-9 px-4 rounded-full flex items-center gap-2 bg-emerald-500 hover:bg-emerald-600 text-white shadow-lg hover:shadow-emerald-500/30 transition-all active:scale-95" title="Plant a New Task">
-                        <Icons.plus className="w-4 h-4" /><span className="text-sm font-bold hidden sm:inline">Plant Seed</span>
+                        <Icons.plus className="w-4 h-4" /><span className="text-sm font-bold hidden sm:inline">New Task</span>
                     </button>
                     <div className="flex bg-white/80 dark:bg-slate-900/80 rounded-full p-1 border border-slate-200/50 dark:border-slate-700/50 shadow-md backdrop-blur-md">
                         {(['auto', 'morning', 'afternoon', 'evening', 'night'] as const).map(t2 => (

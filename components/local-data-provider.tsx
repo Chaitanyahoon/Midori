@@ -48,6 +48,14 @@ export interface UserStats {
   lastActiveDate: string
 }
 
+export interface SharedGarden {
+  id: string
+  name: string
+  sunlightPool: number
+  waterPool: number
+  plants: any[]
+}
+
 export interface UserSettings {
   userName: string | null
   userTone: string | null
@@ -59,6 +67,7 @@ export interface UserSettings {
   sunlight: number
   waterdrops: number
   gardenPlants?: any[]
+  activeSharedGardenId?: string | null
 }
 
 export interface CustomTrack {
@@ -83,6 +92,10 @@ interface DataContextType {
   updateSettings: (updates: Partial<UserSettings>) => Promise<void>
   addCustomTrack: (track: Omit<CustomTrack, "id" | "addedAt">) => Promise<void>
   removeCustomTrack: (id: string) => Promise<void>
+  sharedGarden: SharedGarden | null
+  updateSharedGarden: (updates: Partial<SharedGarden>) => Promise<void>
+  joinSharedGarden: (gardenId: string) => Promise<void>
+  createSharedGarden: (name: string) => Promise<string>
   refreshData: () => void
   exportData: () => Promise<string | null>
 }
@@ -99,6 +112,7 @@ const DEFAULT_SETTINGS: UserSettings = {
   dailyGoalHours: 2,
   sunlight: 0,
   waterdrops: 0,
+  activeSharedGardenId: null,
 }
 
 export function DataProvider({ children }: { children: React.ReactNode }) {
@@ -109,6 +123,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
   const [pomodoros, setPomodoros] = useState<PomodoroSession[]>([])
   const [settings, setSettings] = useState<UserSettings>(DEFAULT_SETTINGS)
   const [customTracks, setCustomTracks] = useState<CustomTrack[]>([])
+  const [sharedGarden, setSharedGarden] = useState<SharedGarden | null>(null)
   const [loading, setLoading] = useState(true)
 
   // Real-time listeners for Firestore collections
@@ -185,6 +200,19 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
         setSettings(prev => {
             const newSunlight = (prev.sunlight || 0) + 10
             updateDoc(doc(db, "users", uid, "meta", "settings"), { sunlight: newSunlight }).catch(() => {})
+            
+            // Pool sunlight for shared garden
+            if (prev.activeSharedGardenId) {
+               getDoc(doc(db, "shared_gardens", prev.activeSharedGardenId)).then(snap => {
+                 if (snap.exists()) {
+                   const gData = snap.data()
+                   updateDoc(doc(db, "shared_gardens", prev.activeSharedGardenId!), {
+                     sunlightPool: (gData.sunlightPool || 0) + 5
+                   })
+                 }
+               })
+            }
+
             return { ...prev, sunlight: newSunlight }
         })
     }
@@ -207,6 +235,19 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
         const earned = Math.floor(pomodoroData.duration / 60) || 1
         const newWaterdrops = (prev.waterdrops || 0) + earned
         updateDoc(doc(db, "users", uid, "meta", "settings"), { waterdrops: newWaterdrops }).catch(() => {})
+        
+        // Pool water for shared garden
+        if (prev.activeSharedGardenId) {
+            getDoc(doc(db, "shared_gardens", prev.activeSharedGardenId)).then(snap => {
+              if (snap.exists()) {
+                const gData = snap.data()
+                updateDoc(doc(db, "shared_gardens", prev.activeSharedGardenId!), {
+                  waterPool: (gData.waterPool || 0) + earned
+                })
+              }
+            })
+        }
+         
         return { ...prev, waterdrops: newWaterdrops }
       })
     }
@@ -236,6 +277,50 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     if (!uid) return
     await deleteDoc(doc(db, "users", uid, "customTracks", id))
   }, [uid])
+
+  const updateSharedGarden = useCallback(async (updates: Partial<SharedGarden>) => {
+    if (!settings.activeSharedGardenId) return
+    await updateDoc(doc(db, "shared_gardens", settings.activeSharedGardenId), updates)
+  }, [settings.activeSharedGardenId])
+
+  const joinSharedGarden = useCallback(async (gardenId: string) => {
+    if (!uid) return
+    const ref = doc(db, "shared_gardens", gardenId)
+    const snap = await getDoc(ref)
+    if (!snap.exists()) throw new Error("Garden not found")
+    await updateSettings({ activeSharedGardenId: gardenId })
+  }, [uid, updateSettings])
+
+  const createSharedGarden = useCallback(async (name: string) => {
+    if (!uid) return ""
+    const gardenId = Math.random().toString(36).substring(2, 8).toUpperCase()
+    await setDoc(doc(db, "shared_gardens", gardenId), {
+      id: gardenId,
+      name,
+      sunlightPool: 0,
+      waterPool: 0,
+      plants: []
+    })
+    await updateSettings({ activeSharedGardenId: gardenId })
+    return gardenId
+  }, [uid, updateSettings])
+
+  // Shared Garden Listener
+  useEffect(() => {
+    if (!settings.activeSharedGardenId) {
+      setSharedGarden(null)
+      return
+    }
+    const unsub = onSnapshot(doc(db, "shared_gardens", settings.activeSharedGardenId), (docSnap) => {
+      if (docSnap.exists()) {
+        setSharedGarden(docSnap.data() as SharedGarden)
+      } else {
+        setSharedGarden(null)
+        updateSettings({ activeSharedGardenId: null })
+      }
+    })
+    return () => unsub()
+  }, [settings.activeSharedGardenId, updateSettings])
 
   const refreshData = useCallback(() => {
     // Real-time listeners handle updates automatically
@@ -268,10 +353,14 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
   const value = useMemo(() => ({
     tasks, pomodoros, stats, settings, customTracks, loading,
     addTask, updateTask, deleteTask, addPomodoro,
-    updateSettings, addCustomTrack, removeCustomTrack, refreshData, exportData
+    updateSettings, addCustomTrack, removeCustomTrack,
+    sharedGarden, updateSharedGarden, joinSharedGarden, createSharedGarden,
+    refreshData, exportData
   }), [tasks, pomodoros, stats, settings, customTracks, loading,
     addTask, updateTask, deleteTask, addPomodoro,
-    updateSettings, addCustomTrack, removeCustomTrack, refreshData, exportData])
+    updateSettings, addCustomTrack, removeCustomTrack,
+    sharedGarden, updateSharedGarden, joinSharedGarden, createSharedGarden,
+    refreshData, exportData])
 
   return <DataContext.Provider value={value}>{children}</DataContext.Provider>
 }

@@ -6,6 +6,7 @@ import { Icons } from "@/components/icons"
 import { useTheme } from "next-themes"
 import { useWeather } from "@/hooks/use-weather"
 import { toast } from "sonner"
+import { CoopGardenManager } from "@/components/garden/coop-garden-manager"
 
 interface Plant { x: number; y: number; type: "flower" | "tree"; subtype: string; color: string; scale: number; growth: number; delay: number; swayOffset: number; swaySpeed: number; seed: number }
 interface Star { x: number; y: number; size: number; ts: number; to: number }
@@ -662,6 +663,7 @@ export function VisualGarden({ onAddPlant }: { onAddPlant?: () => void }) {
                             <span>{settings?.waterdrops || 0}</span>
                         </div>
                     </div>
+                    <CoopGardenManager />
                     <button onClick={() => setShowStore(!showStore)} className="h-9 px-4 rounded-full flex items-center gap-2 bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-200 dark:hover:bg-emerald-800/60 shadow-sm transition-all active:scale-95" title="Open Nursery">
                         <Icons.flower className="w-4 h-4" /><span className="text-sm font-bold hidden sm:inline">Nursery</span>
                     </button>

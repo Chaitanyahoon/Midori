@@ -45,7 +45,7 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
 
   return (
     <DataProvider>
-      <div className="min-h-screen bg-slate-50 dark:bg-slate-900 flex relative">
+      <div className="h-screen overflow-hidden bg-slate-50 dark:bg-slate-900 flex relative">
         {/* Washi Texture Overlay */}
         <div className="washi-overlay pointer-events-none" />
         {/* Floating Sakura Particles in background with subtle opacity (12%) */}

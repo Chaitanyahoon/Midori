@@ -279,10 +279,10 @@ export function TaskList() {
 
           <TabsContent value="today" className="flex-1 overflow-y-auto px-6 py-2 pb-6 space-y-3 m-0 data-[state=inactive]:hidden focus-visible:outline-none">
             {todayTasks.length === 0 ? (
-              <div className="text-center py-8 bg-gradient-to-br from-emerald-50 to-blue-50 rounded-2xl border border-emerald-100">
-                <Icons.calendar className="w-12 h-12 text-emerald-400 mx-auto mb-3" />
-                <h3 className="font-medium text-gray-900 mb-1">No tasks for today</h3>
-                <p className="text-sm text-gray-600">Add a task to get started with your productive day!</p>
+              <div className="text-center py-8 bg-gradient-to-br from-emerald-50 to-blue-50 dark:from-emerald-950/20 dark:to-blue-950/20 rounded-2xl border border-emerald-100 dark:border-emerald-900/30">
+                <Icons.calendar className="w-12 h-12 text-emerald-400 dark:text-emerald-500 mx-auto mb-3" />
+                <h3 className="font-medium text-slate-900 dark:text-slate-100 mb-1">No tasks for today</h3>
+                <p className="text-sm text-slate-600 dark:text-slate-400">Add a task to get started with your productive day!</p>
               </div>
             ) : (
               todayTasks.slice(0, 4).map((task) => <TaskItem key={task.id} task={task} showCategory />)
@@ -298,10 +298,10 @@ export function TaskList() {
 
           <TabsContent value="upcoming" className="flex-1 overflow-y-auto px-6 py-2 pb-6 space-y-3 m-0 data-[state=inactive]:hidden focus-visible:outline-none">
             {upcomingTasks.length === 0 ? (
-              <div className="text-center py-8 bg-gradient-to-br from-blue-50 to-violet-50 rounded-2xl border border-blue-100">
-                <Icons.clock className="w-12 h-12 text-blue-400 mx-auto mb-3" />
-                <h3 className="font-medium text-gray-900 mb-1">No upcoming tasks</h3>
-                <p className="text-sm text-gray-600">Schedule tasks for future dates to stay organized!</p>
+              <div className="text-center py-8 bg-gradient-to-br from-blue-50 to-violet-50 dark:from-blue-950/20 dark:to-violet-950/20 rounded-2xl border border-blue-100 dark:border-blue-900/30">
+                <Icons.clock className="w-12 h-12 text-blue-400 dark:text-blue-500 mx-auto mb-3" />
+                <h3 className="font-medium text-slate-900 dark:text-slate-100 mb-1">No upcoming tasks</h3>
+                <p className="text-sm text-slate-600 dark:text-slate-400">Schedule tasks for future dates to stay organized!</p>
               </div>
             ) : (
               upcomingTasks.slice(0, 4).map((task) => <TaskItem key={task.id} task={task} showCategory />)
@@ -310,10 +310,10 @@ export function TaskList() {
 
           <TabsContent value="completed" className="flex-1 overflow-y-auto px-6 py-2 pb-6 space-y-3 m-0 data-[state=inactive]:hidden focus-visible:outline-none">
             {completedTasks.length === 0 ? (
-              <div className="text-center py-8 bg-gradient-to-br from-green-50 to-emerald-50 rounded-2xl border border-green-100">
-                <Icons.target className="w-12 h-12 text-green-400 mx-auto mb-3" />
-                <h3 className="font-medium text-gray-900 mb-1">No completed tasks yet</h3>
-                <p className="text-sm text-gray-600">Complete your first task to see it here!</p>
+              <div className="text-center py-8 bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-950/20 dark:to-emerald-950/20 rounded-2xl border border-green-100 dark:border-green-900/30">
+                <Icons.target className="w-12 h-12 text-green-400 dark:text-green-500 mx-auto mb-3" />
+                <h3 className="font-medium text-slate-900 dark:text-slate-100 mb-1">No completed tasks yet</h3>
+                <p className="text-sm text-slate-600 dark:text-slate-400">Complete your first task to see it here!</p>
               </div>
             ) : (
               completedTasks.map((task) => <TaskItem key={task.id} task={task} showCategory />)

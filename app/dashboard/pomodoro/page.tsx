@@ -935,7 +935,7 @@ export default function PomodoroPage() {
       </Card>
       {/* Zen Mode Overlay */}
       {isZenMode && (
-        <div className="fixed inset-0 z-50 bg-gradient-to-b from-slate-955 via-emerald-950/20 to-slate-950 flex flex-col items-center justify-center p-4 animate-in fade-in duration-500">
+        <div className="fixed inset-0 z-50 bg-gradient-to-b from-slate-950 via-emerald-950/20 to-slate-950 flex flex-col items-center justify-center p-4 animate-in fade-in duration-500">
           <div className="absolute inset-0 washi-overlay pointer-events-none opacity-20" />
           <SakuraParticles count={15} opacity={0.25} className="absolute inset-0 pointer-events-none" />
 

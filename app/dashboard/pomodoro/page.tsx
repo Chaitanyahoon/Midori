@@ -11,6 +11,7 @@ import { Icons } from "@/components/icons"
 import { useData } from "@/components/local-data-provider"
 import { useToast } from "@/hooks/use-toast"
 import { FocusMusicPlayer } from "@/components/dashboard/focus-music-player"
+import { SakuraParticles } from "@/components/dashboard/sakura-particles"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
@@ -351,7 +352,7 @@ export default function PomodoroPage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         {/* Main Timer */}
         <div className="lg:col-span-2">
-          <Card className="bg-gradient-to-br from-white via-emerald-50/30 to-blue-50/30 dark:from-slate-800 dark:via-slate-800/90 dark:to-slate-900/90 backdrop-blur-sm border border-emerald-100/50 dark:border-slate-700 shadow-xl rounded-3xl overflow-hidden">
+          <Card className={`bg-white/40 dark:bg-slate-900/40 backdrop-blur-xl border border-white/60 dark:border-slate-700/50 shadow-xl rounded-3xl overflow-hidden relative group transition-all duration-500 ${isBreak ? 'card-glow-emerald' : 'card-glow-orange'}`}>
             {/* Header with status indicator */}
             <div className={`h-2 ${isBreak ? "bg-gradient-to-r from-green-400 to-emerald-500" : "bg-gradient-to-r from-blue-500 to-indigo-600"}`}></div>
 
@@ -374,7 +375,7 @@ export default function PomodoroPage() {
             <CardContent className="space-y-8 px-8 pb-8">
               {/* Timer Display */}
               <div className="text-center">
-                <div className="relative w-44 h-44 sm:w-56 sm:h-56 mx-auto mb-8">
+                <div className={`relative w-44 h-44 sm:w-56 sm:h-56 mx-auto mb-8 transition-all duration-1000 ${isActive ? (isBreak ? "animate-breathe-glow-emerald" : "animate-breathe-glow-amber") : ""}`}>
                   {/* Outer glow effect */}
                   <div className={`absolute inset-0 rounded-full blur-xl opacity-30 ${isBreak ? "bg-emerald-400" : "bg-blue-500"}`}></div>
 
@@ -423,23 +424,14 @@ export default function PomodoroPage() {
                   </svg>
                 </div>
 
-                {/* Progress Bar */}
-                <div className="max-w-md mx-auto mb-6">
-                  <Progress value={progress} className="h-2.5 mb-2" />
-                  <div className="flex justify-between text-xs text-gray-500 dark:text-gray-400">
-                    <span>{Math.round(progress)}%</span>
-                    <span>{isBreak ? "Break Time" : "Focus Time"}</span>
-                  </div>
-                </div>
-
                 {/* Controls */}
-                <div className="flex items-center justify-center gap-3">
+                <div className="flex items-center justify-center gap-3 mb-2">
                   {!isActive ? (
                     <Button
                       onClick={handleStart}
                       size="lg"
                       aria-label="Start focus session"
-                      className="bg-gradient-to-r from-emerald-600 to-blue-600 hover:from-emerald-700 hover:to-blue-700 text-white px-10 py-6 rounded-2xl text-lg font-semibold shadow-lg hover:shadow-xl transition-all"
+                      className="bg-gradient-to-r from-emerald-600 to-blue-600 hover:from-emerald-700 hover:to-blue-700 text-white px-10 py-6 rounded-2xl text-lg font-semibold shadow-lg hover:shadow-xl transition-all border-0"
                     >
                       <Icons.play className="w-5 h-5 mr-2" />
                       Start Session
@@ -449,7 +441,7 @@ export default function PomodoroPage() {
                       onClick={handlePause}
                       size="lg"
                       aria-label={isActive ? "Pause timer" : "Resume timer"}
-                      className="bg-gradient-to-r from-yellow-500 to-orange-600 hover:from-yellow-600 hover:to-orange-700 text-white px-10 py-6 rounded-2xl text-lg font-semibold shadow-lg hover:shadow-xl transition-all"
+                      className="bg-gradient-to-r from-yellow-500 to-orange-600 hover:from-yellow-600 hover:to-orange-700 text-white px-10 py-6 rounded-2xl text-lg font-semibold shadow-lg hover:shadow-xl transition-all border-0"
                     >
                       <Icons.pause className="w-5 h-5 mr-2" />
                       Pause
@@ -471,7 +463,7 @@ export default function PomodoroPage() {
 
               {/* Task Selection */}
               {!isBreak && (
-                <div className="bg-gradient-to-br from-white/80 to-slate-50/80 dark:from-slate-800/80 dark:to-slate-900/80 backdrop-blur-sm rounded-2xl p-5 space-y-4 border border-slate-200/50 dark:border-slate-700/50">
+                <div className="bg-white/40 dark:bg-slate-900/40 backdrop-blur-xl rounded-2xl p-5 space-y-4 border border-slate-200/50 dark:border-slate-800/40">
                   <div className="flex items-center gap-2 mb-1">
                     <Icons.target className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
                     <label className="text-sm font-semibold text-gray-700 dark:text-gray-300">
@@ -484,7 +476,7 @@ export default function PomodoroPage() {
                       Select Task (Optional)
                     </Label>
                     <Select value={selectedTask} onValueChange={setSelectedTask}>
-                      <SelectTrigger className="w-full bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 h-11">
+                      <SelectTrigger className="w-full bg-white/70 dark:bg-slate-900/60 border-slate-200 dark:border-slate-700 h-11 focus:ring-emerald-500 focus:border-emerald-500 rounded-xl">
                         <SelectValue placeholder="Select a task or focus generally" />
                       </SelectTrigger>
                       <SelectContent>
@@ -508,7 +500,7 @@ export default function PomodoroPage() {
                       value={sessionNote}
                       onChange={(e) => setSessionNote(e.target.value)}
                       placeholder="What are you focusing on in this session?"
-                      className="bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-sm resize-none"
+                      className="bg-white/70 dark:bg-slate-900/60 border-slate-200 dark:border-slate-700 text-sm resize-none focus:ring-emerald-500 focus:border-emerald-500 rounded-xl"
                       rows={2}
                     />
                   </div>
@@ -523,7 +515,7 @@ export default function PomodoroPage() {
           <FocusMusicPlayer isActive={isActive} isBreak={isBreak} />
 
           {/* Today's Stats */}
-          <Card className="bg-gradient-to-br from-white to-emerald-50/30 dark:from-slate-800 dark:to-emerald-900/10 backdrop-blur-sm border border-emerald-100/50 dark:border-emerald-800/50 shadow-lg rounded-2xl">
+          <Card className="bg-white/40 dark:bg-slate-900/40 backdrop-blur-xl border border-white/60 dark:border-slate-700/50 shadow-xl rounded-2xl card-glow-emerald">
             <CardHeader className="pb-2">
               <CardTitle className="text-lg font-semibold flex items-center gap-2 text-gray-900 dark:text-gray-100">
                 <Icons.trendingUp className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
@@ -621,7 +613,7 @@ export default function PomodoroPage() {
           </Card>
 
           {/* Task Analytics */}
-          <Card className="bg-gradient-to-br from-white to-blue-50/30 dark:from-slate-800 dark:to-blue-900/10 backdrop-blur-sm border border-blue-100/50 dark:border-blue-800/50 shadow-lg rounded-2xl">
+          <Card className="bg-white/40 dark:bg-slate-900/40 backdrop-blur-xl border border-white/60 dark:border-slate-700/50 shadow-xl rounded-2xl card-glow-blue">
             <CardHeader className="pb-2">
               <CardTitle className="text-lg font-semibold flex items-center gap-2 text-gray-900 dark:text-gray-100">
                 <Icons.insights className="w-5 h-5 text-blue-600 dark:text-blue-400" />
@@ -653,7 +645,7 @@ export default function PomodoroPage() {
           </Card>
 
           {/* Settings */}
-          <Card className="bg-gradient-to-br from-white to-purple-50/30 dark:from-slate-800 dark:to-purple-900/10 backdrop-blur-sm border border-purple-100/50 dark:border-purple-800/50 shadow-lg rounded-2xl">
+          <Card className="bg-white/40 dark:bg-slate-900/40 backdrop-blur-xl border border-white/60 dark:border-slate-700/50 shadow-xl rounded-2xl card-glow-purple">
             <CardHeader className="pb-2">
               <CardTitle className="text-lg font-semibold flex items-center gap-2 text-gray-900 dark:text-gray-100">
                 <Icons.settings className="w-5 h-5 text-purple-600 dark:text-purple-400" />
@@ -681,7 +673,7 @@ export default function PomodoroPage() {
                         }
                       }}
                     >
-                      <SelectTrigger className="bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 h-10">
+                      <SelectTrigger className="bg-white/75 dark:bg-slate-900/60 border-slate-200 dark:border-slate-700 h-10 focus:ring-purple-500 focus:border-purple-500 rounded-xl">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -708,7 +700,7 @@ export default function PomodoroPage() {
                           }
                         }}
                       >
-                        <SelectTrigger className="bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 h-10">
+                        <SelectTrigger className="bg-white/75 dark:bg-slate-900/60 border-slate-200 dark:border-slate-700 h-10 focus:ring-purple-500 focus:border-purple-500 rounded-xl">
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
@@ -732,7 +724,7 @@ export default function PomodoroPage() {
                           }
                         }}
                       >
-                        <SelectTrigger className="bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 h-10">
+                        <SelectTrigger className="bg-white/75 dark:bg-slate-900/60 border-slate-200 dark:border-slate-700 h-10 focus:ring-purple-500 focus:border-purple-500 rounded-xl">
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
@@ -755,7 +747,7 @@ export default function PomodoroPage() {
                       max="10"
                       value={settings.sessionsUntilLongBreak}
                       onChange={(e) => setSettings({ ...settings, sessionsUntilLongBreak: Number.parseInt(e.target.value) || 4 })}
-                      className="bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 h-10"
+                      className="bg-white/75 dark:bg-slate-900/60 border-slate-200 dark:border-slate-700 h-10 focus:ring-purple-500 focus:border-purple-500 rounded-xl"
                     />
                   </div>
                 </div>
@@ -801,14 +793,14 @@ export default function PomodoroPage() {
                   <Icons.target className="w-4 h-4 text-purple-600 dark:text-purple-400" />
                   <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300">Daily Goal</h4>
                 </div>
-                <div className="p-2.5 bg-white/50 dark:bg-slate-800/50 rounded-xl border border-purple-100/50 dark:border-purple-800/50">
+                <div className="p-2.5 bg-white/40 dark:bg-slate-900/40 rounded-xl border border-purple-200/50 dark:border-purple-800/40">
                   <Input
                     type="number"
                     min="0"
                     max="20"
                     value={focusGoal}
                     onChange={(e) => setFocusGoal(Number.parseInt(e.target.value) || 0)}
-                    className="bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 h-10 mb-2"
+                    className="bg-white/75 dark:bg-slate-900/60 border-slate-200 dark:border-slate-700 h-10 mb-2 focus:ring-purple-500 focus:border-purple-500 rounded-xl"
                     placeholder="Set daily goal"
                   />
                   <p className="text-xs text-gray-500 dark:text-gray-400">
@@ -824,7 +816,7 @@ export default function PomodoroPage() {
       </div>
 
       {/* Focus Tips & Motivation */}
-      <Card className="bg-gradient-to-br from-white to-indigo-50/30 dark:from-slate-800 dark:to-indigo-900/10 backdrop-blur-sm border border-indigo-100/50 dark:border-indigo-800/50 shadow-lg rounded-2xl">
+      <Card className="bg-white/40 dark:bg-slate-900/40 backdrop-blur-xl border border-white/60 dark:border-slate-700/50 shadow-xl rounded-2xl card-glow-blue">
         <CardHeader className="pb-3">
           <CardTitle className="text-xl font-semibold flex items-center gap-2 text-gray-900 dark:text-gray-100">
             <div className="p-2 bg-indigo-100 dark:bg-indigo-900/30 rounded-xl">
@@ -862,7 +854,7 @@ export default function PomodoroPage() {
       </Card>
 
       {/* Session History */}
-      <Card className="bg-gradient-to-br from-white to-slate-50/30 dark:from-slate-800 dark:to-slate-900/50 backdrop-blur-sm border border-slate-200/50 dark:border-slate-700/50 shadow-lg rounded-2xl">
+      <Card className="bg-white/40 dark:bg-slate-900/40 backdrop-blur-xl border border-white/60 dark:border-slate-700/50 shadow-xl rounded-2xl card-glow-emerald">
         <CardHeader>
           <CardTitle className="text-xl font-semibold text-gray-900 dark:text-gray-100">Recent Sessions</CardTitle>
         </CardHeader>
@@ -899,9 +891,9 @@ export default function PomodoroPage() {
                           {session.duration} min • {new Date(session.startTime).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })}
                         </p>
                       </div>
-                      <Badge className="bg-emerald-500 dark:bg-emerald-600 text-white font-semibold">
-                        ✓
-                      </Badge>
+                      <div className="w-8 h-8 border-2 border-red-600 dark:border-red-500 outline outline-1 outline-red-600 dark:outline-red-500 outline-offset-2 rounded flex items-center justify-center rotate-[-12deg] bg-red-500/5 select-none flex-shrink-0" title="Completed / 済">
+                        <span className="text-red-600 dark:text-red-500 font-serif font-black text-xs leading-none">済</span>
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -930,9 +922,9 @@ export default function PomodoroPage() {
                           {session.duration} min • {new Date(session.startTime).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
                         </p>
                       </div>
-                      <Badge className="bg-blue-500 dark:bg-blue-600 text-white font-semibold">
-                        {session.duration}m
-                      </Badge>
+                      <div className="w-8 h-8 border-2 border-red-600 dark:border-red-500 outline outline-1 outline-red-600 dark:outline-red-500 outline-offset-2 rounded flex items-center justify-center rotate-[-12deg] bg-red-500/5 select-none flex-shrink-0" title="Completed / 済">
+                        <span className="text-red-600 dark:text-red-500 font-serif font-black text-xs leading-none">済</span>
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -943,10 +935,14 @@ export default function PomodoroPage() {
       </Card>
       {/* Zen Mode Overlay */}
       {isZenMode && (
-        <div className="fixed inset-0 z-50 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-emerald-900 via-slate-950 to-black flex flex-col items-center justify-center p-4 animate-in fade-in duration-500">
+        <div className="fixed inset-0 z-50 bg-gradient-to-b from-slate-955 via-emerald-950/20 to-slate-950 flex flex-col items-center justify-center p-4 animate-in fade-in duration-500">
+          <div className="absolute inset-0 washi-overlay pointer-events-none opacity-20" />
+          <SakuraParticles count={15} opacity={0.25} className="absolute inset-0 pointer-events-none" />
+
           {/* Animated Background Elements */}
           <div className="absolute inset-0 overflow-hidden pointer-events-none">
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-emerald-500/5 rounded-full blur-3xl animate-pulse delay-700" />
+            <div className="absolute top-[20%] left-[20%] w-[500px] h-[500px] bg-emerald-500/5 dark:bg-emerald-400/5 rounded-full blur-[120px] animate-pulse-slow" />
+            <div className="absolute bottom-[20%] right-[20%] w-[600px] h-[600px] bg-teal-500/5 dark:bg-teal-400/5 rounded-full blur-[150px] animate-pulse-slow delay-1000" />
           </div>
 
           <Button
@@ -967,7 +963,7 @@ export default function PomodoroPage() {
                 }`} />
 
               <div className="relative flex flex-col items-center justify-center">
-                <span className={`text-7xl sm:text-8xl md:text-[8rem] lg:text-[10rem] xl:text-[12rem] font-thin text-white/90 tabular-nums tracking-tighter leading-none transition-all duration-300 ${isActive ? "scale-105" : "scale-100"}`}>
+                <span className={`text-7xl sm:text-8xl md:text-[8rem] lg:text-[10rem] xl:text-[12rem] font-thin text-white/95 tabular-nums tracking-tighter leading-none transition-all duration-500 ${isActive ? (isBreak ? "drop-shadow-[0_0_40px_rgba(16,185,129,0.3)] scale-105" : "drop-shadow-[0_0_40px_rgba(245,158,11,0.3)] scale-105") : "drop-shadow-[0_0_15px_rgba(255,255,255,0.15)] scale-100"}`}>
                   {formatTime(timeLeft)}
                 </span>
                 <p className="text-sm sm:text-lg md:text-xl text-emerald-400/60 font-medium tracking-[0.2em] uppercase mt-4 animate-pulse">
@@ -976,38 +972,33 @@ export default function PomodoroPage() {
               </div>
             </div>
 
-            {/* Controls are moved inside the minimal player or kept minimal here? 
-                Actually, the minimal player HAS play/pause. We should hide duplicate controls here 
-                if we want the player to be the main controller, BUT the main timer logic is here.
-                Let's KEEP the timer controls minimal below the timer, and let the music player handle music.
-             */}
-
             {/* Minimal Timer Controls */}
-            <div className="flex items-center gap-8">
+            <div className="flex items-center gap-8 z-10">
               {!isActive ? (
                 <Button
                   onClick={handleStart}
                   variant="ghost"
-                  className="text-white/80 hover:text-white hover:bg-white/10 rounded-full w-20 h-20 p-0 flex items-center justify-center border border-white/10 hover:border-emerald-500/50 hover:scale-105 transition-all"
+                  className="text-white/80 hover:text-white hover:bg-emerald-500/10 hover:text-emerald-400 rounded-full w-20 h-20 p-0 flex items-center justify-center border border-white/10 hover:border-emerald-500/40 hover:scale-105 active:scale-95 transition-all duration-300 shadow-md hover:shadow-emerald-500/10"
                 >
-                  <Icons.play className="w-10 h-10 ml-1" />
+                  <Icons.play className="w-8 h-8 ml-1 text-emerald-400" />
                 </Button>
               ) : (
                 <Button
                   onClick={handlePause}
                   variant="ghost"
-                  className="text-white/80 hover:text-white hover:bg-white/10 rounded-full w-20 h-20 p-0 flex items-center justify-center border border-white/10 hover:border-amber-500/50 hover:scale-105 transition-all"
+                  className="text-white/80 hover:text-white hover:bg-amber-500/10 hover:text-amber-400 rounded-full w-20 h-20 p-0 flex items-center justify-center border border-white/10 hover:border-amber-500/40 hover:scale-105 active:scale-95 transition-all duration-300 shadow-md hover:shadow-amber-500/10"
                 >
-                  <Icons.pause className="w-10 h-10" />
+                  <Icons.pause className="w-8 h-8 text-amber-400" />
                 </Button>
               )}
 
               <Button
                 onClick={handleReset}
                 variant="ghost"
-                className="text-white/40 hover:text-white hover:bg-white/10 rounded-full w-14 h-14 p-0 border border-transparent hover:border-white/10"
+                className="text-white/40 hover:text-rose-400 hover:bg-rose-500/10 rounded-full w-14 h-14 p-0 border border-transparent hover:border-rose-500/20 hover:scale-105 active:scale-95 transition-all duration-300"
+                title="Reset Session"
               >
-                <Icons.reset className="w-6 h-6" />
+                <Icons.reset className="w-5 h-5" />
               </Button>
             </div>
 

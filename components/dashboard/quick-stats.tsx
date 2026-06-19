@@ -100,27 +100,27 @@ export function QuickStats() {
         return (
           <Card
             key={index}
-            className={`${colors.bg} border ${colors.border} shadow-sm rounded-2xl hover:scale-105 transition-transform duration-300 group`}
+            className={`${colors.bg} border ${colors.border} shadow-sm rounded-2xl hover:scale-[1.03] hover:shadow-md transition-all duration-300 card-glow-${stat.color} group`}
           >
             <CardContent className="p-3 sm:p-5">
               <div className="flex items-start justify-between mb-3 sm:mb-4">
                 <div className="flex-1 min-w-0">
-                  <p className="text-[10px] sm:text-xs font-medium text-slate-500 dark:text-slate-400 mb-1 tracking-wide uppercase">
+                  <p className="text-[10px] sm:text-xs font-bold text-slate-500 dark:text-slate-400 mb-1 tracking-wide uppercase">
                     {stat.title}
                   </p>
-                  <p className={`text-2xl sm:text-3xl font-bold ${colors.text} mb-1 tracking-tight`}>
+                  <p className={`text-2xl sm:text-3xl font-extrabold ${colors.text} mb-1 tracking-tight`}>
                     {stat.value}
                   </p>
                   <p className="text-[10px] sm:text-xs text-slate-400 dark:text-slate-500 font-medium truncate">
                     {stat.total}
                   </p>
                 </div>
-                <div className={`w-9 h-9 sm:w-12 sm:h-12 ml-2 flex-shrink-0 ${colors.icon} rounded-xl shadow-md flex items-center justify-center group-hover:rotate-6 transition-transform duration-500`}>
+                <div className={`w-9 h-9 sm:w-12 sm:h-12 ml-2 flex-shrink-0 ${colors.icon} rounded-xl shadow-md flex items-center justify-center group-hover:scale-110 group-hover:rotate-6 transition-all duration-500`}>
                   <stat.icon className="w-4 h-4 sm:w-6 sm:h-6 text-white" />
                 </div>
               </div>
               <div className={`h-1.5 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden`}>
-                <div className={`h-full ${colors.progress} rounded-full transition-all duration-500`} style={{ width: `${stat.progress}%` }} />
+                <div className={`h-full ${colors.progress} rounded-full transition-all duration-500 group-hover:animate-pulse`} style={{ width: `${stat.progress}%` }} />
               </div>
             </CardContent>
           </Card>

@@ -24,7 +24,7 @@ export function PomodoroTimer() {
   } = usePomodoro()
 
   return (
-    <Card className="relative overflow-hidden bg-white/60 dark:bg-slate-900/60 backdrop-blur-xl border border-white/40 dark:border-slate-700/50 shadow-xl shadow-emerald-500/5 rounded-2xl">
+    <Card className="relative overflow-hidden bg-white/60 dark:bg-slate-900/60 backdrop-blur-xl border border-white/40 dark:border-slate-700/50 shadow-xl shadow-emerald-500/5 rounded-2xl card-glow-orange">
       {/* Ambient radial glow when active */}
       {isActive && (
         <div
@@ -58,7 +58,7 @@ export function PomodoroTimer() {
 
         {/* Circular Timer */}
         <div className="flex flex-col items-center">
-          <div className="relative w-52 h-52 flex items-center justify-center">
+          <div className={`relative w-52 h-52 flex items-center justify-center transition-all duration-1000 rounded-full ${isActive ? (isBreak ? "animate-breathe-glow-emerald" : "animate-breathe-glow-amber") : ""}`}>
             {/* Slow breathing outer glow */}
             {isActive && (
               <div

@@ -111,39 +111,39 @@ export function TaskList() {
     const CategoryIcon = getCategoryIcon(task.category)
 
     return (
-      <div className="group flex items-start space-x-3 p-4 bg-white/50 dark:bg-slate-900/40 backdrop-blur-md rounded-2xl border border-white/60 dark:border-slate-700/50 hover:bg-white/80 dark:hover:bg-slate-800/80 shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer">
+      <div className="group flex items-start space-x-3 p-4 bg-white/50 dark:bg-slate-900/40 backdrop-blur-md rounded-2xl border border-slate-200/50 dark:border-slate-800/40 hover:border-emerald-300 dark:hover:border-emerald-700/60 hover:bg-white/80 dark:hover:bg-slate-800/80 shadow-sm hover:shadow-md transition-all duration-300 hover:translate-x-1 cursor-pointer">
         <Checkbox
           checked={task.completed}
           onCheckedChange={(checked) => toggleTask(task.id, checked as boolean)}
-          className="mt-1 rounded-md"
+          className="mt-1 rounded-md border-slate-300 dark:border-slate-600 data-[state=checked]:bg-emerald-500 data-[state=checked]:border-emerald-500"
         />
         <div className="flex-1 min-w-0">
           <div className="flex items-start justify-between">
             <div className="flex-1">
               <p
-                className={`font-medium leading-tight ${task.completed ? "line-through text-gray-500" : "text-gray-900"}`}
+                className={`font-medium leading-tight ${task.completed ? "line-through text-slate-400 dark:text-slate-500" : "text-slate-800 dark:text-slate-200"}`}
               >
                 {task.title}
               </p>
               {task.description && (
                 <p
-                  className={`text-sm mt-1 leading-relaxed ${task.completed ? "line-through text-gray-400" : "text-gray-600"}`}
+                  className={`text-xs mt-1.5 leading-relaxed ${task.completed ? "line-through text-slate-400/70" : "text-slate-500 dark:text-slate-400"}`}
                 >
                   {task.description}
                 </p>
               )}
               <div className="flex items-center space-x-2 mt-3">
-                <Badge className={`${getPriorityColor(task.priority)} text-xs px-2 py-1`} variant="outline">
+                <Badge className={`${getPriorityColor(task.priority)} text-[10px] px-2 py-0.5 rounded-lg border`} variant="outline">
                   {task.priority}
                 </Badge>
                 {showCategory && (
-                  <Badge variant="outline" className="text-xs px-2 py-1 bg-blue-50 text-blue-700 border-blue-200">
+                  <Badge variant="outline" className="text-[10px] px-2 py-0.5 rounded-lg bg-blue-50/70 text-blue-700 border-blue-200/50 dark:bg-blue-950/30 dark:text-blue-400 dark:border-blue-900/30">
                     <CategoryIcon className="w-3 h-3 mr-1" />
                     {task.category}
                   </Badge>
                 )}
                 {task.dueDate && (
-                  <Badge variant="outline" className="text-xs px-2 py-1 bg-purple-50 text-purple-700 border-purple-200">
+                  <Badge variant="outline" className="text-[10px] px-2 py-0.5 rounded-lg bg-purple-50/70 text-purple-700 border-purple-200/50 dark:bg-purple-950/30 dark:text-purple-400 dark:border-purple-900/30">
                     <Icons.calendar className="w-3 h-3 mr-1" />
                     {new Date(task.dueDate).toLocaleDateString()}
                   </Badge>
@@ -157,9 +157,9 @@ export function TaskList() {
   }
 
   return (
-    <Card className="flex flex-col h-[500px] sm:h-[600px] bg-white/60 dark:bg-slate-900/60 backdrop-blur-xl border border-white/40 dark:border-slate-700/50 shadow-xl shadow-slate-200/40 dark:shadow-slate-950/40 rounded-3xl overflow-hidden relative group">
+    <Card className="flex flex-col h-[500px] sm:h-[600px] bg-white/60 dark:bg-slate-900/60 backdrop-blur-xl border border-white/40 dark:border-slate-700/50 shadow-xl shadow-slate-200/40 dark:shadow-slate-950/40 rounded-3xl overflow-hidden relative group card-glow-emerald">
       {/* Subtle background glow */}
-      <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-400/10 dark:bg-emerald-500/10 rounded-full blur-3xl -z-10 pointer-events-none group-hover:bg-emerald-400/20 transition-colors duration-1000" />
+      <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-400/5 dark:bg-emerald-500/5 rounded-full blur-3xl -z-10 pointer-events-none group-hover:bg-emerald-400/10 transition-colors duration-1000" />
 
       <CardHeader className="flex flex-row items-center justify-between pb-3 bg-white/40 dark:bg-slate-900/40 backdrop-blur-md border-b border-white/20 dark:border-slate-700/50 z-10 px-6 pt-6">
         <div className="flex items-center gap-2">

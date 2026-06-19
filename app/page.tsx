@@ -2,42 +2,8 @@
 
 import { useState, useEffect, useRef } from "react"
 import { useRouter } from "next/navigation"
+import { SakuraParticles } from "@/components/dashboard/sakura-particles"
 
-// --- Sakura Particle Component ---
-const SakuraParticles = () => {
-    const [petals, setPetals] = useState<any[]>([])
-
-    useEffect(() => {
-        // fewer petals for a lighter, simpler look
-        const petalCount = 6
-        const newPetals = Array.from({ length: petalCount }).map((_, i) => ({
-            id: i,
-            left: `${10 + Math.random() * 80}%`,
-            delay: `${Math.random() * 6}s`,
-            duration: `${8 + Math.random() * 10}s`,
-            size: `${6 + Math.random() * 6}px`,
-        }))
-        setPetals(newPetals)
-    }, [])
-
-    return (
-        <div className="sakura-container overflow-hidden">
-            {petals.map((petal) => (
-                <div
-                    key={petal.id}
-                    className="sakura"
-                    style={{
-                        left: petal.left,
-                        animationDelay: petal.delay,
-                        animationDuration: petal.duration,
-                        width: petal.size,
-                        height: petal.size,
-                    }}
-                />
-            ))}
-        </div>
-    )
-}
 
 export default function HomePage() {
     const router = useRouter()

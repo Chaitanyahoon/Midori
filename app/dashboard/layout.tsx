@@ -13,6 +13,8 @@ import { ErrorBoundary } from "@/components/error-boundary"
 import { useAuth } from "@/components/auth-provider"
 import { useUIStore } from "@/lib/store"
 import { Icons } from "@/components/icons"
+import { SakuraParticles } from "@/components/dashboard/sakura-particles"
+
 
 function DashboardContent({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth()
@@ -46,6 +48,8 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
       <div className="min-h-screen bg-slate-50 dark:bg-slate-900 flex relative">
         {/* Washi Texture Overlay */}
         <div className="washi-overlay pointer-events-none" />
+        {/* Floating Sakura Particles in background with subtle opacity (12%) */}
+        <SakuraParticles count={8} opacity={0.12} className="opacity-15 dark:opacity-[0.08]" />
         {/* ── Desktop Sidebar (always visible ≥ lg) ── */}
         <div className="hidden lg:flex flex-shrink-0">
           <Sidebar />

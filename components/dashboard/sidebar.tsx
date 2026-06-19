@@ -44,7 +44,12 @@ export function Sidebar({ onClose }: SidebarProps) {
           <div className="absolute top-0 left-0 w-full h-32 bg-gradient-to-br from-emerald-500/10 to-amber-500/10 rounded-b-[3rem] -z-10" aria-hidden="true" />
 
           <div className="flex items-center justify-between mb-6 animate-bloom">
-            <MidoriLogo size="lg" />
+            <div className="flex items-center gap-3">
+              <MidoriLogo size="lg" />
+              <div className="hanko-seal select-none flex-shrink-0 cursor-default" title="Midori / 緑">
+                <span className="text-red-700 dark:text-red-500 font-serif font-black text-sm">緑</span>
+              </div>
+            </div>
             {/* Mobile close button */}
             {onClose && (
               <button
@@ -83,7 +88,7 @@ export function Sidebar({ onClose }: SidebarProps) {
                 )}
 
                 <item.icon className={cn(
-                  "w-5 h-5 transition-colors",
+                  "w-5 h-5 transition-all duration-300 group-hover:scale-110",
                   isActive ? "text-emerald-600 dark:text-emerald-400" : "text-slate-400 dark:text-slate-500 group-hover:text-emerald-500"
                 )} />
                 <div className="flex-1 flex items-baseline gap-2">
@@ -104,19 +109,24 @@ export function Sidebar({ onClose }: SidebarProps) {
         {/* Footer / User Settings */}
         <div className="p-5 mt-auto space-y-6">
           {/* Weekly Growth Card */}
-          <div className="bg-gradient-to-br from-amber-50 to-orange-50 dark:from-emerald-900/20 dark:to-teal-900/20 rounded-2xl p-4 border border-amber-100 dark:border-emerald-800/30 text-center relative overflow-hidden group">
+          <div className="bg-gradient-to-br from-amber-50 to-orange-50 dark:from-emerald-900/20 dark:to-teal-900/20 rounded-2xl p-4 border border-amber-100 dark:border-emerald-800/30 text-center relative overflow-hidden group shadow-sm hover:shadow transition-shadow">
             <div className="absolute -top-6 -right-6 w-12 h-12 bg-amber-400/20 rounded-full blur-xl group-hover:scale-150 transition-transform duration-700" aria-hidden="true" />
             <h3 className="text-sm font-semibold text-amber-800 dark:text-emerald-100 mb-1">Weekly Growth</h3>
             <p className="text-xs text-amber-600/80 dark:text-emerald-300/70 mb-3 italic">
               Ganbatte! / <span className="font-jp">頑張って!</span> ✨
             </p>
-            <div className="h-1.5 w-full bg-amber-100 dark:bg-emerald-900/50 rounded-full overflow-hidden mb-1">
+            <div className="h-1.5 w-full bg-amber-100 dark:bg-emerald-900/50 rounded-full overflow-hidden mb-1.5">
               <div 
                 className="h-full bg-gradient-to-r from-amber-400 to-orange-400 transition-all duration-500 ease-out" 
                 style={{ width: `${growthPercentage}%` }}
               />
             </div>
-            <span className="text-[10px] font-bold text-amber-700 dark:text-emerald-300">{growthPercentage}% Completed</span>
+            <div className="flex items-center justify-center gap-1.5 mt-1">
+              <span className="text-[10px] font-bold text-amber-700 dark:text-emerald-300">{growthPercentage}% Completed</span>
+              {growthPercentage >= 100 && (
+                <span className="inline-block text-[8px] font-black border border-red-500 text-red-500 rounded px-1 scale-90 rotate-[-5deg] font-serif bg-red-500/5" title="Completed / 済">済</span>
+              )}
+            </div>
           </div>
 
           {/* User & Settings */}

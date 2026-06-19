@@ -130,7 +130,20 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (!uid) { setLoading(false); return }
     if (!db) {
-      console.error("[DataProvider] Firestore `db` is null — Firebase may not have initialized. Check NEXT_PUBLIC_FIREBASE_* env vars.")
+      console.warn("[DataProvider] Firestore `db` is null — Falling back to localStorage.")
+      try {
+        const storedTasks = localStorage.getItem(`midori_tasks_${uid}`)
+        const storedPomodoros = localStorage.getItem(`midori_pomodoros_${uid}`)
+        const storedSettings = localStorage.getItem(`midori_settings_${uid}`)
+        const storedCustomTracks = localStorage.getItem(`midori_customTracks_${uid}`)
+
+        if (storedTasks) setTasks(JSON.parse(storedTasks))
+        if (storedPomodoros) setPomodoros(JSON.parse(storedPomodoros))
+        if (storedSettings) setSettings(JSON.parse(storedSettings))
+        if (storedCustomTracks) setCustomTracks(JSON.parse(storedCustomTracks))
+      } catch (err) {
+        console.error("[DataProvider] Failed to load from localStorage:", err)
+      }
       setLoading(false)
       return
     }
@@ -147,7 +160,9 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
 
     // Tasks
     unsubs.push(onSnapshot(collection(db, "users", uid, "tasks"), (snap) => {
-      setTasks(snap.docs.map(d => ({ id: d.id, ...d.data() } as Task)))
+      const list = snap.docs.map(d => ({ id: d.id, ...d.data() } as Task))
+      setTasks(list)
+      try { localStorage.setItem(`midori_tasks_${uid}`, JSON.stringify(list)) } catch (e) {}
       checkAllLoaded()
     }, (error) => {
       console.error("[DataProvider] Tasks listener error:", error.code, error.message)
@@ -156,7 +171,9 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
 
     // Pomodoros
     unsubs.push(onSnapshot(collection(db, "users", uid, "pomodoros"), (snap) => {
-      setPomodoros(snap.docs.map(d => ({ id: d.id, ...d.data() } as PomodoroSession)))
+      const list = snap.docs.map(d => ({ id: d.id, ...d.data() } as PomodoroSession))
+      setPomodoros(list)
+      try { localStorage.setItem(`midori_pomodoros_${uid}`, JSON.stringify(list)) } catch (e) {}
       checkAllLoaded()
     }, (error) => {
       console.error("[DataProvider] Pomodoros listener error:", error.code, error.message)
@@ -166,7 +183,9 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     // Settings (single doc)
     unsubs.push(onSnapshot(doc(db, "users", uid, "meta", "settings"), (snap) => {
       if (snap.exists()) {
-        setSettings({ ...DEFAULT_SETTINGS, ...snap.data() as UserSettings })
+        const data = { ...DEFAULT_SETTINGS, ...snap.data() as UserSettings }
+        setSettings(data)
+        try { localStorage.setItem(`midori_settings_${uid}`, JSON.stringify(data)) } catch (e) {}
       }
       checkAllLoaded()
     }, (error) => {
@@ -176,7 +195,9 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
 
     // Custom tracks
     unsubs.push(onSnapshot(collection(db, "users", uid, "customTracks"), (snap) => {
-      setCustomTracks(snap.docs.map(d => ({ id: d.id, ...d.data() } as CustomTrack)))
+      const list = snap.docs.map(d => ({ id: d.id, ...d.data() } as CustomTrack))
+      setCustomTracks(list)
+      try { localStorage.setItem(`midori_customTracks_${uid}`, JSON.stringify(list)) } catch (e) {}
       checkAllLoaded()
     }, (error) => {
       console.error("[DataProvider] CustomTracks listener error:", error.code, error.message)
@@ -212,6 +233,22 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
 
   const addTask = useCallback(async (taskData: Omit<Task, "id" | "createdAt">) => {
     if (!uid) return
+    const newTask = {
+      ...taskData,
+      id: Math.random().toString(36).substring(7),
+      createdAt: new Date().toISOString(),
+    }
+    const applyLocalAdd = () => {
+      setTasks(prev => {
+        const next = [...prev, newTask]
+        try { localStorage.setItem(`midori_tasks_${uid}`, JSON.stringify(next)) } catch (e) {}
+        return next
+      })
+    }
+    if (!db) {
+      applyLocalAdd()
+      return
+    }
     try {
       await addDoc(collection(db, "users", uid, "tasks"), {
         ...taskData,
@@ -219,11 +256,23 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
       })
     } catch (e) {
       console.error("Failed to add task:", e)
+      applyLocalAdd()
     }
   }, [uid])
 
   const updateTask = useCallback(async (id: string, updates: Partial<Task>) => {
     if (!uid) return
+    const applyLocalUpdate = () => {
+      setTasks(prev => {
+        const next = prev.map(t => t.id === id ? { ...t, ...updates } : t)
+        try { localStorage.setItem(`midori_tasks_${uid}`, JSON.stringify(next)) } catch (e) {}
+        return next
+      })
+    }
+    if (!db) {
+      applyLocalUpdate()
+      return
+    }
     try {
       const ref = doc(db, "users", uid, "tasks", id)
       const extra: Partial<Task> = {}
@@ -245,27 +294,66 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
                  })
               }
 
-              return { ...prev, sunlight: newSunlight }
+              const nextSettings = { ...prev, sunlight: newSunlight }
+              try { localStorage.setItem(`midori_settings_${uid}`, JSON.stringify(nextSettings)) } catch (e) {}
+              return nextSettings
           })
       }
       if (updates.completed === false) extra.completedAt = undefined
       await updateDoc(ref, { ...updates, ...extra })
     } catch (e) {
       console.error("Failed to update task:", e)
+      applyLocalUpdate()
     }
   }, [uid])
 
   const deleteTask = useCallback(async (id: string) => {
     if (!uid) return
+    const applyLocalDelete = () => {
+      setTasks(prev => {
+        const next = prev.filter(t => t.id !== id)
+        try { localStorage.setItem(`midori_tasks_${uid}`, JSON.stringify(next)) } catch (e) {}
+        return next
+      })
+    }
+    if (!db) {
+      applyLocalDelete()
+      return
+    }
     try {
       await deleteDoc(doc(db, "users", uid, "tasks", id))
     } catch (e) {
       console.error("Failed to delete task:", e)
+      applyLocalDelete()
     }
   }, [uid])
 
   const addPomodoro = useCallback(async (pomodoroData: Omit<PomodoroSession, "id">) => {
     if (!uid) return
+    const newSession = {
+      ...pomodoroData,
+      id: Math.random().toString(36).substring(7),
+    }
+    const applyLocalAdd = () => {
+      setPomodoros(prev => {
+        const next = [...prev, newSession]
+        try { localStorage.setItem(`midori_pomodoros_${uid}`, JSON.stringify(next)) } catch (e) {}
+        return next
+      })
+      if (pomodoroData.completed) {
+        setSettings(prev => {
+          const earned = Math.floor(pomodoroData.duration / 60) || 1
+          const newWaterdrops = (prev.waterdrops || 0) + earned
+          const nextSettings = { ...prev, waterdrops: newWaterdrops }
+          try { localStorage.setItem(`midori_settings_${uid}`, JSON.stringify(nextSettings)) } catch (e) {}
+          return nextSettings
+        })
+      }
+    }
+    if (!db) {
+      applyLocalAdd()
+      return
+    }
     try {
       await addDoc(collection(db, "users", uid, "pomodoros"), pomodoroData)
       
@@ -288,16 +376,30 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
               })
           }
            
-          return { ...prev, waterdrops: newWaterdrops }
+          const nextSettings = { ...prev, waterdrops: newWaterdrops }
+          try { localStorage.setItem(`midori_settings_${uid}`, JSON.stringify(nextSettings)) } catch (e) {}
+          return nextSettings
         })
       }
     } catch (e) {
       console.error("Failed to add pomodoro:", e)
+      applyLocalAdd()
     }
   }, [uid])
 
   const updateSettings = useCallback(async (updates: Partial<UserSettings>) => {
     if (!uid) return
+    const applyLocalSettings = () => {
+      setSettings(prev => {
+        const next = { ...prev, ...updates }
+        try { localStorage.setItem(`midori_settings_${uid}`, JSON.stringify(next)) } catch (e) {}
+        return next
+      })
+    }
+    if (!db) {
+      applyLocalSettings()
+      return
+    }
     try {
       const ref = doc(db, "users", uid, "meta", "settings")
       const snap = await getDoc(ref)
@@ -306,9 +408,14 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
       } else {
         await setDoc(ref, { ...DEFAULT_SETTINGS, ...updates })
       }
-      setSettings(prev => ({ ...prev, ...updates }))
+      setSettings(prev => {
+        const next = { ...prev, ...updates }
+        try { localStorage.setItem(`midori_settings_${uid}`, JSON.stringify(next)) } catch (e) {}
+        return next
+      })
     } catch (e) {
       console.error("Failed to update settings:", e)
+      applyLocalSettings()
     }
   }, [uid])
 

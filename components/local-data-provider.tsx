@@ -129,6 +129,11 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
   // Real-time listeners for Firestore collections
   useEffect(() => {
     if (!uid) { setLoading(false); return }
+    if (!db) {
+      console.error("[DataProvider] Firestore `db` is null — Firebase may not have initialized. Check NEXT_PUBLIC_FIREBASE_* env vars.")
+      setLoading(false)
+      return
+    }
     setLoading(true)
 
     const unsubs: (() => void)[] = []
@@ -144,13 +149,19 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     unsubs.push(onSnapshot(collection(db, "users", uid, "tasks"), (snap) => {
       setTasks(snap.docs.map(d => ({ id: d.id, ...d.data() } as Task)))
       checkAllLoaded()
-    }, () => checkAllLoaded()))
+    }, (error) => {
+      console.error("[DataProvider] Tasks listener error:", error.code, error.message)
+      checkAllLoaded()
+    }))
 
     // Pomodoros
     unsubs.push(onSnapshot(collection(db, "users", uid, "pomodoros"), (snap) => {
       setPomodoros(snap.docs.map(d => ({ id: d.id, ...d.data() } as PomodoroSession)))
       checkAllLoaded()
-    }, () => checkAllLoaded()))
+    }, (error) => {
+      console.error("[DataProvider] Pomodoros listener error:", error.code, error.message)
+      checkAllLoaded()
+    }))
 
     // Settings (single doc)
     unsubs.push(onSnapshot(doc(db, "users", uid, "meta", "settings"), (snap) => {
@@ -158,13 +169,19 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
         setSettings({ ...DEFAULT_SETTINGS, ...snap.data() as UserSettings })
       }
       checkAllLoaded()
-    }, () => checkAllLoaded()))
+    }, (error) => {
+      console.error("[DataProvider] Settings listener error:", error.code, error.message)
+      checkAllLoaded()
+    }))
 
     // Custom tracks
     unsubs.push(onSnapshot(collection(db, "users", uid, "customTracks"), (snap) => {
       setCustomTracks(snap.docs.map(d => ({ id: d.id, ...d.data() } as CustomTrack)))
       checkAllLoaded()
-    }, () => checkAllLoaded()))
+    }, (error) => {
+      console.error("[DataProvider] CustomTracks listener error:", error.code, error.message)
+      checkAllLoaded()
+    }))
 
     return () => unsubs.forEach(u => u())
   }, [uid])

@@ -18,6 +18,15 @@ if (typeof window !== "undefined") {
         appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
     }
 
+    // Diagnostic: log which config keys are present vs missing
+    const missing = Object.entries(firebaseConfig)
+        .filter(([, v]) => !v)
+        .map(([k]) => k)
+    if (missing.length > 0) {
+        console.warn("[Firebase] Missing config keys:", missing.join(", "),
+            "— Firestore reads will fail. Ensure NEXT_PUBLIC_FIREBASE_* env vars are set in Vercel.")
+    }
+
     try {
         app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0]
         auth = getAuth(app)
@@ -36,3 +45,4 @@ if (typeof window !== "undefined") {
 
 export { auth, db }
 export default app
+

@@ -49,6 +49,7 @@ export function VisualGarden({ onAddPlant }: { onAddPlant?: () => void }) {
     const assets = useRef<Record<string, HTMLImageElement>>({})
     const [loaded, setLoaded] = useState(false)
     const mTimeRef = useRef(mTime)
+    const isDragging = useRef(false)
 
     const NURSERY_ITEMS = [
         { id: "sakura", name: "Sakura Tree", type: "tree", costSunlight: 100, costWater: 20, icon: "🌸", desc: "A beautiful cherry blossom." },
@@ -607,10 +608,15 @@ export function VisualGarden({ onAddPlant }: { onAddPlant?: () => void }) {
     const handlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
         if (!cont.current) return
         const rect = cont.current.getBoundingClientRect()
-        const x = (e.clientX - rect.left) / rect.width
-        const y = (e.clientY - rect.top) / rect.height
+        const clickX = e.clientX - rect.left
+        const clickY = e.clientY - rect.top
+        const x = clickX / rect.width
+        const y = clickY / rect.height
 
         if (plantToPlace) {
+            // Constrain placement y to ground zone [0.48, 0.92]
+            const constrainedY = Math.max(0.48, Math.min(0.92, y))
+            
             // Check affordability at placement time
             if (gardenView === "shared") {
                 const currentSun = sharedGarden?.sunlightPool || 0
@@ -623,7 +629,7 @@ export function VisualGarden({ onAddPlant }: { onAddPlant?: () => void }) {
                         id: Date.now().toString(),
                         type: plantToPlace.type,
                         subtype: plantToPlace.id,
-                        x, y,
+                        x, y: constrainedY,
                         scale: plantToPlace.type === 'tree' ? 0.75 : 0.5
                     }
                     const currentPlants = sharedGarden?.plants || []
@@ -647,7 +653,7 @@ export function VisualGarden({ onAddPlant }: { onAddPlant?: () => void }) {
                         id: Date.now().toString(),
                         type: plantToPlace.type,
                         subtype: plantToPlace.id,
-                        x, y,
+                        x, y: constrainedY,
                         scale: plantToPlace.type === 'tree' ? 0.75 : 0.5
                     }
                     const currentPlants = settings?.gardenPlants || []
@@ -663,18 +669,70 @@ export function VisualGarden({ onAddPlant }: { onAddPlant?: () => void }) {
         }
 
         if (editMode) {
+            if (!cvs.current) return
+            const W = rect.width
+            const H = rect.height
+            
             // Select existing plant
             for (let i = plants.length - 1; i >= 0; i--) {
                 const p = plants[i]
                 if (!p.id) continue
-                const dx = p.x - x; const dy = p.y - y; const dist = Math.sqrt(dx * dx + dy * dy)
-                const threshold = p.type === 'tree' ? 0.1 : 0.05
+                
+                const px = p.x * W
+                const py = p.y * H
+                const size = p.type === 'tree' ? 180 : 85
+                const scale = p.scale * p.growth
+                const sz = size * scale
+                
+                // Plant center in pixels
+                const centerX = px
+                const centerY = py - sz / 2
+                
+                // Distance in pixels
+                const dx = clickX - centerX
+                const dy = clickY - centerY
+                const dist = Math.sqrt(dx * dx + dy * dy)
+                
+                // Click target threshold: half size + comfort padding
+                const threshold = sz / 2 + 16
+                
                 if (dist < threshold) {
                     setSelectedPlantId(p.id)
+                    isDragging.current = true
                     return
                 }
             }
             setSelectedPlantId(null)
+            isDragging.current = false
+        }
+    }
+
+    const handlePointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
+        if (!editMode || !isDragging.current || !selectedPlantId || !cont.current) return
+        
+        const rect = cont.current.getBoundingClientRect()
+        const clickX = e.clientX - rect.left
+        const clickY = e.clientY - rect.top
+        
+        let x = clickX / rect.width
+        let y = clickY / rect.height
+        
+        x = Math.max(0.02, Math.min(0.98, x))
+        y = Math.max(0.48, Math.min(0.92, y))
+        
+        setPlants(prev => {
+            const updated = prev.map(p => p.id === selectedPlantId ? { ...p, x, y } : p)
+            return updated.sort((a, b) => a.y - b.y)
+        })
+    }
+
+    const handlePointerUp = () => {
+        if (isDragging.current && selectedPlantId) {
+            isDragging.current = false
+            const draggedPlant = pRef.current.find(p => p.id === selectedPlantId)
+            if (draggedPlant) {
+                updateSelectedPlant({ x: draggedPlant.x, y: draggedPlant.y })
+            }
         }
     }
 
@@ -871,7 +929,14 @@ export function VisualGarden({ onAddPlant }: { onAddPlant?: () => void }) {
             )}
 
             <div className="w-full relative bg-slate-50 dark:bg-slate-900 transition-colors duration-700 flex-1 overflow-x-auto overflow-y-hidden custom-scrollbar">
-                <div ref={cont} onPointerDown={handlePointerDown} className={`min-w-[800px] w-full h-72 sm:h-96 relative ${plantToPlace ? 'cursor-crosshair' : editMode ? 'cursor-pointer' : ''}`}>
+                <div 
+                    ref={cont} 
+                    onPointerDown={handlePointerDown} 
+                    onPointerMove={handlePointerMove}
+                    onPointerUp={handlePointerUp}
+                    onPointerLeave={handlePointerUp}
+                    className={`min-w-[800px] w-full h-72 sm:h-96 relative ${plantToPlace ? 'cursor-crosshair' : editMode ? 'cursor-move' : ''}`}
+                >
                     <canvas ref={cvs} className="w-full h-full block" />
                     
                     {editMode && selectedPlantId && (() => {

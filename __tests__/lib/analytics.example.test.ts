@@ -126,9 +126,9 @@ describe('Analytics Functions', () => {
   describe('calculateProductivityScore', () => {
     it('should calculate productivity score 0-100', () => {
       const dailyStats = [
-        { ...new mock DailyStats(), completionRate: 100 },
-        { ...new mock DailyStats(), completionRate: 80 },
-        { ...new mock DailyStats(), completionRate: 60 },
+        { date: '2024-01-15', tasksCompleted: 2, focusMinutes: 50, focusSessions: 2, completionRate: 100 },
+        { date: '2024-01-14', tasksCompleted: 1, focusMinutes: 25, focusSessions: 1, completionRate: 80 },
+        { date: '2024-01-13', tasksCompleted: 1, focusMinutes: 25, focusSessions: 1, completionRate: 60 },
       ]
 
       const streak = { current: 5, longest: 10, lastActiveDate: '2024-01-15', isActiveToday: true, nextMilestone: 10 }

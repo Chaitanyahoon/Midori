@@ -78,7 +78,6 @@ export async function POST(request: Request) {
     if (!apiKey) {
       throw new Error("GEMINI_API_KEY is not defined in environment variables");
     }
-    console.log("[Growth AI] Initializing with key prefix:", apiKey.substring(0, 8) + "...");
     const ai = new GoogleGenAI({ apiKey });
 
     if (intent === "schedule") {

@@ -150,6 +150,26 @@ body {
 }
 .animate-float { animation: float 5s ease-in-out infinite; }
 
+@media (prefers-reduced-motion: reduce) {
+  .animate-float,
+  .animate-bloom,
+  .animate-fade-in,
+  .animate-pulse-slow,
+  .animate-pulse-slow,
+  .animate-leaf-float,
+  .animate-grow-in,
+  .animate-pulse,
+  .pulse-subtle,
+  .sakura,
+  [class*="animate-"] {
+    animation: none !important;
+    transition: none !important;
+  }
+  html {
+    scroll-behavior: auto;
+  }
+}
+
 @keyframes bloom {
   0% { transform: scale(0.95); opacity: 0; }
   100% { transform: scale(1); opacity: 1; }

@@ -132,30 +132,40 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     setLoading(true)
 
     const unsubs: (() => void)[] = []
+    let loadedCount = 0
+    const totalListeners = 4
+
+    const checkAllLoaded = () => {
+      loadedCount++
+      if (loadedCount >= totalListeners) setLoading(false)
+    }
 
     // Tasks
     unsubs.push(onSnapshot(collection(db, "users", uid, "tasks"), (snap) => {
       setTasks(snap.docs.map(d => ({ id: d.id, ...d.data() } as Task)))
-    }))
+      checkAllLoaded()
+    }, () => checkAllLoaded()))
 
     // Pomodoros
     unsubs.push(onSnapshot(collection(db, "users", uid, "pomodoros"), (snap) => {
       setPomodoros(snap.docs.map(d => ({ id: d.id, ...d.data() } as PomodoroSession)))
-    }))
+      checkAllLoaded()
+    }, () => checkAllLoaded()))
 
     // Settings (single doc)
     unsubs.push(onSnapshot(doc(db, "users", uid, "meta", "settings"), (snap) => {
       if (snap.exists()) {
         setSettings({ ...DEFAULT_SETTINGS, ...snap.data() as UserSettings })
       }
-    }))
+      checkAllLoaded()
+    }, () => checkAllLoaded()))
 
     // Custom tracks
     unsubs.push(onSnapshot(collection(db, "users", uid, "customTracks"), (snap) => {
       setCustomTracks(snap.docs.map(d => ({ id: d.id, ...d.data() } as CustomTrack)))
-    }))
+      checkAllLoaded()
+    }, () => checkAllLoaded()))
 
-    setLoading(false)
     return () => unsubs.forEach(u => u())
   }, [uid])
 
@@ -185,97 +195,125 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
 
   const addTask = useCallback(async (taskData: Omit<Task, "id" | "createdAt">) => {
     if (!uid) return
-    await addDoc(collection(db, "users", uid, "tasks"), {
-      ...taskData,
-      createdAt: new Date().toISOString(),
-    })
+    try {
+      await addDoc(collection(db, "users", uid, "tasks"), {
+        ...taskData,
+        createdAt: new Date().toISOString(),
+      })
+    } catch (e) {
+      console.error("Failed to add task:", e)
+    }
   }, [uid])
 
   const updateTask = useCallback(async (id: string, updates: Partial<Task>) => {
     if (!uid) return
-    const ref = doc(db, "users", uid, "tasks", id)
-    const extra: Partial<Task> = {}
-    if (updates.completed === true) {
-        extra.completedAt = new Date().toISOString()
-        setSettings(prev => {
-            const newSunlight = (prev.sunlight || 0) + 10
-            updateDoc(doc(db, "users", uid, "meta", "settings"), { sunlight: newSunlight }).catch(() => {})
-            
-            // Pool sunlight for shared garden
-            if (prev.activeSharedGardenId) {
-               getDoc(doc(db, "shared_gardens", prev.activeSharedGardenId)).then(snap => {
-                 if (snap.exists()) {
-                   const gData = snap.data()
-                   updateDoc(doc(db, "shared_gardens", prev.activeSharedGardenId!), {
-                     sunlightPool: (gData.sunlightPool || 0) + 5
-                   })
-                 }
-               })
-            }
+    try {
+      const ref = doc(db, "users", uid, "tasks", id)
+      const extra: Partial<Task> = {}
+      if (updates.completed === true) {
+          extra.completedAt = new Date().toISOString()
+          setSettings(prev => {
+              const newSunlight = (prev.sunlight || 0) + 10
+              updateDoc(doc(db, "users", uid, "meta", "settings"), { sunlight: newSunlight }).catch(() => {})
+              
+              // Pool sunlight for shared garden
+              if (prev.activeSharedGardenId) {
+                 getDoc(doc(db, "shared_gardens", prev.activeSharedGardenId)).then(snap => {
+                   if (snap.exists()) {
+                     const gData = snap.data()
+                     updateDoc(doc(db, "shared_gardens", prev.activeSharedGardenId!), {
+                       sunlightPool: (gData.sunlightPool || 0) + 5
+                     })
+                   }
+                 })
+              }
 
-            return { ...prev, sunlight: newSunlight }
-        })
+              return { ...prev, sunlight: newSunlight }
+          })
+      }
+      if (updates.completed === false) extra.completedAt = undefined
+      await updateDoc(ref, { ...updates, ...extra })
+    } catch (e) {
+      console.error("Failed to update task:", e)
     }
-    if (updates.completed === false) extra.completedAt = undefined
-    await updateDoc(ref, { ...updates, ...extra })
   }, [uid])
 
   const deleteTask = useCallback(async (id: string) => {
     if (!uid) return
-    await deleteDoc(doc(db, "users", uid, "tasks", id))
+    try {
+      await deleteDoc(doc(db, "users", uid, "tasks", id))
+    } catch (e) {
+      console.error("Failed to delete task:", e)
+    }
   }, [uid])
 
   const addPomodoro = useCallback(async (pomodoroData: Omit<PomodoroSession, "id">) => {
     if (!uid) return
-    await addDoc(collection(db, "users", uid, "pomodoros"), pomodoroData)
-    
-    // Award waterdrops if completed
-    if (pomodoroData.completed) {
-      setSettings(prev => {
-        const earned = Math.floor(pomodoroData.duration / 60) || 1
-        const newWaterdrops = (prev.waterdrops || 0) + earned
-        updateDoc(doc(db, "users", uid, "meta", "settings"), { waterdrops: newWaterdrops }).catch(() => {})
-        
-        // Pool water for shared garden
-        if (prev.activeSharedGardenId) {
-            getDoc(doc(db, "shared_gardens", prev.activeSharedGardenId)).then(snap => {
-              if (snap.exists()) {
-                const gData = snap.data()
-                updateDoc(doc(db, "shared_gardens", prev.activeSharedGardenId!), {
-                  waterPool: (gData.waterPool || 0) + earned
-                })
-              }
-            })
-        }
-         
-        return { ...prev, waterdrops: newWaterdrops }
-      })
+    try {
+      await addDoc(collection(db, "users", uid, "pomodoros"), pomodoroData)
+      
+      // Award waterdrops if completed
+      if (pomodoroData.completed) {
+        setSettings(prev => {
+          const earned = Math.floor(pomodoroData.duration / 60) || 1
+          const newWaterdrops = (prev.waterdrops || 0) + earned
+          updateDoc(doc(db, "users", uid, "meta", "settings"), { waterdrops: newWaterdrops }).catch(() => {})
+          
+          // Pool water for shared garden
+          if (prev.activeSharedGardenId) {
+              getDoc(doc(db, "shared_gardens", prev.activeSharedGardenId)).then(snap => {
+                if (snap.exists()) {
+                  const gData = snap.data()
+                  updateDoc(doc(db, "shared_gardens", prev.activeSharedGardenId!), {
+                    waterPool: (gData.waterPool || 0) + earned
+                  })
+                }
+              })
+          }
+           
+          return { ...prev, waterdrops: newWaterdrops }
+        })
+      }
+    } catch (e) {
+      console.error("Failed to add pomodoro:", e)
     }
   }, [uid])
 
   const updateSettings = useCallback(async (updates: Partial<UserSettings>) => {
     if (!uid) return
-    const ref = doc(db, "users", uid, "meta", "settings")
-    const snap = await getDoc(ref)
-    if (snap.exists()) {
-      await updateDoc(ref, updates)
-    } else {
-      await setDoc(ref, { ...DEFAULT_SETTINGS, ...updates })
+    try {
+      const ref = doc(db, "users", uid, "meta", "settings")
+      const snap = await getDoc(ref)
+      if (snap.exists()) {
+        await updateDoc(ref, updates)
+      } else {
+        await setDoc(ref, { ...DEFAULT_SETTINGS, ...updates })
+      }
+      setSettings(prev => ({ ...prev, ...updates }))
+    } catch (e) {
+      console.error("Failed to update settings:", e)
     }
-    setSettings(prev => ({ ...prev, ...updates }))
   }, [uid])
 
   const addCustomTrack = useCallback(async (trackData: Omit<CustomTrack, "id" | "addedAt">) => {
     if (!uid) return
-    await addDoc(collection(db, "users", uid, "customTracks"), {
-      ...trackData,
-      addedAt: new Date().toISOString(),
-    })
+    try {
+      await addDoc(collection(db, "users", uid, "customTracks"), {
+        ...trackData,
+        addedAt: new Date().toISOString(),
+      })
+    } catch (e) {
+      console.error("Failed to add custom track:", e)
+    }
   }, [uid])
 
   const removeCustomTrack = useCallback(async (id: string) => {
     if (!uid) return
-    await deleteDoc(doc(db, "users", uid, "customTracks", id))
+    try {
+      await deleteDoc(doc(db, "users", uid, "customTracks", id))
+    } catch (e) {
+      console.error("Failed to remove custom track:", e)
+    }
   }, [uid])
 
   const updateSharedGarden = useCallback(async (updates: Partial<SharedGarden>) => {

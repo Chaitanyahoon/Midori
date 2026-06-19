@@ -36,7 +36,7 @@ export function Sidebar({ onClose }: SidebarProps) {
         {/* Header */}
         <div className="p-6 relative overflow-hidden">
           {/* Background Decoration */}
-          <div className="absolute top-0 left-0 w-full h-32 bg-gradient-to-br from-emerald-500/10 to-amber-500/10 rounded-b-[3rem] -z-10" />
+          <div className="absolute top-0 left-0 w-full h-32 bg-gradient-to-br from-emerald-500/10 to-amber-500/10 rounded-b-[3rem] -z-10" aria-hidden="true" />
 
           <div className="flex items-center justify-between mb-6 animate-bloom">
             <MidoriLogo size="lg" />
@@ -64,6 +64,7 @@ export function Sidebar({ onClose }: SidebarProps) {
               <Link
                 key={item.name}
                 href={item.href}
+                aria-current={isActive ? "page" : undefined}
                 className={cn(
                   "group flex items-center space-x-3 px-4 py-3 rounded-xl transition-all duration-300 relative overflow-hidden",
                   isActive
@@ -99,7 +100,7 @@ export function Sidebar({ onClose }: SidebarProps) {
         <div className="p-5 mt-auto space-y-6">
           {/* Weekly Growth Card */}
           <div className="bg-gradient-to-br from-amber-50 to-orange-50 dark:from-emerald-900/20 dark:to-teal-900/20 rounded-2xl p-4 border border-amber-100 dark:border-emerald-800/30 text-center relative overflow-hidden group">
-            <div className="absolute -top-6 -right-6 w-12 h-12 bg-amber-400/20 rounded-full blur-xl group-hover:scale-150 transition-transform duration-700" />
+            <div className="absolute -top-6 -right-6 w-12 h-12 bg-amber-400/20 rounded-full blur-xl group-hover:scale-150 transition-transform duration-700" aria-hidden="true" />
             <h3 className="text-sm font-semibold text-amber-800 dark:text-emerald-100 mb-1">Weekly Growth</h3>
             <p className="text-xs text-amber-600/80 dark:text-emerald-300/70 mb-3 italic">
               Ganbatte! / <span className="font-jp">頑張って!</span> ✨

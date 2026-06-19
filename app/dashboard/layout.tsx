@@ -8,6 +8,7 @@ import { Sidebar } from "@/components/dashboard/sidebar"
 import { TopNav } from "@/components/dashboard/top-nav"
 import { PlantAIAssistant } from "@/components/dashboard/plant-ai-assistant"
 import { AmbientPlayer } from "@/components/dashboard/ambient-player"
+import { OfflineIndicator } from "@/components/offline-indicator"
 import { ErrorBoundary } from "@/components/error-boundary"
 import { useAuth } from "@/components/auth-provider"
 import { useUIStore } from "@/lib/store"
@@ -89,6 +90,7 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
               <a
                 key={item.href}
                 href={item.href}
+                aria-current={isActive ? "page" : undefined}
                 className={`flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-xl transition-all touch-manipulation active:scale-95 ${isActive
                     ? "text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/30"
                     : "text-slate-400 dark:text-slate-500 hover:text-emerald-500 dark:hover:text-emerald-400"
@@ -102,6 +104,7 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
         </nav>
 
         <AmbientPlayer />
+        <OfflineIndicator />
         <PlantAIAssistant />
       </div>
     </DataProvider>

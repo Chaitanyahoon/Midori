@@ -165,7 +165,6 @@ export class SyncQueue {
     queue.push(queuedChange)
     this.cache.set(STORAGE_KEYS.QUEUE, queue)
 
-    console.log(`[SyncQueue] Added change: ${queuedChange.id}`)
     return queuedChange
   }
 
@@ -189,7 +188,6 @@ export class SyncQueue {
   remove(id: string): boolean {
     const queue = this.getAll().filter((c) => c.id !== id)
     this.cache.set(STORAGE_KEYS.QUEUE, queue)
-    console.log(`[SyncQueue] Removed change: ${id}`)
     return true
   }
 
@@ -210,7 +208,6 @@ export class SyncQueue {
    */
   clear(): void {
     this.cache.remove(STORAGE_KEYS.QUEUE)
-    console.log("[SyncQueue] Cleared all changes")
   }
 
   /**
@@ -258,13 +255,11 @@ export class NetworkMonitor {
   }
 
   private handleOnline(): void {
-    console.log("[NetworkMonitor] Going online")
     this.isOnline = true
     this.notify()
   }
 
   private handleOffline(): void {
-    console.log("[NetworkMonitor] Going offline")
     this.isOnline = false
     this.notify()
   }
@@ -360,7 +355,6 @@ export class OfflineManager {
       this.state.errorCount = 0
       this.cache.set(STORAGE_KEYS.LAST_SYNC, this.state.lastSyncTime)
 
-      console.log("[OfflineManager] Sync successful")
       return true
     } catch (error) {
       this.state.errorCount++
@@ -402,7 +396,6 @@ export class OfflineManager {
       lastSyncTime: null,
       errorCount: 0,
     }
-    console.log("[OfflineManager] Reset complete")
   }
 
   /**

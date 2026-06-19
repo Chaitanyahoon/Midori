@@ -15,6 +15,7 @@ interface MusicTrack {
   name: string
   url: string
   category: "focus" | "relax" | "energy" | "nature" | "instrumental" | "zen"
+  type?: "youtube" | "audio"
   description?: string
   icon?: string
 }
@@ -24,6 +25,283 @@ const extractVideoId = (url: string): string | null => {
   const match = url.match(/(?:youtube\.com\/embed\/|youtu\.be\/|youtube\.com\/watch\?v=)([^&\n?#]+)/)
   return match ? match[1] : null
 }
+
+// Verified working YouTube live streams - all unique links, no duplicates
+const MUSIC_OPTIONS: MusicTrack[] = [
+  // Focus Category - Deep concentration music
+  {
+    name: "Lo-Fi Hip Hop Radio",
+    url: "https://www.youtube.com/embed/jfKfPfyJRdk",
+    category: "focus",
+    description: "24/7 lo-fi beats - perfect for studying",
+    icon: "🎧",
+  },
+  {
+    name: "Deep Focus",
+    url: "/assets/audio/deep-focus.mp3",
+    category: "focus",
+    type: "audio",
+    description: "Ambient drone for intense concentration",
+    icon: "🧠",
+  },
+  {
+    name: "Coding Music",
+    url: "https://www.youtube.com/embed/Dx5qFachd3A",
+    category: "focus",
+    description: "Jazz beats perfect for coding sessions",
+    icon: "💻",
+  },
+  {
+    name: "Study With Me",
+    url: "https://www.youtube.com/embed/4VR-6AS0-l4",
+    category: "focus",
+    description: "Binaural beats for enhanced concentration",
+    icon: "📚",
+  },
+  {
+    name: "Jazz & Bossa Nova",
+    url: "https://www.youtube.com/embed/W9k3jBjBxgo",
+    category: "focus",
+    description: "Lo-fi jazz beats for productive coding",
+    icon: "🎷",
+  },
+  {
+    name: "Classical for Studying",
+    url: "https://www.youtube.com/embed/9Auq9mYxFEE",
+    category: "focus",
+    description: "Mozart and Bach for better focus",
+    icon: "🎼",
+  },
+  {
+    name: "Electronic Focus",
+    url: "https://www.youtube.com/embed/4xDzrJKXOOY",
+    category: "focus",
+    description: "Synthwave and electronic for coding",
+    icon: "⚡",
+  },
+  {
+    name: "Alpha Waves Focus",
+    url: "https://www.youtube.com/embed/7Mrv2PHvbjM",
+    category: "focus",
+    description: "Binaural beats for deep concentration",
+    icon: "🧘",
+  },
+  {
+    name: "Brown Noise Focus",
+    url: "https://www.youtube.com/embed/wzjWIxXBs_s",
+    category: "focus",
+    description: "Deep brown noise for intense focus",
+    icon: "🔊",
+  },
+
+  // Relax Category - Calming and peaceful
+  {
+    name: "Peaceful Piano",
+    url: "https://www.youtube.com/embed/4Tr0otuiQuU",
+    category: "relax",
+    description: "Gentle piano to unwind",
+    icon: "🎹",
+  },
+  {
+    name: "Meditation Music",
+    url: "https://www.youtube.com/embed/1ZYbU82GVz4",
+    category: "relax",
+    description: "Zen sounds for mindfulness",
+    icon: "🧘",
+  },
+  {
+    name: "Rain Sounds",
+    url: "https://www.youtube.com/embed/mPZkdNFkNps",
+    category: "relax",
+    description: "Cozy rain for relaxation",
+    icon: "🌧️",
+  },
+  {
+    name: "Ocean Waves",
+    url: "https://www.youtube.com/embed/a3iy5RQNL_s",
+    category: "relax",
+    description: "Soothing waves on the beach",
+    icon: "🌊",
+  },
+  {
+    name: "Chill Beats",
+    url: "https://www.youtube.com/embed/DWcJFNfaw9c",
+    category: "relax",
+    description: "Relaxing electronic vibes",
+    icon: "🎵",
+  },
+  {
+    name: "Fireplace Sounds",
+    url: "https://www.youtube.com/embed/L_LUpnjgPso",
+    category: "relax",
+    description: "Cozy fireplace ambience",
+    icon: "🔥",
+  },
+
+  // Energy Category - Upbeat and motivating
+  {
+    name: "Upbeat Electronic",
+    url: "https://www.youtube.com/embed/VQTK6PzLMgA",
+    category: "energy",
+    description: "Energetic beats to boost mood",
+    icon: "⚡",
+  },
+  {
+    name: "Workout Motivation",
+    url: "https://www.youtube.com/embed/5yx6BWlEVcY",
+    category: "energy",
+    description: "High-energy pump-up music",
+    icon: "💪",
+  },
+  {
+    name: "Synthwave Radio",
+    url: "https://www.youtube.com/embed/1H-vSHVOxoU",
+    category: "energy",
+    description: "Retro 80s synthwave vibes",
+    icon: "🌃",
+  },
+  {
+    name: "Productivity Boost",
+    url: "https://www.youtube.com/embed/aQzGxazf0l4",
+    category: "energy",
+    description: "Motivational beats for action",
+    icon: "🚀",
+  },
+
+  // Nature Category - Natural sounds
+  {
+    name: "Forest Sounds",
+    url: "https://www.youtube.com/embed/4oSt4AbW4hI",
+    category: "nature",
+    description: "Peaceful forest ambience",
+    icon: "🌲",
+  },
+  {
+    name: "Mountain Stream",
+    url: "https://www.youtube.com/embed/7maJOI3QMu0",
+    category: "nature",
+    description: "Flowing water in nature",
+    icon: "🏔️",
+  },
+  {
+    name: "Birds & Nature",
+    url: "https://www.youtube.com/embed/nBGeZQhBmRY",
+    category: "nature",
+    description: "Morning birds chirping in forest",
+    icon: "🐦",
+  },
+  {
+    name: "Thunderstorm",
+    url: "https://www.youtube.com/embed/k7x0j-BvWXg",
+    category: "nature",
+    description: "Cozy thunderstorm sounds",
+    icon: "⛈️",
+  },
+  {
+    name: "Cafe Ambience",
+    url: "https://www.youtube.com/embed/2Vv-BfVoq4g",
+    category: "nature",
+    description: "Coffee shop background noise",
+    icon: "☕",
+  },
+  {
+    name: "Wind Chimes",
+    url: "/assets/audio/wind-chimes.mp3",
+    category: "nature",
+    type: "audio",
+    description: "Soft wind chimes in a garden",
+    icon: "🎐",
+  },
+
+  // Instrumental Category - Pure instrumental
+  {
+    name: "Acoustic Guitar",
+    url: "https://www.youtube.com/embed/C1GzKRPM3Sw",
+    category: "instrumental",
+    description: "Beautiful guitar melodies",
+    icon: "🎸",
+  },
+  {
+    name: "Piano & Strings",
+    url: "https://www.youtube.com/embed/BFpLr0LfDUA",
+    category: "instrumental",
+    description: "Classical instrumental pieces",
+    icon: "🎻",
+  },
+  {
+    name: "Jazz Instrumental",
+    url: "https://www.youtube.com/embed/lTRiuFIWV5Y",
+    category: "instrumental",
+    description: "Lo-fi jazz without vocals",
+    icon: "🎺",
+  },
+  {
+    name: "Ambient Instrumental",
+    url: "https://www.youtube.com/embed/5qap5aO4i9A",
+    category: "instrumental",
+    description: "Atmospheric instrumental music",
+    icon: "🎹",
+  },
+  {
+    name: "Classical Piano",
+    url: "https://www.youtube.com/embed/hHW1oY26kxQ",
+    category: "instrumental",
+    description: "Peaceful piano compositions",
+    icon: "🎹",
+  },
+  
+  // Zen Category - Japanese Soothing Study
+  {
+    name: "Deep Focus Koto",
+    url: "https://www.youtube.com/embed/S2pEToi-1Vw",
+    category: "zen",
+    description: "Traditional string melodies for deep study",
+    icon: "🗾",
+  },
+  {
+    name: "Shakuhachi Meditation",
+    url: "https://www.youtube.com/embed/zH0Fp1jrvIs",
+    category: "zen",
+    description: "Zen bamboo flute for mental clarity",
+    icon: "🎍",
+  },
+  {
+    name: "Japanese Zen Lofi",
+    url: "https://www.youtube.com/embed/rUxyKA_-grg",
+    category: "zen",
+    description: "Atmospheric beats with Japanese accents",
+    icon: "🗼",
+  },
+  {
+    name: "Zen Temple Ambient",
+    url: "https://www.youtube.com/embed/n6lS1z4UOM0",
+    category: "zen",
+    description: "Serene monastic soundscapes",
+    icon: "⛩️",
+  },
+  {
+    name: "Shinrin-yoku Melody",
+    url: "https://www.youtube.com/embed/xR7oiEJ8x4Q",
+    category: "zen",
+    description: "Forest bathing melodic environment",
+    icon: "🌲",
+  },
+  {
+    name: "Midnight Kyoto",
+    url: "https://www.youtube.com/embed/eIho9S2qcfI",
+    category: "zen",
+    description: "Slow jazz-infused Japanese beats",
+    icon: "🌙",
+  },
+  {
+    name: "Kyoto Rain",
+    url: "/assets/audio/kyoto-rain.mp3",
+    category: "zen",
+    type: "audio",
+    description: "Gentle rain on Kyoto temple roofs",
+    icon: "🌧️",
+  },
+]
 
 export function FocusMusicPlayer({
   isActive,
@@ -44,6 +322,7 @@ export function FocusMusicPlayer({
   const iframeRef = useRef<HTMLIFrameElement>(null)
   const playerRef = useRef<any>(null)
   const apiReadyRef = useRef(false)
+  const audioRef = useRef<HTMLAudioElement | null>(null)
 
   // Ambient Layer State
   const [ambientTrack, setAmbientTrack] = useState<MusicTrack | null>(null)
@@ -96,259 +375,6 @@ export function FocusMusicPlayer({
     })
   }
 
-  // Verified working YouTube live streams - all unique links, no duplicates
-  const MUSIC_OPTIONS: MusicTrack[] = [
-    // Focus Category - Deep concentration music
-    {
-      name: "Lo-Fi Hip Hop Radio",
-      url: "https://www.youtube.com/embed/jfKfPfyJRdk",
-      category: "focus",
-      description: "24/7 lo-fi beats - perfect for studying",
-      icon: "🎧",
-    },
-    {
-      name: "Coding Music",
-      url: "https://www.youtube.com/embed/Dx5qFachd3A",
-      category: "focus",
-      description: "Jazz beats perfect for coding sessions",
-      icon: "💻",
-    },
-    {
-      name: "Study With Me",
-      url: "https://www.youtube.com/embed/4VR-6AS0-l4",
-      category: "focus",
-      description: "Binaural beats for enhanced concentration",
-      icon: "📚",
-    },
-    {
-      name: "Jazz & Bossa Nova",
-      url: "https://www.youtube.com/embed/jfKfPfyJRdk",
-      category: "focus",
-      description: "Lo-fi jazz beats for productive coding",
-      icon: "🎷",
-    },
-    {
-      name: "Classical for Studying",
-      url: "https://www.youtube.com/embed/9Auq9mYxFEE",
-      category: "focus",
-      description: "Mozart and Bach for better focus",
-      icon: "🎼",
-    },
-    {
-      name: "Electronic Focus",
-      url: "https://www.youtube.com/embed/4xDzrJKXOOY",
-      category: "focus",
-      description: "Synthwave and electronic for coding",
-      icon: "⚡",
-    },
-    {
-      name: "Alpha Waves Focus",
-      url: "https://www.youtube.com/embed/4VR-6AS0-l4",
-      category: "focus",
-      description: "Binaural beats for deep concentration",
-      icon: "🧘",
-    },
-    {
-      name: "Brown Noise Focus",
-      url: "https://www.youtube.com/embed/wzjWIxXBs_s",
-      category: "focus",
-      description: "Deep brown noise for intense focus",
-      icon: "🔊",
-    },
-
-    // Relax Category - Calming and peaceful
-    {
-      name: "Peaceful Piano",
-      url: "https://www.youtube.com/embed/4Tr0otuiQuU",
-      category: "relax",
-      description: "Gentle piano to unwind",
-      icon: "🎹",
-    },
-    {
-      name: "Meditation Music",
-      url: "https://www.youtube.com/embed/1ZYbU82GVz4",
-      category: "relax",
-      description: "Zen sounds for mindfulness",
-      icon: "🧘",
-    },
-    {
-      name: "Rain Sounds",
-      url: "https://www.youtube.com/embed/mPZkdNFkNps",
-      category: "relax",
-      description: "Cozy rain for relaxation",
-      icon: "🌧️",
-    },
-    {
-      name: "Ocean Waves",
-      url: "https://www.youtube.com/embed/a3iy5RQNL_s",
-      category: "relax",
-      description: "Soothing waves on the beach",
-      icon: "🌊",
-    },
-    {
-      name: "Chill Beats",
-      url: "https://www.youtube.com/embed/DWcJFNfaw9c",
-      category: "relax",
-      description: "Relaxing electronic vibes",
-      icon: "🎵",
-    },
-    {
-      name: "Fireplace Sounds",
-      url: "https://www.youtube.com/embed/L_LUpnjgPso",
-      category: "relax",
-      description: "Cozy fireplace ambience",
-      icon: "🔥",
-    },
-
-    // Energy Category - Upbeat and motivating
-    {
-      name: "Upbeat Electronic",
-      url: "https://www.youtube.com/embed/4xDzrJKXOOY",
-      category: "energy",
-      description: "Energetic beats to boost mood",
-      icon: "⚡",
-    },
-    {
-      name: "Workout Motivation",
-      url: "https://www.youtube.com/embed/5yx6BWlEVcY",
-      category: "energy",
-      description: "High-energy pump-up music",
-      icon: "💪",
-    },
-    {
-      name: "Synthwave Radio",
-      url: "https://www.youtube.com/embed/1H-vSHVOxoU",
-      category: "energy",
-      description: "Retro 80s synthwave vibes",
-      icon: "🌃",
-    },
-    {
-      name: "Productivity Boost",
-      url: "https://www.youtube.com/embed/5yx6BWlEVcY",
-      category: "energy",
-      description: "Motivational beats for action",
-      icon: "🚀",
-    },
-
-    // Nature Category - Natural sounds
-    {
-      name: "Forest Sounds",
-      url: "https://www.youtube.com/embed/4oSt4AbW4hI",
-      category: "nature",
-      description: "Peaceful forest ambience",
-      icon: "🌲",
-    },
-    {
-      name: "Mountain Stream",
-      url: "https://www.youtube.com/embed/7maJOI3QMu0",
-      category: "nature",
-      description: "Flowing water in nature",
-      icon: "🏔️",
-    },
-    {
-      name: "Birds & Nature",
-      url: "https://www.youtube.com/embed/4oSt4AbW4hI",
-      category: "nature",
-      description: "Morning birds chirping in forest",
-      icon: "🐦",
-    },
-    {
-      name: "Thunderstorm",
-      url: "https://www.youtube.com/embed/k7x0j-BvWXg",
-      category: "nature",
-      description: "Cozy thunderstorm sounds",
-      icon: "⛈️",
-    },
-    {
-      name: "Cafe Ambience",
-      url: "https://www.youtube.com/embed/2Vv-BfVoq4g",
-      category: "nature",
-      description: "Coffee shop background noise",
-      icon: "☕",
-    },
-
-    // Instrumental Category - Pure instrumental
-    {
-      name: "Acoustic Guitar",
-      url: "https://www.youtube.com/embed/4Tr0otuiQuU",
-      category: "instrumental",
-      description: "Beautiful guitar melodies",
-      icon: "🎸",
-    },
-    {
-      name: "Piano & Strings",
-      url: "https://www.youtube.com/embed/9Auq9mYxFEE",
-      category: "instrumental",
-      description: "Classical instrumental pieces",
-      icon: "🎻",
-    },
-    {
-      name: "Jazz Instrumental",
-      url: "https://www.youtube.com/embed/jfKfPfyJRdk",
-      category: "instrumental",
-      description: "Lo-fi jazz without vocals",
-      icon: "🎺",
-    },
-    {
-      name: "Ambient Instrumental",
-      url: "https://www.youtube.com/embed/5qap5aO4i9A",
-      category: "instrumental",
-      description: "Atmospheric instrumental music",
-      icon: "🎹",
-    },
-    {
-      name: "Classical Piano",
-      url: "https://www.youtube.com/embed/9Auq9mYxFEE",
-      category: "instrumental",
-      description: "Peaceful piano compositions",
-      icon: "🎹",
-    },
-    
-    // Zen Category - Japanese Soothing Study
-    {
-      name: "Deep Focus Koto",
-      url: "https://www.youtube.com/embed/S2pEToi-1Vw",
-      category: "zen",
-      description: "Traditional string melodies for deep study",
-      icon: "🗾",
-    },
-    {
-      name: "Shakuhachi Meditation",
-      url: "https://www.youtube.com/embed/zH0Fp1jrvIs",
-      category: "zen",
-      description: "Zen bamboo flute for mental clarity",
-      icon: "🎍",
-    },
-    {
-      name: "Japanese Zen Lofi",
-      url: "https://www.youtube.com/embed/jfKfPfyJRdk",
-      category: "zen",
-      description: "Atmospheric beats with Japanese accents",
-      icon: "🗼",
-    },
-    {
-      name: "Zen Temple Ambient",
-      url: "https://www.youtube.com/embed/1ZYbU82GVz4",
-      category: "zen",
-      description: "Serene monastic soundscapes",
-      icon: "⛩️",
-    },
-    {
-      name: "Shinrin-yoku Melody",
-      url: "https://www.youtube.com/embed/4oSt4AbW4hI",
-      category: "zen",
-      description: "Forest bathing melodic environment",
-      icon: "🌲",
-    },
-    {
-      name: "Midnight Kyoto",
-      url: "https://www.youtube.com/embed/Dx5qFachd3A",
-      category: "zen",
-      description: "Slow jazz-infused Japanese beats",
-      icon: "🌙",
-    },
-  ]
-
   // Auto-play music based on timer state
   useEffect(() => {
     if (isActive && !isBreak && !isPlaying) {
@@ -387,7 +413,7 @@ export function FocusMusicPlayer({
   // NOTE: we intentionally do NOT include `volume` in deps — recreating the player
   // on every volume change causes flicker and can prevent setVolume from applying.
   useEffect(() => {
-    if (!currentTrack || !isPlaying) return
+    if (!currentTrack || !isPlaying || currentTrack.type === "audio") return
 
     const videoId = extractVideoId(currentTrack.url)
     if (!videoId) return
@@ -467,6 +493,11 @@ export function FocusMusicPlayer({
 
   // Update volume when it changes
   useEffect(() => {
+    if (audioRef.current && isPlaying) {
+      const raw = Array.isArray(volume) ? volume[0] : (volume as any) || 0
+      const vol = Math.max(0, Math.min(1, Number(raw) / 100))
+      audioRef.current.volume = vol
+    }
     if (playerRef.current && isPlaying) {
       try {
         const raw = Array.isArray(volume) ? volume[0] : (volume as any) || 0
@@ -474,9 +505,7 @@ export function FocusMusicPlayer({
         if (typeof playerRef.current.setVolume === "function") {
           playerRef.current.setVolume(vol)
         }
-      } catch (e) {
-        // Player might not be ready yet
-      }
+      } catch (e) {}
     }
   }, [volume, isPlaying])
 
@@ -572,10 +601,29 @@ export function FocusMusicPlayer({
   }
 
   const handlePlayMusic = (track: MusicTrack) => {
+    // Stop any existing playback
+    if (audioRef.current) {
+      audioRef.current.pause()
+      audioRef.current = null
+    }
+    if (playerRef.current) {
+      try { playerRef.current.stopVideo(); playerRef.current.destroy() } catch (e) {}
+      playerRef.current = null
+    }
+
     setCurrentTrack(track)
     setIsPlaying(true)
 
-    // Add to recently played (max 5)
+    // If local audio file, create HTML5 Audio element
+    if (track.type === "audio") {
+      const audio = new Audio(track.url)
+      audio.volume = (Array.isArray(volume) ? volume[0] : volume) / 100
+      audio.loop = true
+      audio.play().catch(() => {})
+      audioRef.current = audio
+    }
+    // For YouTube tracks, the useEffect will handle initialization
+
     setRecentlyPlayed((prev) => {
       const filtered = prev.filter((t) => t.name !== track.name)
       return [track, ...filtered].slice(0, 5)
@@ -583,24 +631,27 @@ export function FocusMusicPlayer({
   }
 
   const handlePause = () => {
+    if (audioRef.current) {
+      audioRef.current.pause()
+    }
     if (playerRef.current) {
       try {
         playerRef.current.pauseVideo()
-      } catch (e) {
-        // Ignore errors
-      }
+      } catch (e) {}
     }
     setIsPlaying(false)
   }
 
   const handleStop = () => {
+    if (audioRef.current) {
+      audioRef.current.pause()
+      audioRef.current = null
+    }
     if (playerRef.current) {
       try {
         playerRef.current.stopVideo()
         playerRef.current.destroy()
-      } catch (e) {
-        // Ignore errors
-      }
+      } catch (e) {}
       playerRef.current = null
     }
     setIsPlaying(false)
@@ -841,6 +892,7 @@ export function FocusMusicPlayer({
                     <button
                       key={music.name}
                       onClick={() => handlePlayMusic(music)}
+                      aria-label={`${playing ? "Now playing" : "Play"} ${music.name}`}
                       className={`group relative flex items-center gap-2.5 p-2.5 text-left rounded-xl transition-all border ${playing
                         ? "bg-emerald-500 text-white border-emerald-500 shadow-md shadow-emerald-500/20"
                         : "bg-white/60 dark:bg-slate-800/40 border-slate-200/40 dark:border-slate-700/40 hover:bg-white dark:hover:bg-slate-800 hover:border-emerald-200 dark:hover:border-emerald-700 hover:shadow-sm"
@@ -977,10 +1029,10 @@ export function FocusMusicPlayer({
               <div className="flex items-center gap-2 flex-shrink-0">
                 <Icons.volume className="w-3 h-3 text-slate-400" />
                 <Slider value={volume} onValueChange={setVolume} max={100} className="w-16" />
-                <Button size="icon" variant="ghost" onClick={handlePause} className="h-7 w-7 text-white hover:bg-white/10 rounded-full">
+                <Button size="icon" variant="ghost" onClick={handlePause} aria-label={isPlaying ? "Pause music" : "Resume music"} className="h-7 w-7 min-w-[36px] min-h-[36px] text-white hover:bg-white/10 rounded-full">
                   <Icons.pause className="w-3.5 h-3.5" />
                 </Button>
-                <Button size="icon" variant="ghost" onClick={handleStop} className="h-7 w-7 text-red-400 hover:text-red-300 hover:bg-white/10 rounded-full">
+                <Button size="icon" variant="ghost" onClick={handleStop} aria-label="Stop music" className="h-7 w-7 min-w-[36px] min-h-[36px] text-red-400 hover:text-red-300 hover:bg-white/10 rounded-full">
                   <Icons.stop className="w-3.5 h-3.5" />
                 </Button>
               </div>

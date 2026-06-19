@@ -132,30 +132,34 @@ export function DataInfoModal({ isOpen, onClose }: DataInfoModalProps) {
                     scenario: "📱 Device Switch",
                     description: "You plant a task on your phone while commuting",
                     result: "It's waiting for you on your laptop when you get to work",
-                    color: "green",
+                    border: "border-green-200/50 hover:border-green-300/50",
+                    resultBg: "bg-green-50 border-green-200/50",
                   },
                   {
                     scenario: "🔄 Browser Switch",
                     description: "You switch from Chrome to Firefox",
                     result: "Just log in, and your entire garden is right there",
-                    color: "blue",
+                    border: "border-blue-200/50 hover:border-blue-300/50",
+                    resultBg: "bg-blue-50 border-blue-200/50",
                   },
                   {
                     scenario: "🧹 Cleared Browsing Data",
                     description: "You clear all your cookies and local storage",
                     result: "Your garden is safe in the cloud. Just log back in!",
-                    color: "purple",
+                    border: "border-purple-200/50 hover:border-purple-300/50",
+                    resultBg: "bg-purple-50 border-purple-200/50",
                   },
                   {
                     scenario: "👻 Incognito Mode",
                     description: "You log in from a library or private window",
                     result: "Your garden loads perfectly. Just ensure you log out!",
-                    color: "orange",
+                    border: "border-orange-200/50 hover:border-orange-300/50",
+                    resultBg: "bg-orange-50 border-orange-200/50",
                   },
                 ].map((item, index) => (
                   <div
                     key={index}
-                    className={`group p-4 bg-white/60 backdrop-blur-sm rounded-2xl border border-${item.color}-200/50 hover:border-${item.color}-300/50 transition-all duration-300 hover:shadow-md animate-grow-in`}
+                    className={`group p-4 bg-white/60 backdrop-blur-sm rounded-2xl border ${item.border} transition-all duration-300 hover:shadow-md animate-grow-in`}
                     style={{ animationDelay: `${0.6 + index * 0.1}s` }}
                   >
                     <div className="space-y-3">
@@ -163,7 +167,7 @@ export function DataInfoModal({ isOpen, onClose }: DataInfoModalProps) {
                         <span className="mr-2">{item.scenario}</span>
                       </h4>
                       <p className="text-sm text-gray-700">{item.description}</p>
-                      <div className={`p-3 bg-${item.color}-50 rounded-xl border border-${item.color}-200/50`}>
+                      <div className={`p-3 ${item.resultBg} rounded-xl`}>
                         <p className="text-sm font-medium text-gray-800">→ {item.result}</p>
                       </div>
                     </div>
@@ -198,30 +202,33 @@ export function DataInfoModal({ isOpen, onClose }: DataInfoModalProps) {
                     tip: "Consistent Cultivation",
                     description:
                       "Use the same browser consistently for the best garden experience and continuous growth tracking.",
-                    color: "emerald",
+                    gradient: "from-emerald-400 to-emerald-600",
+                    border: "border-emerald-200/50 hover:border-emerald-300/50",
                   },
                   {
                     icon: Icons.sun,
                     tip: "Cross-Device Syncing",
                     description:
                       "Consider browser sync features if you want your garden to flourish across multiple devices.",
-                    color: "blue",
+                    gradient: "from-blue-400 to-blue-600",
+                    border: "border-blue-200/50 hover:border-blue-300/50",
                   },
                   {
                     icon: Icons.seedling,
                     tip: "Future Backup Seeds",
                     description: "We're cultivating export features so you can save backup seeds of your garden data.",
-                    color: "purple",
+                    gradient: "from-purple-400 to-purple-600",
+                    border: "border-purple-200/50 hover:border-purple-300/50",
                   },
                 ].map((tip, index) => (
                   <div
                     key={index}
-                    className={`group p-4 bg-white/60 backdrop-blur-sm rounded-2xl border border-${tip.color}-200/50 hover:border-${tip.color}-300/50 transition-all duration-300 hover:shadow-md animate-grow-in`}
+                    className={`group p-4 bg-white/60 backdrop-blur-sm rounded-2xl border ${tip.border} transition-all duration-300 hover:shadow-md animate-grow-in`}
                     style={{ animationDelay: `${0.8 + index * 0.1}s` }}
                   >
                     <div className="flex items-start space-x-3">
                       <div
-                        className={`w-10 h-10 bg-gradient-to-br from-${tip.color}-400 to-${tip.color}-600 rounded-xl flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform`}
+                        className={`w-10 h-10 bg-gradient-to-br ${tip.gradient} rounded-xl flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform`}
                       >
                         <tip.icon className="w-5 h-5 text-white" />
                       </div>

@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useRef } from "react"
+import { useState, useEffect, useRef, useMemo } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Progress } from "@/components/ui/progress"
@@ -275,12 +275,12 @@ export default function PomodoroPage() {
     setSessionStartTime(null)
   }
 
-  const getSessionHistory = () => {
+  const sessionHistory = useMemo(() => {
     return pomodoros
       .filter((session) => session.completed)
       .sort((a, b) => new Date(b.startTime).getTime() - new Date(a.startTime).getTime())
       .slice(0, 10)
-  }
+  }, [pomodoros])
 
   const getTaskTitle = (taskId?: string) => {
     if (!taskId) return "General Focus"
@@ -288,8 +288,7 @@ export default function PomodoroPage() {
     return task ? task.title : "Deleted Task"
   }
 
-  // Get task analytics
-  const getTaskAnalytics = () => {
+  const taskAnalytics = useMemo(() => {
     const taskStats = new Map()
 
     pomodoros.forEach((session) => {
@@ -315,9 +314,7 @@ export default function PomodoroPage() {
     return Array.from(taskStats.values())
       .sort((a, b) => b.totalTime - a.totalTime)
       .slice(0, 5)
-  }
-
-  const taskAnalytics = getTaskAnalytics()
+  }, [pomodoros, tasks])
 
   return (
     <div className="space-y-4 sm:space-y-6 px-4 sm:px-6 lg:px-8 py-4 sm:py-6">
@@ -391,7 +388,7 @@ export default function PomodoroPage() {
 
                   {/* Timer display */}
                   <div className="absolute inset-6 bg-white dark:bg-slate-800 rounded-full flex items-center justify-center shadow-xl border-4 border-white/50 dark:border-slate-700/50">
-                    <div className="text-center">
+                    <div className="text-center" role="timer" aria-live="polite" aria-label={`Time remaining: ${formatTime(timeLeft)}`}>
                       <span className="text-5xl font-bold text-gray-900 dark:text-gray-100 block leading-none">{formatTime(timeLeft)}</span>
                       <span className="text-xs text-gray-500 dark:text-gray-400 mt-1 block">
                         {Math.round(progress)}% complete
@@ -400,7 +397,7 @@ export default function PomodoroPage() {
                   </div>
 
                   {/* Progress Ring */}
-                  <svg className="absolute inset-0 w-full h-full transform -rotate-90" viewBox="0 0 100 100">
+                  <svg className="absolute inset-0 w-full h-full transform -rotate-90" viewBox="0 0 100 100" aria-hidden="true">
                     <circle
                       cx="50"
                       cy="50"
@@ -441,6 +438,7 @@ export default function PomodoroPage() {
                     <Button
                       onClick={handleStart}
                       size="lg"
+                      aria-label="Start focus session"
                       className="bg-gradient-to-r from-emerald-600 to-blue-600 hover:from-emerald-700 hover:to-blue-700 text-white px-10 py-6 rounded-2xl text-lg font-semibold shadow-lg hover:shadow-xl transition-all"
                     >
                       <Icons.play className="w-5 h-5 mr-2" />
@@ -450,6 +448,7 @@ export default function PomodoroPage() {
                     <Button
                       onClick={handlePause}
                       size="lg"
+                      aria-label={isActive ? "Pause timer" : "Resume timer"}
                       className="bg-gradient-to-r from-yellow-500 to-orange-600 hover:from-yellow-600 hover:to-orange-700 text-white px-10 py-6 rounded-2xl text-lg font-semibold shadow-lg hover:shadow-xl transition-all"
                     >
                       <Icons.pause className="w-5 h-5 mr-2" />
@@ -461,6 +460,7 @@ export default function PomodoroPage() {
                     onClick={handleReset}
                     variant="outline"
                     size="lg"
+                    aria-label="Reset timer"
                     className="px-8 py-6 rounded-2xl border-2 hover:bg-gray-50 dark:hover:bg-slate-800"
                   >
                     <Icons.reset className="w-5 h-5 mr-2" />
@@ -909,14 +909,14 @@ export default function PomodoroPage() {
             </TabsContent>
 
             <TabsContent value="all" className="mt-3">
-              {getSessionHistory().length === 0 ? (
+              {sessionHistory.length === 0 ? (
                 <div className="text-center py-6">
                   <Icons.timer className="w-12 h-12 text-gray-400 dark:text-gray-500 mx-auto mb-3" />
                   <p className="text-gray-500 dark:text-gray-400">No sessions completed yet.</p>
                 </div>
               ) : (
                 <div className="space-y-2.5">
-                  {getSessionHistory().map((session) => (
+                  {sessionHistory.map((session) => (
                     <div
                       key={session.id}
                       className="flex items-center space-x-3 p-3 bg-gradient-to-r from-blue-50/50 to-indigo-50/50 dark:from-blue-900/20 dark:to-indigo-900/10 rounded-xl border border-blue-100/50 dark:border-blue-800/50 hover:shadow-md transition-all"

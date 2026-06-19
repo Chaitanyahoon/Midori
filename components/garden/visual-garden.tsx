@@ -18,7 +18,7 @@ interface ShootingStar { x: number; y: number; vx: number; vy: number; life: num
 export function VisualGarden({ onAddPlant }: { onAddPlant?: () => void }) {
     const cvs = useRef<HTMLCanvasElement>(null)
     const cont = useRef<HTMLDivElement>(null)
-    const { tasks, pomodoros, stats, settings, updateSettings } = useData()
+    const { tasks, pomodoros, stats, settings, updateSettings, sharedGarden, updateSharedGarden } = useData()
     const [showStore, setShowStore] = useState(false)
     const [editMode, setEditMode] = useState(false)
     const [plantToPlace, setPlantToPlace] = useState<any>(null)
@@ -29,7 +29,15 @@ export function VisualGarden({ onAddPlant }: { onAddPlant?: () => void }) {
 
     const [mSeason, setMSeason] = useState<"spring" | "summer" | "autumn" | "winter">(season)
     const [mTime, setMTime] = useState<"morning" | "afternoon" | "evening" | "night" | "auto">("auto")
+    const [gardenView, setGardenView] = useState<"personal" | "shared">("personal")
     const [plants, setPlants] = useState<Plant[]>([])
+
+    // Force personal view if active shared garden ID is removed
+    useEffect(() => {
+        if (!settings?.activeSharedGardenId) {
+            setGardenView("personal")
+        }
+    }, [settings?.activeSharedGardenId])
 
     const pRef = useRef<Plant[]>([])
     const parts = useRef<Particle[]>([])
@@ -84,8 +92,11 @@ export function VisualGarden({ onAddPlant }: { onAddPlant?: () => void }) {
         // Remove random auto-spawning to allow full user customization.
         // We only render plants explicitly purchased and placed from settings.
         
-        // Add purchased nursery plants
-        const customPlants = settings?.gardenPlants || []
+        // Add purchased nursery plants (either from personal settings or shared garden document)
+        const customPlants = gardenView === "shared"
+            ? (sharedGarden?.plants || [])
+            : (settings?.gardenPlants || [])
+            
         customPlants.forEach((cp: any, i: number) => {
             np.push({
                 id: cp.id || `plant-${i}`,
@@ -96,7 +107,7 @@ export function VisualGarden({ onAddPlant }: { onAddPlant?: () => void }) {
         })
 
         np.sort((a, b) => a.y - b.y); setPlants(np)
-    }, [tasks, pomodoros, season, mSeason, settings?.gardenPlants])
+    }, [tasks, pomodoros, season, mSeason, settings?.gardenPlants, sharedGarden?.plants, gardenView])
 
     useEffect(() => { pRef.current = plants }, [plants])
 
@@ -601,26 +612,52 @@ export function VisualGarden({ onAddPlant }: { onAddPlant?: () => void }) {
 
         if (plantToPlace) {
             // Check affordability at placement time
-            const currentSun = settings?.sunlight || 0
-            const currentWater = settings?.waterdrops || 0
-            if (currentSun >= plantToPlace.costSunlight && currentWater >= plantToPlace.costWater) {
-                const newSun = currentSun - plantToPlace.costSunlight
-                const newWater = currentWater - plantToPlace.costWater
-                
-                const newPlant = {
-                    id: Date.now().toString(),
-                    type: plantToPlace.type,
-                    subtype: plantToPlace.id,
-                    x, y,
-                    scale: plantToPlace.type === 'tree' ? 0.75 : 0.5
+            if (gardenView === "shared") {
+                const currentSun = sharedGarden?.sunlightPool || 0
+                const currentWater = sharedGarden?.waterPool || 0
+                if (currentSun >= plantToPlace.costSunlight && currentWater >= plantToPlace.costWater) {
+                    const newSun = currentSun - plantToPlace.costSunlight
+                    const newWater = currentWater - plantToPlace.costWater
+                    
+                    const newPlant = {
+                        id: Date.now().toString(),
+                        type: plantToPlace.type,
+                        subtype: plantToPlace.id,
+                        x, y,
+                        scale: plantToPlace.type === 'tree' ? 0.75 : 0.5
+                    }
+                    const currentPlants = sharedGarden?.plants || []
+                    updateSharedGarden({ sunlightPool: newSun, waterPool: newWater, plants: [...currentPlants, newPlant] }).catch(() => {
+                        toast.error("Failed to plant in Co-op Garden")
+                    })
+                    toast.success(`Planted ${plantToPlace.name} in Co-op Garden!`)
+                    setPlantToPlace(null)
+                } else {
+                    toast.error("Not enough Co-op resources!")
+                    setPlantToPlace(null)
                 }
-                const currentPlants = settings?.gardenPlants || []
-                updateSettings({ sunlight: newSun, waterdrops: newWater, gardenPlants: [...currentPlants, newPlant] })
-                toast.success(`Planted ${plantToPlace.name}!`)
-                setPlantToPlace(null)
             } else {
-                toast.error("Not enough resources!")
-                setPlantToPlace(null)
+                const currentSun = settings?.sunlight || 0
+                const currentWater = settings?.waterdrops || 0
+                if (currentSun >= plantToPlace.costSunlight && currentWater >= plantToPlace.costWater) {
+                    const newSun = currentSun - plantToPlace.costSunlight
+                    const newWater = currentWater - plantToPlace.costWater
+                    
+                    const newPlant = {
+                        id: Date.now().toString(),
+                        type: plantToPlace.type,
+                        subtype: plantToPlace.id,
+                        x, y,
+                        scale: plantToPlace.type === 'tree' ? 0.75 : 0.5
+                    }
+                    const currentPlants = settings?.gardenPlants || []
+                    updateSettings({ sunlight: newSun, waterdrops: newWater, gardenPlants: [...currentPlants, newPlant] })
+                    toast.success(`Planted ${plantToPlace.name}!`)
+                    setPlantToPlace(null)
+                } else {
+                    toast.error("Not enough resources!")
+                    setPlantToPlace(null)
+                }
             }
             return
         }
@@ -643,17 +680,30 @@ export function VisualGarden({ onAddPlant }: { onAddPlant?: () => void }) {
 
     const updateSelectedPlant = (updates: any) => {
         if (!selectedPlantId) return
-        const currentPlants = settings?.gardenPlants || []
-        const newPlants = currentPlants.map((p: any) => p.id === selectedPlantId ? { ...p, ...updates } : p)
-        updateSettings({ gardenPlants: newPlants })
+        if (gardenView === "shared") {
+            const currentPlants = sharedGarden?.plants || []
+            const newPlants = currentPlants.map((p: any) => p.id === selectedPlantId ? { ...p, ...updates } : p)
+            updateSharedGarden({ plants: newPlants }).catch(() => {})
+        } else {
+            const currentPlants = settings?.gardenPlants || []
+            const newPlants = currentPlants.map((p: any) => p.id === selectedPlantId ? { ...p, ...updates } : p)
+            updateSettings({ gardenPlants: newPlants })
+        }
     }
 
     const removeSelectedPlant = () => {
         if (!selectedPlantId) return
-        const currentPlants = settings?.gardenPlants || []
-        updateSettings({ gardenPlants: currentPlants.filter((p: any) => p.id !== selectedPlantId) })
-        setSelectedPlantId(null)
-        toast.success("Plant removed from garden.")
+        if (gardenView === "shared") {
+            const currentPlants = sharedGarden?.plants || []
+            updateSharedGarden({ plants: currentPlants.filter((p: any) => p.id !== selectedPlantId) }).catch(() => {})
+            setSelectedPlantId(null)
+            toast.success("Plant removed from Co-op Garden.")
+        } else {
+            const currentPlants = settings?.gardenPlants || []
+            updateSettings({ gardenPlants: currentPlants.filter((p: any) => p.id !== selectedPlantId) })
+            setSelectedPlantId(null)
+            toast.success("Plant removed from garden.")
+        }
     }
 
     const hour = new Date().getHours()
@@ -669,24 +719,50 @@ export function VisualGarden({ onAddPlant }: { onAddPlant?: () => void }) {
                         <Icons.tree className="w-5 h-5 text-white" />
                     </div>
                     <div className="bg-white/20 dark:bg-slate-900/50 px-3 py-1.5 rounded-xl backdrop-blur-md border border-white/10 shadow-sm">
-                        <CardTitle className="text-lg font-bold text-white drop-shadow-md">Visual Garden</CardTitle>
+                        <CardTitle className="text-lg font-bold text-white drop-shadow-md">
+                            {gardenView === "shared" ? (sharedGarden?.name || "Co-op Garden") : "Visual Garden"}
+                        </CardTitle>
                         <p className="text-xs text-white/90 font-medium capitalize flex items-center gap-1.5 drop-shadow">
                             <span>{mSeason}</span><span className="opacity-70">•</span>
                             <span>{todLabel}</span><span className="opacity-70">•</span>
                             <span>{temperature != null ? Math.round(temperature) : '--'}°C</span>
+                            {gardenView === "shared" && (
+                                <>
+                                    <span className="opacity-70">•</span>
+                                    <span className="text-emerald-300 font-bold">Co-op</span>
+                                </>
+                            )}
                         </p>
                     </div>
                 </div>
-                <div className="flex gap-2 flex-wrap justify-end pointer-events-auto w-full sm:w-auto">
-                    <div className="flex items-center gap-2 mr-0 sm:mr-2 bg-white/30 dark:bg-slate-900/50 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/20 shadow-sm">
-                        <div className="flex items-center gap-1.5 text-amber-300 font-bold text-xs drop-shadow" title="Sunlight">
+                <div className="flex gap-2 flex-wrap justify-end pointer-events-auto w-full sm:w-auto items-center">
+                    {/* Personal vs Shared Garden Toggle */}
+                    {settings?.activeSharedGardenId && (
+                        <div className="flex bg-white/20 backdrop-blur-md rounded-full p-0.5 border border-white/20 shadow-sm pointer-events-auto">
+                            <button
+                                onClick={() => { setGardenView("personal"); setSelectedPlantId(null); setPlantToPlace(null); }}
+                                className={`h-8 px-3 rounded-full text-xs font-bold transition-all active:scale-95 ${gardenView === "personal" ? 'bg-white text-slate-800 shadow-sm' : 'text-white/80 hover:text-white hover:bg-white/10'}`}
+                            >
+                                Personal
+                            </button>
+                            <button
+                                onClick={() => { setGardenView("shared"); setSelectedPlantId(null); setPlantToPlace(null); }}
+                                className={`h-8 px-3 rounded-full text-xs font-bold transition-all active:scale-95 ${gardenView === "shared" ? 'bg-emerald-500 text-white shadow-sm' : 'text-white/80 hover:text-white hover:bg-white/10'}`}
+                            >
+                                Co-op
+                            </button>
+                        </div>
+                    )}
+
+                    <div className="flex items-center gap-2 bg-white/30 dark:bg-slate-900/50 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/20 shadow-sm">
+                        <div className="flex items-center gap-1.5 text-amber-300 font-bold text-xs drop-shadow" title={gardenView === "shared" ? "Co-op Sunlight" : "Sunlight"}>
                             <Icons.sun className="w-3.5 h-3.5" />
-                            <span>{settings?.sunlight || 0}</span>
+                            <span>{gardenView === "shared" ? (sharedGarden?.sunlightPool || 0) : (settings?.sunlight || 0)}</span>
                         </div>
                         <div className="w-px h-3 bg-white/30 mx-1" />
-                        <div className="flex items-center gap-1.5 text-blue-300 font-bold text-xs drop-shadow" title="Waterdrops">
+                        <div className="flex items-center gap-1.5 text-blue-300 font-bold text-xs drop-shadow" title={gardenView === "shared" ? "Co-op Waterdrops" : "Waterdrops"}>
                             <Icons.droplets className="w-3.5 h-3.5" />
-                            <span>{settings?.waterdrops || 0}</span>
+                            <span>{gardenView === "shared" ? (sharedGarden?.waterPool || 0) : (settings?.waterdrops || 0)}</span>
                         </div>
                     </div>
                     
@@ -723,9 +799,13 @@ export function VisualGarden({ onAddPlant }: { onAddPlant?: () => void }) {
                         <div className="p-4 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center bg-emerald-50/50 dark:bg-emerald-950/20">
                             <div>
                                 <h3 className="font-bold text-emerald-900 dark:text-emerald-100 flex items-center gap-2">
-                                    <Icons.flower className="w-5 h-5" /> The Nursery
+                                    <Icons.flower className="w-5 h-5" /> The Nursery {gardenView === "shared" && "(Co-op)"}
                                 </h3>
-                                <p className="text-xs text-emerald-600 dark:text-emerald-400">Spend resources to customize your garden</p>
+                                <p className="text-xs text-emerald-600 dark:text-emerald-400">
+                                    {gardenView === "shared" 
+                                        ? "Spend pooled resources to customize your shared garden" 
+                                        : "Spend resources to customize your garden"}
+                                </p>
                             </div>
                             <button onClick={() => setShowStore(false)} className="w-8 h-8 rounded-full bg-white dark:bg-slate-800 flex items-center justify-center text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 shadow-sm border border-slate-200 dark:border-slate-700">
                                 <Icons.close className="w-4 h-4" />
@@ -735,7 +815,9 @@ export function VisualGarden({ onAddPlant }: { onAddPlant?: () => void }) {
                         <div className="p-4 overflow-y-auto custom-scrollbar flex-1">
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                 {NURSERY_ITEMS.map(item => {
-                                    const canAfford = (settings?.sunlight || 0) >= item.costSunlight && (settings?.waterdrops || 0) >= item.costWater
+                                    const canAfford = gardenView === "shared"
+                                        ? (sharedGarden?.sunlightPool || 0) >= item.costSunlight && (sharedGarden?.waterPool || 0) >= item.costWater
+                                        : (settings?.sunlight || 0) >= item.costSunlight && (settings?.waterdrops || 0) >= item.costWater
                                     return (
                                         <div key={item.id} className={`flex flex-col p-3 rounded-xl border ${canAfford ? 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:border-emerald-300 dark:hover:border-emerald-700' : 'bg-slate-50 dark:bg-slate-900/50 border-slate-100 dark:border-slate-800 opacity-70'} transition-all`}>
                                             <div className="flex items-start justify-between mb-2">
@@ -768,12 +850,20 @@ export function VisualGarden({ onAddPlant }: { onAddPlant?: () => void }) {
                             {/* Quick resource boost for testing */}
                             <button 
                                 onClick={() => {
-                                    updateSettings({ sunlight: (settings?.sunlight || 0) + 500, waterdrops: (settings?.waterdrops || 0) + 100 })
-                                    toast.success("Added +500 ☀️ and +100 💧!")
+                                    if (gardenView === "shared") {
+                                        updateSharedGarden({
+                                            sunlightPool: (sharedGarden?.sunlightPool || 0) + 500,
+                                            waterPool: (sharedGarden?.waterPool || 0) + 100
+                                        }).catch(() => {})
+                                        toast.success("Added +500 ☀️ and +100 💧 to Co-op pool!")
+                                    } else {
+                                        updateSettings({ sunlight: (settings?.sunlight || 0) + 500, waterdrops: (settings?.waterdrops || 0) + 100 })
+                                        toast.success("Added +500 ☀️ and +100 💧!")
+                                    }
                                 }}
                                 className="w-full mt-4 p-2.5 bg-gradient-to-r from-amber-50 to-blue-50 dark:from-amber-950/20 dark:to-blue-950/20 hover:from-amber-100 hover:to-blue-100 dark:hover:from-amber-950/40 dark:hover:to-blue-950/40 text-xs font-semibold rounded-xl border border-amber-200/50 dark:border-amber-800/30 text-slate-600 dark:text-slate-300 transition-colors"
                             >
-                                🎁 Bonus: +500 ☀️  +100 💧
+                                🎁 Bonus: +500 ☀️  +100 💧 {gardenView === "shared" && "(Co-op)"}
                             </button>
                         </div>
                     </div>

@@ -1,8 +1,10 @@
 "use client"
 
-import { ProductivityCharts } from "@/components/dashboard/productivity-charts"
-import { WeeklyStats } from "@/components/dashboard/weekly-stats"
-import { ProductivityTrends } from "@/components/dashboard/productivity-trends"
+import dynamic from "next/dynamic"
+
+const ProductivityCharts = dynamic(() => import("@/components/dashboard/productivity-charts").then(m => ({ default: m.ProductivityCharts })), { ssr: false })
+const WeeklyStats = dynamic(() => import("@/components/dashboard/weekly-stats").then(m => ({ default: m.WeeklyStats })), { ssr: false })
+const ProductivityTrends = dynamic(() => import("@/components/dashboard/productivity-trends").then(m => ({ default: m.ProductivityTrends })), { ssr: false })
 
 export default function InsightsPage() {
   return (

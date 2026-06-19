@@ -10,21 +10,14 @@ import { Input } from "@/components/ui/input"
 import { Icons } from "@/components/icons"
 import { useData } from "@/components/local-data-provider"
 import { useToast } from "@/hooks/use-toast"
-
-interface MusicTrack {
-  name: string
-  url: string
-  category: "focus" | "relax" | "energy" | "nature" | "instrumental" | "zen"
-  type?: "youtube" | "audio"
-  description?: string
-  icon?: string
-}
+import { useMusicStore, type MusicTrack } from "@/lib/store"
 
 // Extract video ID from YouTube URL
 const extractVideoId = (url: string): string | null => {
   const match = url.match(/(?:youtube\.com\/embed\/|youtu\.be\/|youtube\.com\/watch\?v=)([^&\n?#]+)/)
   return match ? match[1] : null
 }
+
 
 // Verified working YouTube live streams - all unique links, no duplicates
 const MUSIC_OPTIONS: MusicTrack[] = [
@@ -314,21 +307,31 @@ export function FocusMusicPlayer({
   className?: string;
   variant?: "default" | "zen"
 }) {
-  const [isPlaying, setIsPlaying] = useState(false)
-  const [currentTrack, setCurrentTrack] = useState<MusicTrack | null>(null)
-  const [volume, setVolume] = useState([50])
-  const [activeCategory, setActiveCategory] = useState<MusicTrack["category"] | "custom">("focus")
-  const [recentlyPlayed, setRecentlyPlayed] = useState<MusicTrack[]>([])
+  const {
+    isPlaying,
+    setIsPlaying,
+    currentTrack,
+    setCurrentTrack,
+    volume,
+    setVolume,
+    activeCategory,
+    setActiveCategory,
+    recentlyPlayed,
+    setRecentlyPlayed,
+    ambientTrack,
+    setAmbientTrack,
+    isAmbientPlaying,
+    setIsAmbientPlaying,
+    ambientVolume,
+    setAmbientVolume,
+  } = useMusicStore()
+
   const iframeRef = useRef<HTMLIFrameElement>(null)
   const playerRef = useRef<any>(null)
   const apiReadyRef = useRef(false)
   const audioRef = useRef<HTMLAudioElement | null>(null)
-
-  // Ambient Layer State
-  const [ambientTrack, setAmbientTrack] = useState<MusicTrack | null>(null)
-  const [isAmbientPlaying, setIsAmbientPlaying] = useState(false)
-  const [ambientVolume, setAmbientVolume] = useState([30])
   const ambientPlayerRef = useRef<any>(null)
+
 
   // Custom Tracks State
   const { customTracks, addCustomTrack, removeCustomTrack } = useData()
@@ -464,8 +467,13 @@ export function FocusMusicPlayer({
               }
               playerRef.current = event.target
             },
-            onError: () => {
-              // YouTube player error
+            onError: (err: any) => {
+              console.error("YouTube Player Error:", err)
+              toast({
+                title: "Playback Error ⚠️",
+                description: "Failed to load YouTube track. Autoplay might be blocked or video is unavailable.",
+                variant: "destructive"
+              })
             },
           },
         })
@@ -554,6 +562,9 @@ export function FocusMusicPlayer({
                 event.target.setVolume(vol)
               } catch (e) { }
               ambientPlayerRef.current = event.target
+            },
+            onError: (err: any) => {
+              console.error("YouTube Ambient Player Error:", err)
             },
           },
         })
@@ -700,16 +711,38 @@ export function FocusMusicPlayer({
 
           {/* Now Playing Info (Centered) */}
           <div className="text-center mb-6">
-            {isPlaying && currentTrack ? (
+            {currentTrack ? (
               <div className="space-y-2 animate-in fade-in slide-in-from-bottom-2">
                 <div className="w-12 h-12 bg-white/10 rounded-full flex items-center justify-center mx-auto mb-3 text-2xl">
                   {currentTrack.icon}
                 </div>
                 <h3 className="font-medium text-lg tracking-wide">{currentTrack.name}</h3>
                 <p className="text-sm text-white/50">{currentTrack.description}</p>
+                
+                {/* Minimal Player controls */}
+                <div className="flex justify-center gap-4 mt-3">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="w-10 h-10 rounded-full text-white/80 hover:text-white hover:bg-white/10"
+                    onClick={isPlaying ? handlePause : () => handlePlayMusic(currentTrack)}
+                    title={isPlaying ? "Pause music" : "Resume music"}
+                  >
+                    {isPlaying ? <Icons.pause className="w-5 h-5" /> : <Icons.play className="w-5 h-5" />}
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="w-10 h-10 rounded-full text-red-400 hover:text-red-300 hover:bg-white/10"
+                    onClick={handleStop}
+                    title="Stop music"
+                  >
+                    <Icons.stop className="w-5 h-5" />
+                  </Button>
+                </div>
               </div>
             ) : (
-              <div className="text-white/40 text-sm">Select some focus music to begin</div>
+              <div className="text-white/40 text-sm py-4">Select some focus music in normal mode to begin</div>
             )}
           </div>
 
@@ -734,7 +767,7 @@ export function FocusMusicPlayer({
                     variant="ghost"
                     size="icon"
                     onClick={() => handlePlayAmbient(track)}
-                    className={`rounded-full w-12 h-12 transition-all ${isActive
+                    className={`rounded-full w-12 h-12 transition-all min-h-[44px] min-w-[44px] ${isActive
                         ? "bg-emerald-500/20 text-emerald-300 ring-1 ring-emerald-500/50"
                         : "text-white/60 hover:text-white hover:bg-white/10"
                       }`}
@@ -775,17 +808,6 @@ export function FocusMusicPlayer({
               </div>
             )}
           </div>
-
-          {/* Hidden Players for Zen Mode */}
-          {isPlaying && currentTrack && (
-            <div className="hidden">
-              <div id={`youtube-player-zen-${extractVideoId(currentTrack.url)}`}></div>
-            </div>
-          )}
-          {/* Note: The main logic re-uses the IDs, so we rely on the main render returning to keep state if switched back, 
-               but for pure Zen mode usage, we might need the portal or just keep using the same effect logic. 
-               Since the effect logic uses ID based on video ID, it should attach to whichever element is in DOM.
-           */}
         </div>
       </div>
     )
@@ -885,7 +907,7 @@ export function FocusMusicPlayer({
 
           {(["focus", "zen", "relax", "energy", "instrumental"] as const).map((cat) => (
             <TabsContent key={cat} value={cat} className="mt-3 focus-visible:outline-none">
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 max-h-[220px] overflow-y-auto pr-1">
+              <div className="grid grid-cols-1 min-[375px]:grid-cols-2 sm:grid-cols-3 gap-2 max-h-[220px] overflow-y-auto pr-1">
                 {filteredMusic.map((music) => {
                   const playing = isPlaying && currentTrack?.name === music.name
                   return (
@@ -994,7 +1016,7 @@ export function FocusMusicPlayer({
                   key={scape.name}
                   onClick={() => handlePlayAmbient(track)}
                   title={scape.name}
-                  className={`flex-1 flex flex-col items-center justify-center py-2.5 rounded-xl transition-all ${active
+                  className={`flex-1 flex flex-col items-center justify-center py-2.5 rounded-xl transition-all min-h-[44px] ${active
                       ? "bg-emerald-100 dark:bg-emerald-900/50 ring-1 ring-emerald-400 text-emerald-600 dark:text-emerald-400"
                       : "hover:bg-white dark:hover:bg-slate-700 text-slate-400 hover:text-slate-600"
                     }`}
@@ -1005,7 +1027,7 @@ export function FocusMusicPlayer({
             })}
           </div>
           {ambientTrack && (
-            <div className="hidden">
+            <div className="fixed top-[-9999px] left-[-9999px] w-[1px] h-[1px] overflow-hidden opacity-0 pointer-events-none">
               <div id={`youtube-player-ambient-${extractVideoId(ambientTrack.url) || "default"}`} />
             </div>
           )}
@@ -1014,8 +1036,8 @@ export function FocusMusicPlayer({
         {/* Now Playing floating bar  */}
         {isPlaying && currentTrack && (
           <div className="bg-slate-900 dark:bg-slate-950 rounded-xl overflow-hidden shadow-lg">
-            {/* Hidden video player */}
-            <div className="hidden">
+            {/* Hidden video player (offscreen but rendered so YouTube API functions) */}
+            <div className="fixed top-[-9999px] left-[-9999px] w-[1px] h-[1px] overflow-hidden opacity-0 pointer-events-none">
               <div id={`youtube-player-${extractVideoId(currentTrack.url) || "default"}`} />
             </div>
             <div className="flex items-center gap-3 px-3 py-2.5">

@@ -13,11 +13,24 @@ import { SettingsDialog } from "@/components/dashboard/settings-dialog"
 import { ModeToggle } from "@/components/mode-toggle"
 import { useUIStore } from "@/lib/store"
 import { useAuth } from "@/components/auth-provider"
+import { usePathname } from "next/navigation"
 
 export function TopNav() {
+  const pathname = usePathname()
   const { tasks, pomodoros, settings } = useData()
   const { user, signOut } = useAuth()
   const { setAIModalOpen, setSidebarOpen, notifications, markAllNotificationsAsRead, addNotification, markNotificationAsRead } = useUIStore()
+
+  const getPageTitle = (path: string) => {
+    if (path === "/dashboard") return "Growth Hub"
+    if (path.startsWith("/dashboard/tasks")) return "Tasks Garden"
+    if (path.startsWith("/dashboard/calendar")) return "Time Planner"
+    if (path.startsWith("/dashboard/pomodoro")) return "Focus Grove"
+    if (path.startsWith("/dashboard/insights")) return "Growth Insights"
+    if (path.startsWith("/dashboard/coop")) return "Kyōei Co-op"
+    return "Growth Hub"
+  }
+  const pageTitle = getPageTitle(pathname)
 
   const userName = settings.userName || user?.displayName || user?.email?.split('@')[0] || ""
   const userTone = settings.userTone
@@ -153,12 +166,18 @@ export function TopNav() {
           variant="ghost"
           size="icon"
           onClick={() => setSidebarOpen(true)}
-          className="lg:hidden w-10 h-10 rounded-full"
+          className="lg:hidden w-10 h-10 rounded-full text-slate-700 dark:text-slate-300 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-emerald-50/50 dark:hover:bg-emerald-950/30"
+          aria-label="Open sidebar menu"
         >
           <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
           </svg>
         </Button>
+
+        {/* Mobile Breadcrumb (Dynamic page title) */}
+        <span className="lg:hidden font-bold text-slate-800 dark:text-slate-100 text-sm truncate max-w-[120px] ml-1">
+          {pageTitle}
+        </span>
 
         <div className="flex items-center space-x-2 lg:space-x-6 flex-1 min-w-0">
           {/* Greeting removed, name now shown in main header */}

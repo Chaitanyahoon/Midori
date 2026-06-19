@@ -1,0 +1,25 @@
+{
+  "name": "Midori - Your Productive Garden",
+  "short_name": "Midori",
+  "description": "Grow your tasks, cultivate your focus.",
+  "start_url": "/dashboard",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#f0fdf4",
+  "theme_color": "#059669",
+  "categories": ["productivity", "utilities"],
+  "icons": [
+    {
+      "src": "/midori_logo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "maskable any"
+    }
+  ]
+}

@@ -70,14 +70,14 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
         {/* ── Main Content ── */}
         <div className="flex-1 flex flex-col min-w-0 w-full overflow-hidden">
           <TopNav />
-          {/* pb-16 on mobile to clear the bottom nav bar */}
-          <main className="flex-1 overflow-y-auto overflow-x-hidden pb-16 lg:pb-0">
+          {/* pb-24 on mobile to clear the bottom nav bar with safe areas */}
+          <main className="flex-1 overflow-y-auto overflow-x-hidden pb-24 lg:pb-0">
             {children}
           </main>
         </div>
 
         {/* ── Mobile Bottom Navigation Bar ── */}
-        <nav className="fixed bottom-0 left-0 right-0 z-40 lg:hidden bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-t border-slate-200/60 dark:border-slate-700/60 flex items-center justify-around px-2 py-2 safe-area-pb">
+        <nav className="fixed bottom-0 left-0 right-0 z-40 lg:hidden bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-t border-slate-200/60 dark:border-slate-700/60 flex items-center justify-around px-2 py-1 safe-area-pb shadow-lg">
           {[
             { href: "/dashboard", icon: Icons.seedling, label: "Home" },
             { href: "/dashboard/tasks", icon: Icons.leaf, label: "Tasks" },
@@ -91,13 +91,13 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
                 key={item.href}
                 href={item.href}
                 aria-current={isActive ? "page" : undefined}
-                className={`flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-xl transition-all touch-manipulation active:scale-95 ${isActive
-                    ? "text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/30"
+                className={`flex flex-col items-center justify-center gap-1 px-3 rounded-xl transition-all touch-manipulation active:scale-95 min-h-[48px] min-w-[56px] ${isActive
+                    ? "text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40"
                     : "text-slate-400 dark:text-slate-500 hover:text-emerald-500 dark:hover:text-emerald-400"
                   }`}
               >
-                <item.icon className={`w-5 h-5 ${isActive ? "scale-110" : ""} transition-transform`} />
-                <span className={`text-[10px] ${isActive ? "font-bold text-emerald-600 dark:text-emerald-400" : "font-medium"}`}>{item.label}</span>
+                <item.icon className={`w-5 h-5 ${isActive ? "scale-110 text-emerald-600 dark:text-emerald-400" : ""} transition-transform`} />
+                <span className={`text-[10px] tracking-wide ${isActive ? "font-bold text-emerald-600 dark:text-emerald-400" : "font-medium"}`}>{item.label}</span>
               </a>
             )
           })}

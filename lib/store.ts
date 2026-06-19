@@ -79,3 +79,56 @@ export const useUIStore = create<UIStore>((set) => ({
 
     clearNotifications: () => set({ notifications: [] }),
 }))
+
+export interface MusicTrack {
+  name: string
+  url: string
+  category: "focus" | "relax" | "energy" | "nature" | "instrumental" | "zen"
+  type?: "youtube" | "audio"
+  description?: string
+  icon?: string
+}
+
+interface MusicStore {
+  isPlaying: boolean
+  currentTrack: MusicTrack | null
+  volume: number[]
+  activeCategory: MusicTrack["category"] | "custom"
+  recentlyPlayed: MusicTrack[]
+  ambientTrack: MusicTrack | null
+  isAmbientPlaying: boolean
+  ambientVolume: number[]
+
+  setIsPlaying: (isPlaying: boolean) => void
+  setCurrentTrack: (track: MusicTrack | null) => void
+  setVolume: (volume: number[]) => void
+  setActiveCategory: (category: MusicTrack["category"] | "custom") => void
+  setRecentlyPlayed: (tracks: MusicTrack[] | ((prev: MusicTrack[]) => MusicTrack[])) => void
+  setAmbientTrack: (track: MusicTrack | null) => void
+  setIsAmbientPlaying: (isAmbientPlaying: boolean) => void
+  setAmbientVolume: (volume: number[]) => void
+}
+
+export const useMusicStore = create<MusicStore>((set) => ({
+  isPlaying: false,
+  currentTrack: null,
+  volume: [50],
+  activeCategory: "focus",
+  recentlyPlayed: [],
+  ambientTrack: null,
+  isAmbientPlaying: false,
+  ambientVolume: [30],
+
+  setIsPlaying: (isPlaying) => set({ isPlaying }),
+  setCurrentTrack: (currentTrack) => set({ currentTrack }),
+  setVolume: (volume) => set({ volume }),
+  setActiveCategory: (activeCategory) => set({ activeCategory }),
+  setRecentlyPlayed: (tracks) => set((state) => {
+    const nextTracks = typeof tracks === "function" ? tracks(state.recentlyPlayed) : tracks
+    return { recentlyPlayed: nextTracks }
+  }),
+  setAmbientTrack: (ambientTrack) => set({ ambientTrack }),
+  setIsAmbientPlaying: (isAmbientPlaying) => set({ isAmbientPlaying }),
+  setAmbientVolume: (ambientVolume) => set({ ambientVolume }),
+}))
+

@@ -69,8 +69,8 @@ export default function DashboardPage() {
           {/* Welcome Section */}
           <div className="flex-1 w-full animate-bloom">
             <div className="mb-4">
-              <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold bg-gradient-to-r from-emerald-800 to-teal-600 dark:from-emerald-200 dark:to-teal-200 bg-clip-text text-transparent flex items-center gap-3">
-                {`Good ${new Date().getHours() < 12 ? 'Morning' : new Date().getHours() < 17 ? 'Afternoon' : 'Evening'},`}
+              <h1 className="text-2xl sm:text-4xl lg:text-5xl font-bold bg-gradient-to-r from-emerald-800 to-teal-600 dark:from-emerald-200 dark:to-teal-200 bg-clip-text text-transparent leading-tight flex flex-wrap items-baseline gap-x-2">
+                <span>Good {new Date().getHours() < 12 ? 'Morning' : new Date().getHours() < 17 ? 'Afternoon' : 'Evening'},</span>
                 {userName && (
                   <span className="text-emerald-600 dark:text-emerald-400 font-extrabold">{userName}</span>
                 )}
@@ -120,37 +120,38 @@ export default function DashboardPage() {
       {/* Main Content */}
       <div className="px-4 sm:px-6 lg:px-8 py-4 sm:py-6 space-y-4 sm:space-y-6 overflow-y-auto">
         {/* Motivational Quote */}
-        <MotivationalQuote />
+        <div className="animate-stagger-1">
+          <MotivationalQuote />
+        </div>
 
         {/* Quick Stats */}
-        <QuickStats />
-
-
+        <div className="animate-stagger-2">
+          <QuickStats />
+        </div>
 
         {/* Main Content Grid */}
         <div className="grid grid-cols-1 xl:grid-cols-3 gap-4 sm:gap-6">
           {/* Top Row: Visual Garden (New) */}
-          <div className="xl:col-span-3 min-w-0">
+          <div className="xl:col-span-3 min-w-0 animate-stagger-3">
             <VisualGarden onAddPlant={() => router.push("/dashboard/tasks")} />
           </div>
 
           {/* Left Column */}
-          <div className="xl:col-span-2 space-y-4 sm:space-y-6 min-w-0">
-
+          <div className="xl:col-span-2 space-y-4 sm:space-y-6 min-w-0 animate-stagger-4">
             <TaskCalendar />
             <RecentActivity />
           </div>
 
           {/* Right Column */}
-          <div className="space-y-4 sm:space-y-6 min-w-0">
+          <div className="space-y-4 sm:space-y-6 min-w-0 animate-stagger-4">
             <PomodoroTimer />
             <TaskList />
           </div>
         </div>
       </div>
 
-      {/* Quick Action Menu */}
-      <div className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-50 quick-actions-menu">
+      {/* Quick Action Menu (raised on mobile to clear bottom nav) */}
+      <div className="fixed bottom-20 right-4 lg:bottom-6 lg:right-6 z-50 quick-actions-menu">
         <div className="relative">
           {/* Main Toggle Button */}
           <button

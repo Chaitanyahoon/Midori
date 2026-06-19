@@ -24,11 +24,16 @@ interface SidebarProps {
 
 export function Sidebar({ onClose }: SidebarProps) {
   const pathname = usePathname()
-  const { settings, sharedGarden } = useData()
+  const { settings, sharedGarden, tasks, pomodoros } = useData()
   const { user } = useAuth()
 
   const userName = settings.userName || user?.displayName || user?.email?.split('@')[0] || "My Profile"
   const initials = userName === "My Profile" ? "ME" : userName.toUpperCase().slice(0, 2)
+
+  // Calculate dynamic weekly growth based on completed tasks ratio
+  const completedTasksCount = tasks?.filter((t) => t.completed).length || 0
+  const totalTasksCount = tasks?.length || 0
+  const growthPercentage = totalTasksCount > 0 ? Math.round((completedTasksCount / totalTasksCount) * 100) : 0
 
   return (
     <div className="w-72 h-screen flex flex-col sticky top-0 z-40">
@@ -105,9 +110,13 @@ export function Sidebar({ onClose }: SidebarProps) {
             <p className="text-xs text-amber-600/80 dark:text-emerald-300/70 mb-3 italic">
               Ganbatte! / <span className="font-jp">頑張って!</span> ✨
             </p>
-            <div className="h-1.5 w-full bg-amber-100 dark:bg-emerald-900/50 rounded-full overflow-hidden">
-              <div className="h-full bg-gradient-to-r from-amber-400 to-orange-400 w-[70%]" />
+            <div className="h-1.5 w-full bg-amber-100 dark:bg-emerald-900/50 rounded-full overflow-hidden mb-1">
+              <div 
+                className="h-full bg-gradient-to-r from-amber-400 to-orange-400 transition-all duration-500 ease-out" 
+                style={{ width: `${growthPercentage}%` }}
+              />
             </div>
+            <span className="text-[10px] font-bold text-amber-700 dark:text-emerald-300">{growthPercentage}% Completed</span>
           </div>
 
           {/* User & Settings */}

@@ -13,11 +13,25 @@ const outfit = Outfit({ subsets: ["latin"] })
 export const metadata: Metadata = {
   title: "Midori - Your Productive Garden",
   description: "Grow your tasks, cultivate your focus.",
-  generator: 'Midori',
-  icons: {
-    icon: '/midori_logo.png',
-    apple: '/midori_logo.png',
+  generator: "Midori",
+  manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: "Midori",
   },
+  icons: {
+    icon: "/midori_logo.png",
+    apple: "/midori_logo.png",
+  },
+}
+
+export const viewport = {
+  themeColor: "#059669",
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  viewportFit: "cover",
 }
 
 export default function RootLayout({
@@ -32,11 +46,30 @@ export default function RootLayout({
           <AuthProvider>
             {children}
             <Toaster />
-            <Sonner position="top-center" richColors />
+            <Toaster as={Sonner} position="top-center" richColors />
           </AuthProvider>
         </ThemeProvider>
         <Analytics />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              if ('serviceWorker' in navigator) {
+                window.addEventListener('load', function() {
+                  navigator.serviceWorker.register('/sw.js').then(
+                    function(registration) {
+                      console.log('ServiceWorker registration successful with scope: ', registration.scope);
+                    },
+                    function(err) {
+                      console.log('ServiceWorker registration failed: ', err);
+                    }
+                  );
+                });
+              }
+            `,
+          }}
+        />
       </body>
     </html>
   )
 }
+

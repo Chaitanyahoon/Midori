@@ -374,7 +374,7 @@ export default function PomodoroPage() {
             <CardContent className="space-y-8 px-8 pb-8">
               {/* Timer Display */}
               <div className="text-center">
-                <div className="relative w-56 h-56 mx-auto mb-8">
+                <div className="relative w-44 h-44 sm:w-56 sm:h-56 mx-auto mb-8">
                   {/* Outer glow effect */}
                   <div className={`absolute inset-0 rounded-full blur-xl opacity-30 ${isBreak ? "bg-emerald-400" : "bg-blue-500"}`}></div>
 
@@ -387,10 +387,10 @@ export default function PomodoroPage() {
                   ></div>
 
                   {/* Timer display */}
-                  <div className="absolute inset-6 bg-white dark:bg-slate-800 rounded-full flex items-center justify-center shadow-xl border-4 border-white/50 dark:border-slate-700/50">
+                  <div className="absolute inset-4 sm:inset-6 bg-white dark:bg-slate-800 rounded-full flex items-center justify-center shadow-xl border-4 border-white/50 dark:border-slate-700/50">
                     <div className="text-center" role="timer" aria-live="polite" aria-label={`Time remaining: ${formatTime(timeLeft)}`}>
-                      <span className="text-5xl font-bold text-gray-900 dark:text-gray-100 block leading-none">{formatTime(timeLeft)}</span>
-                      <span className="text-xs text-gray-500 dark:text-gray-400 mt-1 block">
+                      <span className="text-3xl sm:text-5xl font-bold text-gray-900 dark:text-gray-100 block leading-none">{formatTime(timeLeft)}</span>
+                      <span className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400 mt-1 block">
                         {Math.round(progress)}% complete
                       </span>
                     </div>

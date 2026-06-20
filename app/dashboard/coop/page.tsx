@@ -122,8 +122,8 @@ export default function CoopPage() {
     // ── NO GARDEN: LANDING VIEW ──
     if (!sharedGarden) {
         return (
-            <div className="w-full h-full p-4 sm:p-8">
-                <div className="max-w-2xl mx-auto">
+            <div className="w-full min-h-full ambient-bg px-4 sm:px-6 lg:px-8 py-6 sm:py-10">
+                <div className="max-w-2xl mx-auto space-y-6 sm:space-y-10">
                     {/* Header */}
                     <div className="text-center mb-10 animate-bloom">
                         <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-emerald-400 to-teal-500 shadow-lg shadow-emerald-500/25 mb-5">
@@ -154,7 +154,7 @@ export default function CoopPage() {
                     </div>
 
                     {/* Forms */}
-                    <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm p-6 sm:p-8">
+                    <div className="card-zen p-6 sm:p-8">
                         {activeTab === "join" ? (
                             <div className="space-y-4">
                                 <div>
@@ -207,13 +207,13 @@ export default function CoopPage() {
                     </div>
 
                     {/* Info Cards */}
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-6">
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-6">
                         {[
                             { icon: "☀️", title: "Shared Sunlight", desc: "Tasks completed by any member add sunlight to the pool" },
                             { icon: "💧", title: "Shared Water", desc: "Pomodoro sessions fill the communal water reserve" },
                             { icon: "💬", title: "Real-time Chat", desc: "Talk with your garden members while you focus" },
                         ].map(card => (
-                            <div key={card.title} className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-4 text-center">
+                            <div key={card.title} className="card-zen p-4 text-center">
                                 <span className="text-2xl">{card.icon}</span>
                                 <h3 className="font-bold text-slate-800 dark:text-slate-200 text-sm mt-2">{card.title}</h3>
                                 <p className="text-[11px] text-slate-500 mt-1">{card.desc}</p>
@@ -227,9 +227,9 @@ export default function CoopPage() {
 
     // ── ACTIVE GARDEN VIEW ──
     return (
-        <div className="w-full h-full flex flex-col lg:flex-row">
+        <div className="w-full h-full flex flex-col lg:flex-row ambient-bg">
             {/* Left panel: Garden Info */}
-            <div className="w-full lg:w-80 xl:w-96 flex-shrink-0 border-b lg:border-b-0 lg:border-r border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-5 sm:p-6 overflow-y-auto">
+            <div className="w-full lg:w-80 xl:w-96 flex-shrink-0 border-b lg:border-b-0 lg:border-r border-slate-200/50 dark:border-slate-700/50 bg-white/60 dark:bg-slate-900/60 backdrop-blur-xl p-5 sm:p-6 overflow-y-auto">
                 {/* Garden header */}
                 <div className="flex items-start justify-between mb-6">
                     <div>
@@ -242,10 +242,10 @@ export default function CoopPage() {
                 </div>
 
                 {/* Invite Code */}
-                <div className="bg-slate-50 dark:bg-slate-900 rounded-xl p-4 border border-slate-200 dark:border-slate-700 mb-5">
+                <div className="card-zen p-4 mb-5 [transform:none_!important] hover:translate-y-0">
                     <p className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">Invite Code</p>
                     <div className="flex items-center gap-2">
-                        <code className="flex-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 font-mono font-bold text-lg tracking-[0.25em] text-emerald-700 dark:text-emerald-300 text-center select-all">
+                        <code className="flex-1 bg-white/80 dark:bg-slate-800/80 border border-slate-200/60 dark:border-slate-700/60 rounded-lg px-3 py-2 font-mono font-bold text-lg tracking-[0.25em] text-emerald-700 dark:text-emerald-300 text-center select-all">
                             {sharedGarden.id}
                         </code>
                         <button
@@ -260,14 +260,14 @@ export default function CoopPage() {
 
                 {/* Resource Pools */}
                 <div className="grid grid-cols-2 gap-3 mb-5">
-                    <div className="bg-amber-50 dark:bg-amber-950/20 rounded-xl p-4 border border-amber-100 dark:border-amber-900/30">
+                    <div className="card-zen p-4 bg-amber-500/5 dark:bg-amber-500/10 border-amber-500/20 hover:scale-[1.02]">
                         <div className="flex items-center gap-1.5 text-amber-600 dark:text-amber-400 mb-2">
                             <Icons.sun className="w-4 h-4" />
                             <span className="text-[11px] font-semibold uppercase tracking-wider">Sunlight</span>
                         </div>
                         <p className="text-2xl font-black text-amber-700 dark:text-amber-300">{sharedGarden.sunlightPool ?? 0}</p>
                     </div>
-                    <div className="bg-blue-50 dark:bg-blue-950/20 rounded-xl p-4 border border-blue-100 dark:border-blue-900/30">
+                    <div className="card-zen p-4 bg-blue-500/5 dark:bg-blue-500/10 border-blue-500/20 hover:scale-[1.02]">
                         <div className="flex items-center gap-1.5 text-blue-600 dark:text-blue-400 mb-2">
                             <Icons.droplets className="w-4 h-4" />
                             <span className="text-[11px] font-semibold uppercase tracking-wider">Water</span>
@@ -277,7 +277,7 @@ export default function CoopPage() {
                 </div>
 
                 {/* How it works */}
-                <div className="bg-emerald-50 dark:bg-emerald-950/20 rounded-xl p-4 border border-emerald-100 dark:border-emerald-900/30 mb-5">
+                <div className="card-zen p-4 bg-emerald-500/5 dark:bg-emerald-500/10 border-emerald-500/20 mb-5 hover:translate-y-0 [transform:none_!important]">
                     <h3 className="text-xs font-bold text-emerald-800 dark:text-emerald-200 uppercase tracking-wider mb-2">How it works</h3>
                     <ul className="space-y-1.5 text-[11px] text-emerald-700 dark:text-emerald-300">
                         <li>✅ Complete a task → +5 sunlight to pool</li>
@@ -296,9 +296,9 @@ export default function CoopPage() {
             </div>
 
             {/* Right panel: Chat */}
-            <div className="flex-1 flex flex-col min-h-0 bg-slate-50 dark:bg-slate-900">
+            <div className="flex-1 flex flex-col min-h-0 bg-transparent">
                 {/* Chat header */}
-                <div className="flex items-center gap-3 px-5 py-4 border-b border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800">
+                <div className="flex items-center gap-3 px-5 py-4 border-b border-slate-200/50 dark:border-slate-700/50 bg-white/40 dark:bg-slate-900/40 backdrop-blur-xl">
                     <div className="w-8 h-8 rounded-lg bg-emerald-100 dark:bg-emerald-900/40 flex items-center justify-center">
                         <Icons.zap className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
                     </div>
@@ -342,7 +342,7 @@ export default function CoopPage() {
                 </div>
 
                 {/* Chat Input */}
-                <div className="border-t border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-4">
+                <div className="border-t border-slate-200/50 dark:border-slate-700/50 bg-white/40 dark:bg-slate-900/40 backdrop-blur-xl p-4">
                     <div className="flex gap-2">
                         <input
                             type="text"

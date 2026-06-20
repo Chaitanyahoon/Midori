@@ -191,15 +191,16 @@ export default function TasksPage() {
   }
 
   return (
-    <div className="space-y-6 px-4 sm:px-6 lg:px-8 py-6 w-full max-w-7xl mx-auto">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 animate-in fade-in slide-in-from-top-4 duration-500">
-        <div>
-          <h1 className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-emerald-800 to-teal-600 dark:from-emerald-200 dark:to-teal-200 bg-clip-text text-transparent flex items-center gap-3">
-            Garden Log
-          </h1>
-          <p className="text-slate-600 dark:text-slate-400 mt-1 font-medium">Nurture your tasks and watch them bloom.</p>
-        </div>
+    <div className="w-full min-h-full ambient-bg px-4 sm:px-6 lg:px-8 py-6 sm:py-10 space-y-6 sm:space-y-10">
+      <div className="max-w-7xl mx-auto space-y-6 sm:space-y-10">
+        {/* Header */}
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 animate-in fade-in slide-in-from-top-4 duration-500">
+          <div>
+            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold bg-gradient-to-r from-emerald-800 to-teal-600 dark:from-emerald-200 dark:to-teal-200 bg-clip-text text-transparent flex items-center gap-3 leading-tight">
+              Garden Log
+            </h1>
+            <p className="text-slate-500 dark:text-slate-400 mt-1.5 font-medium">Nurture your tasks and watch them bloom.</p>
+          </div>
 
         <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
           <DialogTrigger asChild>
@@ -319,7 +320,7 @@ export default function TasksPage() {
       </div>
 
       {/* Quick Add Section */}
-      <Card className="card-premium border-l-4 border-l-emerald-500 overflow-hidden">
+      <Card className="card-zen border-l-4 border-l-emerald-500 overflow-hidden">
         <CardContent className="p-0">
           <div className="flex items-center h-16">
             <div className="pl-6 pr-4">
@@ -364,7 +365,7 @@ export default function TasksPage() {
       </Card>
 
       {/* Filters (Glass Bar) */}
-      <div className="card-premium rounded-2xl p-2 flex flex-wrap gap-2 items-center bg-white/60 dark:bg-slate-900/60 sticky top-4 z-30 transition-all duration-300">
+      <div className="card-zen p-3 flex flex-wrap gap-2 items-center sticky top-4 z-30 transition-all duration-300 hover:translate-y-0">
         <div className="flex-1 min-w-[200px] relative group">
           <Icons.search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-emerald-500 transition-colors" />
           <Input
@@ -444,7 +445,7 @@ export default function TasksPage() {
                 {groupTasks.map((task) => (
                   <Card
                     key={task.id}
-                    className={`card-premium group hover:scale-[1.01] transition-all duration-300 border-l-4 ${task.completed ? 'border-l-slate-300 dark:border-l-slate-700 opacity-60' : 'border-l-emerald-500'}`}
+                    className={`card-zen group border-l-4 ${task.completed ? 'border-l-slate-300 dark:border-l-slate-700 opacity-60' : 'border-l-emerald-500'}`}
                   >
                     <CardContent className="p-4 sm:p-5">
                       <div className="flex items-start gap-4">
@@ -513,6 +514,7 @@ export default function TasksPage() {
             </div>
           ))
         )}
+      </div>
       </div>
     </div>
   )

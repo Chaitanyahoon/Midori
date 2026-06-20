@@ -127,7 +127,7 @@ export function ProductivityTrends() {
   return (
     <div className="space-y-6 animate-fade-in">
       {/* Productivity Insights */}
-      <Card className="bg-white/60 dark:bg-slate-900/60 backdrop-blur-xl border border-white/40 dark:border-slate-700/50 shadow-xl shadow-slate-200/50 dark:shadow-slate-950/50 transition-all duration-300 rounded-3xl overflow-hidden relative group">
+      <Card className="card-zen relative overflow-hidden group">
         <div className="absolute top-0 right-0 w-64 h-64 bg-purple-400/10 dark:bg-purple-500/10 rounded-full blur-3xl -z-10 pointer-events-none group-hover:bg-purple-400/20 transition-colors duration-1000" />
         <CardHeader className="border-b border-white/20 dark:border-slate-700/50 bg-white/40 dark:bg-slate-900/40 backdrop-blur-md z-10 p-6">
           <CardTitle className="flex items-center justify-between w-full text-xl font-bold bg-gradient-to-r from-purple-800 to-blue-600 dark:from-purple-300 dark:to-blue-300 bg-clip-text text-transparent">
@@ -141,7 +141,7 @@ export function ProductivityTrends() {
         <CardContent className="p-6 relative z-10">
           <div className="space-y-8">
             {/* Current Level */}
-            <div className="text-center p-6 bg-white/50 dark:bg-slate-800/50 backdrop-blur-md rounded-3xl border border-white/60 dark:border-slate-700/50 shadow-sm transition-transform hover:scale-[1.01] duration-300">
+            <div className="text-center p-6 card-zen">
               <div
                 className={`w-20 h-20 mx-auto mb-4 bg-gradient-to-br from-${insight.color}-500 to-${insight.color}-600 rounded-full flex items-center justify-center shadow-lg shadow-${insight.color}-500/30 animate-pulse-slow`}
               >
@@ -212,12 +212,12 @@ export function ProductivityTrends() {
             {dailyInsights.map((insight, index) => (
               <div
                 key={index}
-                className={`flex-1 min-w-[220px] p-5 rounded-3xl border flex items-start gap-4 transition-all duration-300 hover:shadow-lg hover:-translate-y-1 cursor-pointer backdrop-blur-md
+                className={`flex-1 min-w-[220px] p-5 card-zen flex items-start gap-4 cursor-pointer
                   ${insight.type === "positive" || insight.type === "achievement"
-                    ? "bg-emerald-500/10 border-emerald-500/30 dark:bg-emerald-500/10 dark:border-emerald-500/20"
+                    ? "bg-emerald-500/5 border-emerald-500/20 dark:bg-emerald-500/10 dark:border-emerald-500/20 hover:border-emerald-500/40"
                     : insight.type === "suggestion"
-                      ? "bg-amber-500/10 border-amber-500/30 dark:bg-amber-500/10 dark:border-amber-500/20"
-                      : "bg-blue-500/10 border-blue-500/30 dark:bg-blue-500/10 dark:border-blue-500/20"}
+                      ? "bg-amber-500/5 border-amber-500/20 dark:bg-amber-500/10 dark:border-amber-500/20 hover:border-amber-500/40"
+                      : "bg-blue-500/5 border-blue-500/20 dark:bg-blue-500/10 dark:border-blue-500/20 hover:border-blue-500/40"}
                 `}
               >
                 <div className="mt-1 text-2xl filter drop-shadow-sm">

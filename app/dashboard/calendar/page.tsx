@@ -175,15 +175,15 @@ export default function CalendarPage() {
   }
 
   return (
-
-    <div className="space-y-4 sm:space-y-6 px-4 sm:px-6 lg:px-8 py-4 sm:py-6">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-gray-900 to-gray-600 dark:from-gray-100 dark:to-gray-300 bg-clip-text text-transparent">
-            Calendar
-          </h1>
-          <p className="text-gray-600 dark:text-gray-400 mt-1">Plan and organize your tasks visually.</p>
-        </div>
+    <div className="w-full min-h-full ambient-bg px-4 sm:px-6 lg:px-8 py-6 sm:py-10 space-y-6 sm:space-y-10">
+      <div className="max-w-7xl mx-auto space-y-6 sm:space-y-10">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div>
+            <h1 className="text-2xl sm:text-4xl lg:text-5xl font-bold bg-gradient-to-r from-emerald-800 to-teal-600 dark:from-emerald-200 dark:to-teal-200 bg-clip-text text-transparent leading-tight">
+              Calendar
+            </h1>
+            <p className="text-gray-500 dark:text-gray-400 mt-1.5 font-medium">Plan and organize your tasks visually.</p>
+          </div>
         <div className="flex items-center gap-2 mt-2 sm:mt-0">
           <Button
             className="flex-1 bg-gradient-to-r from-emerald-600 to-blue-600 hover:from-emerald-700 hover:to-blue-700 text-white shadow-lg hover:shadow-xl transition-all duration-200 disabled:opacity-50"
@@ -285,7 +285,7 @@ export default function CalendarPage() {
         </Dialog>
       </div>
 
-      <Card className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm border-0 shadow-xl">
+      <Card className="card-zen">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-6">
           <CardTitle className="text-xl font-semibold flex items-center text-gray-900 dark:text-gray-100">
             <Icons.calendar className="w-5 h-5 mr-2 text-emerald-600 dark:text-emerald-400" />
@@ -505,6 +505,7 @@ export default function CalendarPage() {
           </div>
         </CardContent>
       </Card>
+      </div>
     </div>
   )
 }

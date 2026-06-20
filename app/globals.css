@@ -490,6 +490,14 @@ html, body {
     radial-gradient(at 50% 50%, rgba(59, 130, 246, 0.03) 0%, transparent 50%);
 }
 
+/* Zen Gradient Background for landing/login pages */
+.zen-gradient-bg {
+  background: linear-gradient(135deg, #f4fcf7 0%, #f0fbf4 50%, #ebfaf0 100%);
+}
+.dark .zen-gradient-bg {
+  background: linear-gradient(135deg, #04241a 0%, #021a12 50%, #01110b 100%);
+}
+
 /* Colored left accent for stat cards */
 .accent-left-emerald { border-left: 3px solid rgba(16, 185, 129, 0.6); }
 .accent-left-blue { border-left: 3px solid rgba(59, 130, 246, 0.6); }

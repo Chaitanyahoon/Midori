@@ -586,7 +586,7 @@ export default function PomodoroPage() {
                     date.setDate(date.getDate() - i)
                     const dateString = date.toISOString().split("T")[0]
                     const daySessions = pomodoros.filter(
-                      (p) => p.completed && p.startTime.split("T")[0] === dateString,
+                      (p) => p.completed && p.startTime && p.startTime.split("T")[0] === dateString,
                     )
                     if (daySessions.length > 0) {
                       streak++

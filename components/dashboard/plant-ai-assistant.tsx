@@ -173,7 +173,7 @@ export function PlantAIAssistant({ onCloseAction }: PlantAIAssistantProps) {
     const today = new Date().toISOString().split("T")[0]
     const todayTasks = tasks.filter((task) => task.completedAt?.split("T")[0] === today).length
     const todayPomodoros = pomodoros.filter(
-      (session) => session.completed && session.startTime.split("T")[0] === today,
+      (session) => session.completed && session.startTime && session.startTime.split("T")[0] === today,
     ).length
     const overdueTasks = tasks.filter((task) => task.dueDate && task.dueDate < today && !task.completed).length
     const pendingTasks = tasks.filter((task) => !task.completed).length

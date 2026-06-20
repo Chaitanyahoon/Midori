@@ -47,12 +47,12 @@ export function WeeklyStats() {
       const dayTasks = tasks.filter((task) => task.completedAt && task.completedAt.split("T")[0] === dateString).length
 
       const dayPomodoros = pomodoros.filter(
-        (session) => session.completed && session.startTime.split("T")[0] === dateString,
+        (session) => session.completed && session.startTime && session.startTime.split("T")[0] === dateString,
       ).length
 
       const dayFocusTime =
         pomodoros
-          .filter((session) => session.completed && session.startTime.split("T")[0] === dateString)
+          .filter((session) => session.completed && session.startTime && session.startTime.split("T")[0] === dateString)
           .reduce((sum, session) => sum + session.duration, 0) / 60
 
       weekData.push({
@@ -86,11 +86,11 @@ export function WeeklyStats() {
 
       prevWeekTasks += tasks.filter((task) => task.completedAt && task.completedAt.split("T")[0] === dateString).length
       prevWeekPomodoros += pomodoros.filter(
-        (session) => session.completed && session.startTime.split("T")[0] === dateString,
+        (session) => session.completed && session.startTime && session.startTime.split("T")[0] === dateString,
       ).length
       prevWeekHours +=
         pomodoros
-          .filter((session) => session.completed && session.startTime.split("T")[0] === dateString)
+          .filter((session) => session.completed && session.startTime && session.startTime.split("T")[0] === dateString)
           .reduce((sum, session) => sum + session.duration, 0) / 60
     }
 

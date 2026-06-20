@@ -55,12 +55,12 @@ export function ProductivityTrends() {
       const dayTasks = tasks.filter((task) => task.completedAt && task.completedAt.split("T")[0] === dateString).length
 
       const dayPomodoros = pomodoros.filter(
-        (session) => session.completed && session.startTime.split("T")[0] === dateString,
+        (session) => session.completed && session.startTime && session.startTime.split("T")[0] === dateString,
       ).length
 
       const dayFocusTime =
         pomodoros
-          .filter((session) => session.completed && session.startTime.split("T")[0] === dateString)
+          .filter((session) => session.completed && session.startTime && session.startTime.split("T")[0] === dateString)
           .reduce((sum, session) => sum + session.duration, 0) / 60
 
       weekData.push({
@@ -136,10 +136,10 @@ export function ProductivityTrends() {
     const todayTasks = tasks.filter((t) => t.completedAt && t.completedAt.split("T")[0] === today).length
     const yesterdayTasks = tasks.filter((t) => t.completedAt && t.completedAt.split("T")[0] === yesterday).length
 
-    const todayPomodoros = pomodoros.filter((p) => p.completed && p.startTime.split("T")[0] === today).length
+    const todayPomodoros = pomodoros.filter((p) => p.completed && p.startTime && p.startTime.split("T")[0] === today).length
 
     // Unused variable
-    // const yesterdayPomodoros = pomodoros.filter((p) => p.completed && p.startTime.split("T")[0] === yesterday).length
+    // const yesterdayPomodoros = pomodoros.filter((p) => p.completed && p.startTime && p.startTime.split("T")[0] === yesterday).length
 
     const insights = []
 

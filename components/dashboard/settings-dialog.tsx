@@ -98,7 +98,10 @@ export function SettingsDialog({ children }: { children?: React.ReactNode }) {
             setOpen(v);
             if (v) {
                 setName(settings.userName || user?.displayName || user?.email?.split("@")[0] || "");
-                setTone(settings.userTone || "casual")
+                setTone(settings.userTone || "casual");
+                setGoalTasks([settings.dailyGoalTasks || 3]);
+                setGoalPomodoros([settings.dailyGoalPomodoros || 4]);
+                setGoalHours([settings.dailyGoalHours || 2]);
             }
         }}>
             <DialogTrigger asChild>

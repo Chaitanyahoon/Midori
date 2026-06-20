@@ -58,7 +58,7 @@ export function TopNav() {
 
   const todayPomodoros = pomodoros.filter((session) => {
     const today = new Date().toISOString().split("T")[0]
-    return session.startTime.split("T")[0] === today && session.completed
+    return session.startTime && session.startTime.split("T")[0] === today && session.completed
   }).length
 
   // Sync generated notifications with store

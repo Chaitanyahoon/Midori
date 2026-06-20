@@ -30,10 +30,35 @@ export function Sidebar({ onClose }: SidebarProps) {
   const userName = settings.userName || user?.displayName || user?.email?.split('@')[0] || "My Profile"
   const initials = userName === "My Profile" ? "ME" : userName.toUpperCase().slice(0, 2)
 
-  // Calculate dynamic weekly growth based on completed tasks ratio
-  const completedTasksCount = tasks?.filter((t) => t.completed).length || 0
-  const totalTasksCount = tasks?.length || 0
-  const growthPercentage = totalTasksCount > 0 ? Math.round((completedTasksCount / totalTasksCount) * 100) : 0
+  // Calculate dynamic weekly growth based on tasks completed in the last 7 days
+  const getWeeklyGrowthPercentage = () => {
+    const sevenDaysAgo = new Date()
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7)
+
+    // Tasks completed in the last 7 days
+    const weeklyCompleted = tasks?.filter((t) => {
+      if (!t.completed || !t.completedAt) return false
+      return new Date(t.completedAt) >= sevenDaysAgo
+    }).length || 0
+
+    // Combine them to get total tasks due or completed in the last 7 days
+    const totalWeeklyTasks = tasks?.filter((t) => {
+      const isCompletedRecently = t.completed && t.completedAt && new Date(t.completedAt) >= sevenDaysAgo
+      const isDueRecently = t.dueDate && new Date(t.dueDate) >= sevenDaysAgo
+      return isCompletedRecently || isDueRecently
+    }).length || 0
+
+    if (totalWeeklyTasks === 0) {
+      // Fallback: If no tasks this week, use overall completed ratio
+      const totalAll = tasks?.length || 0
+      const completedAll = tasks?.filter(t => t.completed).length || 0
+      return totalAll > 0 ? Math.round((completedAll / totalAll) * 100) : 0
+    }
+
+    return Math.round((weeklyCompleted / totalWeeklyTasks) * 100)
+  }
+
+  const growthPercentage = getWeeklyGrowthPercentage()
 
   return (
     <div className="w-72 h-screen flex flex-col sticky top-0 z-40">

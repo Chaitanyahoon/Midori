@@ -634,6 +634,10 @@ export function VisualGarden({ onAddPlant }: { onAddPlant?: () => void }) {
     }
 
     const handlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+        const target = e.target as HTMLElement
+        if (target.closest('.plant-control-overlay')) {
+            return
+        }
         if (!cont.current) return
         const rect = cont.current.getBoundingClientRect()
         const clickX = e.clientX - rect.left
@@ -1023,7 +1027,7 @@ export function VisualGarden({ onAddPlant }: { onAddPlant?: () => void }) {
                         const p = plants.find(p => p.id === selectedPlantId)
                         if (!p) return null
                         return (
-                            <div className="absolute z-20 flex gap-1 bg-white/90 dark:bg-slate-800/90 p-1.5 rounded-xl shadow-lg border border-slate-200 dark:border-slate-700 backdrop-blur-md transform -translate-x-1/2 -translate-y-full animate-in zoom-in duration-200" style={{ left: `${p.x * 100}%`, top: `${p.y * 100}%`, marginTop: '-20px' }}>
+                            <div className="plant-control-overlay absolute z-20 flex gap-1 bg-white/90 dark:bg-slate-800/90 p-1.5 rounded-xl shadow-lg border border-slate-200 dark:border-slate-700 backdrop-blur-md transform -translate-x-1/2 -translate-y-full animate-in zoom-in duration-200" style={{ left: `${p.x * 100}%`, top: `${p.y * 100}%`, marginTop: '-20px' }}>
                                 <button onClick={(e) => { e.stopPropagation(); updateSelectedPlant({ scale: Math.min((p.scale || 1) + 0.1, 1.5) }) }} className="w-8 h-8 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center justify-center text-slate-700 dark:text-slate-300" title="Make Bigger">
                                     <Icons.plus className="w-4 h-4" />
                                 </button>

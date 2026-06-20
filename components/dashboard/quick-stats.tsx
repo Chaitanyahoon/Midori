@@ -34,13 +34,13 @@ export function QuickStats() {
   }).length
 
   const todayPomodoros = pomodoros.filter((session) => {
-    return session.startTime.split("T")[0] === today && session.completed
+    return session.startTime && session.startTime.split("T")[0] === today && session.completed
   }).length
 
   const todayFocusTime =
     pomodoros
       .filter((session) => {
-        return session.startTime.split("T")[0] === today && session.completed
+        return session.startTime && session.startTime.split("T")[0] === today && session.completed
       })
       .reduce((sum, session) => sum + session.duration, 0) / 60
 

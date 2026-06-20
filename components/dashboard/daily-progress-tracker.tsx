@@ -45,7 +45,7 @@ export function DailyProgressTracker() {
   // Calculate today's data
   const today = new Date().toISOString().split("T")[0]
   const todayTasks = tasks.filter((t) => t.completedAt && t.completedAt.split("T")[0] === today)
-  const todayPomodoros = pomodoros.filter((p) => p.completed && p.startTime.split("T")[0] === today)
+  const todayPomodoros = pomodoros.filter((p) => p.completed && p.startTime && p.startTime.split("T")[0] === today)
   const todayFocusTime = todayPomodoros.reduce((sum, p) => sum + p.duration, 0) / 60
 
   // Calculate streak and patterns
@@ -57,7 +57,7 @@ export function DailyProgressTracker() {
       const dateString = date.toISOString().split("T")[0]
 
       const dayTasks = tasks.filter((t) => t.completedAt && t.completedAt.split("T")[0] === dateString).length
-      const dayPomodoros = pomodoros.filter((p) => p.completed && p.startTime.split("T")[0] === dateString).length
+      const dayPomodoros = pomodoros.filter((p) => p.completed && p.startTime && p.startTime.split("T")[0] === dateString).length
 
       days.push({
         date: dateString,

@@ -22,7 +22,7 @@ export function GardenTimeline() {
         (task) => task.completed && task.completedAt && task.completedAt.split("T")[0] === dateString
       )
       const dayPomodoros = pomodoros.filter(
-        (p) => p.completed && p.startTime.split("T")[0] === dateString
+        (p) => p.completed && p.startTime && p.startTime.split("T")[0] === dateString
       )
 
       days.push({

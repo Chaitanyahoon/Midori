@@ -9,8 +9,19 @@ const WeeklyStats = dynamic(() => import("@/components/dashboard/weekly-stats").
 const ProductivityTrends = dynamic(() => import("@/components/dashboard/productivity-trends").then(m => ({ default: m.ProductivityTrends })), { ssr: false })
 
 export default function InsightsPage() {
-  const { tasks, pomodoros } = useData()
+  const { tasks, pomodoros, loading } = useData()
   const isDemoData = tasks.length === 0 && pomodoros.length === 0
+
+  if (loading) {
+    return (
+      <div className="w-full min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-900">
+        <div className="flex flex-col items-center gap-3">
+          <div className="w-8 h-8 animate-spin rounded-full border-2 border-emerald-600 border-t-transparent" />
+          <p className="text-sm text-emerald-600 font-medium animate-pulse">Analyzing growth insights...</p>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="w-full min-h-full ambient-bg px-4 sm:px-6 lg:px-8 py-6 sm:py-10 relative overflow-hidden">

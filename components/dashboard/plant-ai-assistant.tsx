@@ -194,6 +194,22 @@ export function PlantAIAssistant({ onCloseAction }: PlantAIAssistantProps) {
     }
   }, [tasks, pomodoros, stats, settings])
 
+  // Seedling mood calculations
+  const plantMood = useMemo(() => {
+    if (userContext.overdueTasks > 0) return { emoji: "⚠️", text: "Thirsty Sprout (Needs Attention)", color: "from-amber-400 via-orange-400 to-rose-500" }
+    if (userContext.completionRate >= 70) return { emoji: "🌸", text: "Happy Blossom", color: "from-emerald-400 via-teal-400 to-pink-400" }
+    if (userContext.completionRate >= 30) return { emoji: "🌿", text: "Growing Sprout", color: "from-emerald-400 via-teal-550 to-green-600" }
+    return { emoji: "🌱", text: "Resting Seedling", color: "from-slate-400 via-emerald-400 to-slate-500" }
+  }, [userContext])
+
+  const plantLevel = useMemo(() => {
+    const score = (stats.completedTasks || 0) + (stats.streak || 0) * 3 + (stats.totalPomodoros || 0)
+    if (score >= 40) return { level: 4, name: "Zen Garden Master" }
+    if (score >= 20) return { level: 3, name: "Skilled Gardener" }
+    if (score >= 8) return { level: 2, name: "Growing Sprout" }
+    return { level: 1, name: "Tiny Seed" }
+  }, [stats])
+
 
   const { toast } = useToast()
 
@@ -343,11 +359,8 @@ export function PlantAIAssistant({ onCloseAction }: PlantAIAssistantProps) {
         <DialogHeader className="flex flex-row items-center justify-between gap-4 pb-4 px-6 pt-6 border-b-2 border-emerald-100 flex-shrink-0 bg-gradient-to-r from-emerald-50 to-teal-50">
           <DialogTitle className="flex items-center gap-4 flex-1 min-w-0">
             <div className="relative flex-shrink-0">
-              <div className="w-12 h-12 bg-gradient-to-br from-emerald-400 via-teal-500 to-green-600 rounded-full flex items-center justify-center shadow-lg border-[3px] border-white">
-                <svg className="w-6 h-6 text-white transform -rotate-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"
-                    d="M12 19c-2.8 2-5 2.5-7 2.5.5-3 1-5.5 3-7.5-2-3.5-2-7.5-2-9.5 4.5 2 6 4 7 7 1-3 2.5-5 7-7 0 2-.5 6-2 9.5 2 2 2.5 4.5 3 7.5-2 0-4.2-.5-7-2.5" />
-                </svg>
+              <div className={`w-12 h-12 bg-gradient-to-br ${plantMood.color} rounded-full flex items-center justify-center shadow-lg border-[3px] border-white text-2xl transition-all duration-500 animate-breathe-glow-emerald`}>
+                {plantMood.emoji}
               </div>
               <div className="absolute -top-1 -right-1 w-4 h-4 bg-gradient-to-br from-emerald-300 to-green-400 rounded-full animate-pulse shadow-sm border-2 border-white"></div>
               <div className="absolute -bottom-1 -left-1 w-3 h-3 bg-gradient-to-br from-teal-300 to-emerald-400 rounded-full animate-pulse shadow-sm border-2 border-white" style={{ animationDelay: '0.5s' }}></div>
@@ -355,12 +368,14 @@ export function PlantAIAssistant({ onCloseAction }: PlantAIAssistantProps) {
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-2 mb-0.5">
                 <span className="text-xl font-bold bg-gradient-to-r from-emerald-600 via-teal-500 to-green-500 bg-clip-text text-transparent">BloomMind</span>
-                <div className="px-2 py-0.5 bg-gradient-to-r from-emerald-100 to-teal-100 rounded-full text-[10px] font-semibold text-emerald-700 border border-emerald-200/50">AI</div>
+                <div className="px-2 py-0.5 bg-gradient-to-r from-emerald-100 to-teal-100 rounded-full text-[10px] font-bold text-emerald-700 border border-emerald-250/50">
+                  Lvl {plantLevel.level} {plantLevel.name}
+                </div>
               </div>
               <div className="flex items-center gap-2 text-xs text-emerald-600">
-                <span className="font-medium">🌿 Your personal growth companion</span>
+                <span className="font-semibold">{plantMood.text}</span>
                 <span className="w-1 h-1 rounded-full bg-emerald-300"></span>
-                <span className="text-emerald-500 font-medium">BloomAI Local</span>
+                <span className="text-emerald-550 font-medium">BloomAI Local</span>
               </div>
             </div>
           </DialogTitle>
@@ -472,8 +487,28 @@ export function PlantAIAssistant({ onCloseAction }: PlantAIAssistantProps) {
 
         <form
           onSubmit={handleSubmit}
-          className="border-t border-emerald-100 bg-white/50 backdrop-blur-sm p-4 sticky bottom-0 z-10"
+          className="border-t border-emerald-100 bg-white/50 backdrop-blur-sm p-4 sticky bottom-0 z-10 flex-shrink-0"
         >
+          {chatHistory.length > 0 && (
+            <div className="flex gap-2 mb-3 overflow-x-auto scrollbar-hide py-1 max-w-3xl mx-auto px-1 select-none">
+              {[
+                { label: "Prioritize Tasks", prompt: "Look at my tasks and help me prioritize what to do next based on deadlines & priority." },
+                { label: "Suggest a Breather", prompt: "Recommend a brief, offline focus-restoring mindfulness break activity for me." },
+                { label: "Daily Zen Quote", prompt: "Share an encouraging Zen quote and explain how it relates to my daily growth." },
+                { label: "Give me a Challenge", prompt: "Set a small, fun productivity challenge for me based on my current stats." }
+              ].map((chip, idx) => (
+                <button
+                  key={idx}
+                  type="button"
+                  onClick={() => setPrompt(chip.prompt)}
+                  className="px-3 py-1.5 rounded-full bg-emerald-50/60 hover:bg-emerald-100/80 border border-emerald-200/40 text-emerald-700 text-xs font-bold whitespace-nowrap transition-all hover:scale-105 active:scale-95 flex items-center gap-1.5 shadow-sm"
+                >
+                  <span>✨</span> {chip.label}
+                </button>
+              ))}
+            </div>
+          )}
+
           <div className="relative max-w-3xl mx-auto">
             <Textarea
               placeholder="Ask for schedule advice, break ideas, or motivation..."

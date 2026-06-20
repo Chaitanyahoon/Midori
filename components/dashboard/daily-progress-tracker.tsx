@@ -4,9 +4,43 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Icons } from "@/components/icons"
 import { useData } from "@/components/local-data-provider"
+import { Skeleton } from "@/components/ui/skeleton"
 
 export function DailyProgressTracker() {
-  const { tasks, pomodoros, stats } = useData()
+  const { tasks, pomodoros, stats, loading } = useData()
+
+  if (loading) {
+    return (
+      <Card className="bg-gradient-to-br from-white/90 to-blue-50/50 backdrop-blur-sm border-0 shadow-xl">
+        <CardHeader>
+          <CardTitle className="flex items-center justify-between">
+            <Skeleton className="h-5 w-36" />
+            <Skeleton className="h-5 w-24 rounded-full" />
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          <div className="grid grid-cols-3 gap-4">
+            {Array.from({ length: 3 }).map((_, i) => (
+              <div key={i} className="text-center space-y-2">
+                <Skeleton className="w-16 h-16 rounded-full mx-auto" />
+                <Skeleton className="h-3 w-10 mx-auto" />
+                <Skeleton className="h-3 w-12 mx-auto" />
+              </div>
+            ))}
+          </div>
+          <div className="space-y-3">
+            <Skeleton className="h-4 w-28" />
+            <div className="flex justify-between">
+              {Array.from({ length: 7 }).map((_, i) => (
+                <Skeleton key={i} className="w-8 h-8 rounded-full" />
+              ))}
+            </div>
+          </div>
+          <Skeleton className="h-16 w-full rounded-lg" />
+        </CardContent>
+      </Card>
+    )
+  }
 
   // Calculate today's data
   const today = new Date().toISOString().split("T")[0]

@@ -41,6 +41,8 @@ import {
   FiDownloadCloud,
   FiMinus,
   FiMousePointer,
+  FiRepeat,
+  FiSkipForward,
 } from "react-icons/fi"
 
 import {
@@ -106,4 +108,6 @@ export const Icons = {
   tag: FiTag,
   cloudRain: FiCloudRain,
   download: FiDownloadCloud,
+  repeat: FiRepeat,
+  skip: FiSkipForward,
 }

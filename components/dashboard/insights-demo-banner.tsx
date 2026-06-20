@@ -2,8 +2,10 @@
 
 import { Button } from "@/components/ui/button"
 import { Icons } from "@/components/icons"
+import { useRouter } from "next/navigation"
 
 export function InsightsDemoBanner() {
+  const router = useRouter()
   return (
     <div className="card-zen p-6 bg-gradient-to-r from-emerald-500/10 via-teal-500/10 to-transparent border-emerald-500/30 flex flex-col md:flex-row items-center justify-between gap-6 animate-bloom relative overflow-hidden group">
       {/* Decorative background */}
@@ -22,13 +24,13 @@ export function InsightsDemoBanner() {
       </div>
       <div className="flex items-center gap-3 w-full md:w-auto relative z-10">
         <Button 
-          onClick={() => window.location.href = "/dashboard/tasks"} 
+          onClick={() => router.push("/dashboard/tasks")} 
           className="btn-organic flex-1 md:flex-none shadow-md hover:shadow-emerald-500/10"
         >
           <Icons.plus className="w-4 h-4 mr-2" /> Plant Seeds
         </Button>
         <Button 
-          onClick={() => window.location.href = "/dashboard/pomodoro"} 
+          onClick={() => router.push("/dashboard/pomodoro")} 
           variant="outline" 
           className="flex-1 md:flex-none bg-white/40 dark:bg-slate-900/40 border-slate-200/40 dark:border-slate-700/40 hover:bg-white dark:hover:bg-slate-800"
         >

@@ -3,34 +3,33 @@
 import { useState, useEffect, useRef } from "react"
 import { useRouter } from "next/navigation"
 import { SakuraParticles } from "@/components/dashboard/sakura-particles"
-
+import { ModeToggle } from "@/components/mode-toggle"
 
 export default function HomePage() {
     const router = useRouter()
     const [isActive, setIsActive] = useState(false)
-    
-    // Mouse Parallax Effect
-    const [mousePos, setMousePos] = useState({ x: 0, y: 0 })
     const containerRef = useRef<HTMLDivElement>(null)
 
     useEffect(() => {
         setIsActive(true)
+        const container = containerRef.current
+        if (!container) return
+        
+        container.style.setProperty("--mouse-x", "0")
+        container.style.setProperty("--mouse-y", "0")
+
         const handleMouseMove = (e: MouseEvent) => {
-            if (!containerRef.current) return
             const { clientX, clientY } = e
             const { innerWidth, innerHeight } = window
             const x = (clientX / innerWidth) - 0.5
             const y = (clientY / innerHeight) - 0.5
-            setMousePos({ x, y })
+            
+            container.style.setProperty("--mouse-x", x.toString())
+            container.style.setProperty("--mouse-y", y.toString())
         }
         window.addEventListener("mousemove", handleMouseMove)
         return () => window.removeEventListener("mousemove", handleMouseMove)
     }, [])
-
-    const getParallaxStyle = (strength: number) => ({
-        transform: `translate3d(${mousePos.x * strength}px, ${mousePos.y * strength}px, 0)`,
-        transition: "transform 0.4s cubic-bezier(0.16, 1, 0.3, 1)"
-    })
 
     return (
         <div 
@@ -40,39 +39,63 @@ export default function HomePage() {
             {/* Washi Texture Overlay */}
             <div className="washi-overlay pointer-events-none" />
 
+            {/* Theme Toggle in Top Right */}
+            <div className="absolute top-6 right-6 z-50 reveal-staggered delay-1">
+                <ModeToggle />
+            </div>
+
             {/* Sakura Particles */}
             <SakuraParticles />
 
             {/* Cinematic Light Leaks */}
             <div 
                 className="light-leak top-[-10%] left-[-10%] opacity-20 dark:opacity-25" 
-                style={getParallaxStyle(30)}
+                style={{
+                    transform: "translate3d(calc(var(--mouse-x, 0) * 30px), calc(var(--mouse-y, 0) * 30px), 0)",
+                    transition: "transform 0.4s cubic-bezier(0.16, 1, 0.3, 1)"
+                }}
             />
             <div 
                 className="light-leak bottom-[-8%] right-[-8%] opacity-15 dark:opacity-20 bg-teal-500/10" 
-                style={getParallaxStyle(-20)}
+                style={{
+                    transform: "translate3d(calc(var(--mouse-x, 0) * -20px), calc(var(--mouse-y, 0) * -20px), 0)",
+                    transition: "transform 0.4s cubic-bezier(0.16, 1, 0.3, 1)"
+                }}
             />
-
-            {/* Vertical Decorative Text (Ma) */}
-            {/* simplified: hide large decorative vertical text on desktop for compact design */}
 
             {/* Floating Kanji Background */}
             <div className="absolute inset-0 pointer-events-none overflow-hidden select-none">
-                <span className="absolute top-[6%] left-[8%] text-[6rem] font-serif opacity-[0.03] dark:opacity-[0.02] animate-float-slow" style={getParallaxStyle(30)}>緑</span>
-                <span className="absolute bottom-[4%] right-[8%] text-[8rem] font-serif opacity-[0.03] dark:opacity-[0.02] animate-float-slow" style={getParallaxStyle(-40)}>和</span>
+                <span 
+                    className="absolute top-[6%] left-[8%] text-[6rem] font-serif opacity-[0.03] dark:opacity-[0.02] animate-float-slow" 
+                    style={{
+                        transform: "translate3d(calc(var(--mouse-x, 0) * 30px), calc(var(--mouse-y, 0) * 30px), 0)",
+                        transition: "transform 0.4s cubic-bezier(0.16, 1, 0.3, 1)"
+                    }}
+                >
+                    緑
+                </span>
+                <span 
+                    className="absolute bottom-[4%] right-[8%] text-[8rem] font-serif opacity-[0.03] dark:opacity-[0.02] animate-float-slow" 
+                    style={{
+                        transform: "translate3d(calc(var(--mouse-x, 0) * -40px), calc(var(--mouse-y, 0) * -40px), 0)",
+                        transition: "transform 0.4s cubic-bezier(0.16, 1, 0.3, 1)"
+                    }}
+                >
+                    和
+                </span>
             </div>
 
             {/* Main Content */}
             <div className="relative z-10 text-center max-w-3xl px-4">
                 <div className="mb-8 md:mb-12 flex flex-col items-center reveal-staggered delay-1">
-                    <div className="p-4 md:p-6 bg-white/30 dark:bg-emerald-950/8 backdrop-blur-md rounded-2xl border border-white/30 dark:border-emerald-500/8 shadow-sm mb-6 md:mb-8 transition-all duration-500 flex items-center justify-center">
+                    <div className="relative p-4 md:p-6 bg-white/30 dark:bg-emerald-950/8 backdrop-blur-md rounded-2xl border border-white/30 dark:border-emerald-500/8 shadow-sm mb-6 md:mb-8 transition-all duration-500 flex items-center justify-center">
                         <div className="bg-white/90 dark:bg-emerald-900/10 rounded-xl p-3 md:p-4 flex items-center justify-center">
                             <img src="/midori_logo.png" alt="Midori" className="w-12 h-12 md:w-14 md:h-14 pointer-events-none transition-transform group-hover:rotate-6 duration-500" />
                         </div>
-                    </div>
                         <div className="absolute -bottom-3 -right-3 hanko-seal hanko-seal-filter animate-pulse-slow scale-110">
                             <span className="text-red-700 dark:text-red-500 font-serif font-black text-lg select-none">緑</span>
                         </div>
+                    </div>
                 </div>
 
                 <div className="space-y-3 mb-8 md:mb-10">
@@ -92,7 +115,7 @@ export default function HomePage() {
                 <div className="flex flex-col sm:flex-row gap-4 md:gap-6 justify-center items-center reveal-staggered delay-4">
                     <button 
                         onClick={() => router.push("/dashboard")}
-                        className="h-12 md:h-14 px-8 md:px-12 rounded-full bg-emerald-600 dark:bg-emerald-500 text-white dark:text-slate-950 font-serif-luxury font-medium text-base md:text-lg shadow-md transition-all hover:scale-105 active:scale-95"
+                        className="btn-masterpiece h-12 md:h-14 px-8 md:px-12 rounded-full bg-emerald-600 dark:bg-emerald-500 text-white dark:text-slate-950 font-serif-luxury font-medium text-base md:text-lg shadow-md transition-all hover:scale-105 active:scale-95"
                     >
                         <span className="relative z-10 flex items-center gap-2">
                             Enter the Garden <span className="text-xs opacity-60 font-serif italic">/ 入園</span>

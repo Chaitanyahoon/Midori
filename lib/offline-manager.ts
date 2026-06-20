@@ -172,7 +172,7 @@ export class SyncQueue {
    * Get all queued changes
    */
   getAll(): QueuedChange[] {
-    return this.cache.get(STORAGE_KEYS.QUEUE, [])
+    return this.cache.get<QueuedChange[]>(STORAGE_KEYS.QUEUE, []) ?? []
   }
 
   /**
@@ -300,7 +300,7 @@ export class OfflineManager {
       isOnline: this.network.getStatus(),
       syncInProgress: false,
       pendingChanges: this.queue.getAll(),
-      lastSyncTime: this.cache.get<number>(STORAGE_KEYS.LAST_SYNC),
+      lastSyncTime: this.cache.get<number>(STORAGE_KEYS.LAST_SYNC) ?? null,
       errorCount: 0,
     }
 

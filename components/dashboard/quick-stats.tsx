@@ -2,9 +2,30 @@
 
 import { Icons } from "@/components/icons"
 import { useData } from "@/components/local-data-provider"
+import { Skeleton } from "@/components/ui/skeleton"
 
 export function QuickStats() {
-  const { stats, tasks, pomodoros } = useData()
+  const { stats, tasks, pomodoros, loading } = useData()
+
+  if (loading) {
+    return (
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-5">
+        {Array.from({ length: 4 }).map((_, i) => (
+          <div key={i} className="card-zen p-4 sm:p-5">
+            <div className="flex items-start justify-between mb-3 sm:mb-4">
+              <div className="flex-1 min-w-0 space-y-2">
+                <Skeleton className="h-3 w-20" />
+                <Skeleton className="h-8 w-14" />
+                <Skeleton className="h-3 w-16" />
+              </div>
+              <Skeleton className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl" />
+            </div>
+            <Skeleton className="h-1.5 w-full rounded-full" />
+          </div>
+        ))}
+      </div>
+    )
+  }
 
   const today = new Date().toISOString().split("T")[0]
 

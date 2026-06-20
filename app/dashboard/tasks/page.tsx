@@ -11,9 +11,11 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Icons } from "@/components/icons"
-import { useData } from "@/components/local-data-provider"
+import { useData, type Task } from "@/components/local-data-provider"
 import getAppreciation from '@/lib/appreciation'
 import { useToast } from "@/hooks/use-toast"
+import { fireTaskConfetti } from "@/lib/confetti"
+import { playTaskComplete } from "@/lib/sounds"
 
 export default function TasksPage() {
   const { tasks, addTask, updateTask, deleteTask, settings } = useData()
@@ -32,7 +34,7 @@ export default function TasksPage() {
     priority: "medium" as const,
     category: "work" as const,
     dueDate: "",
-    recurrence: "none" as "none" | "daily" | "weekly" | "monthly",
+    recurrence: { type: "none" } as Task["recurrence"],
   })
 
   // Filter Tasks
@@ -135,7 +137,7 @@ export default function TasksPage() {
       priority: "medium",
       category: "work",
       dueDate: "",
-      recurrence: "none",
+      recurrence: { type: "none" },
     })
     setIsAddDialogOpen(false)
 
@@ -149,6 +151,8 @@ export default function TasksPage() {
     updateTask(taskId, { completed })
     const task = tasks.find((t) => t.id === taskId)
     if (completed && task) {
+      fireTaskConfetti()
+      playTaskComplete()
       const app = getAppreciation(task.title, { userName, tone: (userTone as any) || 'balanced' })
       toast({
         title: app.title,
@@ -165,28 +169,28 @@ export default function TasksPage() {
   const getPriorityColor = (priority: string) => {
     switch (priority) {
       case "high":
-        return "bg-rose-100 dark:bg-rose-900/30 text-rose-700 dark:text-rose-300 border-rose-200 dark:border-rose-800"
+        return "bg-rose-500/10 dark:bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20"
       case "medium":
-        return "bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800"
+        return "bg-amber-500/10 dark:bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20"
       case "low":
-        return "bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800"
+        return "bg-emerald-500/10 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20"
       default:
-        return "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700"
+        return "bg-slate-500/10 dark:bg-slate-500/10 text-slate-600 dark:text-slate-400 border border-slate-500/20"
     }
   }
 
   const getCategoryColor = (category: string) => {
     switch (category) {
       case "work":
-        return "bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300"
+        return "bg-blue-500/10 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20"
       case "personal":
-        return "bg-violet-100 dark:bg-violet-900/30 text-violet-700 dark:text-violet-300"
+        return "bg-violet-500/10 dark:bg-violet-500/10 text-violet-600 dark:text-violet-400 border border-violet-500/20"
       case "learning":
-        return "bg-teal-100 dark:bg-teal-900/30 text-teal-700 dark:text-teal-300"
+        return "bg-teal-500/10 dark:bg-teal-500/10 text-teal-600 dark:text-teal-400 border border-teal-500/20"
       case "health":
-        return "bg-pink-100 dark:bg-pink-900/30 text-pink-700 dark:text-pink-300"
+        return "bg-pink-500/10 dark:bg-pink-500/10 text-pink-600 dark:text-pink-400 border border-pink-500/20"
       default:
-        return "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300"
+        return "bg-slate-500/10 dark:bg-slate-500/10 text-slate-600 dark:text-slate-400 border border-slate-500/20"
     }
   }
 
@@ -463,7 +467,11 @@ export default function TasksPage() {
                 {groupTasks.map((task) => (
                   <Card
                     key={task.id}
-                    className={`card-zen group border-l-4 ${task.completed ? 'border-l-slate-300 dark:border-l-slate-700 opacity-60' : 'border-l-emerald-500'}`}
+                    className={`card-zen group border-l-4 transition-all duration-305 hover:border-l-6 ${
+                      task.completed 
+                        ? 'border-l-slate-300 dark:border-l-slate-700 opacity-60' 
+                        : 'border-l-emerald-500 hover:border-l-emerald-600 hover:shadow-md hover:shadow-emerald-500/5 dark:hover:shadow-emerald-400/5'
+                    }`}
                   >
                     <CardContent className="p-4 sm:p-5">
                       <div className="flex items-start gap-4">

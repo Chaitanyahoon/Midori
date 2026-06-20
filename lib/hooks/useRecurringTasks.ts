@@ -1,11 +1,10 @@
 "use client"
 
 import { useCallback } from "react"
-import { useData } from "@/components/local-data-provider"
+import { useData, type Task } from "@/components/local-data-provider"
 import {
   generateRecurrenceInstances,
   type RecurrencePattern,
-  type Task,
 } from "@/lib/task-utils"
 
 /**
@@ -38,7 +37,6 @@ export function useRecurringTasks() {
       const firstInstance = await addTask({
         ...baseTask,
         recurrence: pattern,
-        createdAt: now,
       })
 
       // Generate future instances
@@ -57,7 +55,6 @@ export function useRecurringTasks() {
           dueDate: instanceDates[i],
           parentTaskId: "", // Would be filled with parent task ID in real implementation
           recurrence: { type: "none" },
-          createdAt: now,
         })
       }
     },
@@ -151,7 +148,6 @@ export function useRecurringTasks() {
             dueDate: date,
             parentTaskId: task.id,
             recurrence: { type: "none" },
-            createdAt: new Date().toISOString(),
           })
         }
       }

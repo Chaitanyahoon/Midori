@@ -7,7 +7,7 @@ import { useTheme } from "next-themes"
 import { useWeather } from "@/hooks/use-weather"
 import { toast } from "sonner"
 
-interface Plant { id?: string; x: number; y: number; type: "flower" | "tree"; subtype: string; color: string; scale: number; growth: number; delay: number; swayOffset: number; swaySpeed: number; seed: number }
+interface Plant { id?: string; x: number; y: number; type: "flower" | "tree"; subtype: string; color: string; scale: number; growth: number; delay: number; swayOffset: number; swaySpeed: number; seed: number; targetGrowth?: number }
 interface Star { x: number; y: number; size: number; ts: number; to: number }
 interface Cloud { x: number; y: number; w: number; h: number; spd: number; op: number }
 interface Firefly { x: number; y: number; vx: number; vy: number; phase: number; spd: number; maxOp: number }
@@ -31,6 +31,14 @@ export function VisualGarden({ onAddPlant }: { onAddPlant?: () => void }) {
     const [mTime, setMTime] = useState<"morning" | "afternoon" | "evening" | "night" | "auto">("auto")
     const [gardenView, setGardenView] = useState<"personal" | "shared">("personal")
     const [plants, setPlants] = useState<Plant[]>([])
+    const [clickedPlant, setClickedPlant] = useState<{ plant: Plant; x: number; y: number } | null>(null)
+    const sparkleRef = useRef<{ x: number; y: number; vx: number; vy: number; life: number; color: string; size: number }[]>([])
+
+    const PLANT_NAMES: Record<string, string> = {
+        sakura: "Sakura", maple: "Maple", pine: "Pine", jacaranda: "Jacaranda",
+        sunflower: "Sunflower", tulip: "Tulip", orchid: "Orchid", marigold: "Marigold",
+        snowdrop: "Snowdrop", lily: "Lily", chrysanthemum: "Chrysanthemum", snowflower: "Snow Flower",
+    }
 
     // Force personal view if active shared garden ID is removed
     useEffect(() => {
@@ -99,11 +107,13 @@ export function VisualGarden({ onAddPlant }: { onAddPlant?: () => void }) {
             : (settings?.gardenPlants || [])
             
         customPlants.forEach((cp: any, i: number) => {
+            const targetGrowth = cp.nurtureLevel !== undefined ? (cp.nurtureLevel / 100) : 1
             np.push({
                 id: cp.id || `plant-${i}`,
                 x: cp.x, y: cp.y, type: cp.type as "flower" | "tree", subtype: cp.subtype,
                 color: "#A78BFA", scale: cp.scale || (cp.type === "tree" ? 0.75 : 0.5),
-                growth: 1, delay: i * 50, swayOffset: sr(999 + i) * 10, swaySpeed: 0.015, seed: 999 + i
+                growth: 0, delay: i * 50, swayOffset: sr(999 + i) * 10, swaySpeed: 0.015, seed: 999 + i,
+                targetGrowth
             })
         })
 
@@ -486,7 +496,14 @@ export function VisualGarden({ onAddPlant }: { onAddPlant?: () => void }) {
 
             // ── PLANTS ──
             pRef.current.forEach((plant: Plant) => {
-                if (t > plant.delay && plant.growth < 1) plant.growth += 0.005
+                const targetG = plant.targetGrowth !== undefined ? plant.targetGrowth : 1
+                if (t > plant.delay) {
+                    if (plant.growth < targetG) {
+                        plant.growth = Math.min(plant.growth + 0.005, targetG)
+                    } else if (plant.growth > targetG) {
+                        plant.growth = Math.max(plant.growth - 0.005, targetG)
+                    }
+                }
                 if (plant.growth <= 0) return
                 const px = plant.x * W, py = plant.y * H, s = plant.scale * plant.growth
                 const wind = Math.sin(t * 0.003) * 0.005 + Math.sin(t * (plant.swaySpeed * 0.4) + plant.swayOffset) * 0.008
@@ -571,6 +588,17 @@ export function VisualGarden({ onAddPlant }: { onAddPlant?: () => void }) {
                 ctx.restore()
             }
             if (parts.current.length > 200) parts.current.splice(0, 30)
+
+            // ── SPARKLE PARTICLES (plant click) ──
+            for (let i = sparkleRef.current.length - 1; i >= 0; i--) {
+                const sp = sparkleRef.current[i]
+                sp.x += sp.vx; sp.y += sp.vy; sp.vy += 0.08; sp.life -= 0.025
+                if (sp.life <= 0) { sparkleRef.current.splice(i, 1); continue }
+                ctx.save(); ctx.globalAlpha = sp.life; ctx.fillStyle = sp.color
+                ctx.shadowColor = sp.color; ctx.shadowBlur = 6
+                ctx.beginPath(); ctx.arc(sp.x, sp.y, sp.size * sp.life, 0, Math.PI * 2); ctx.fill()
+                ctx.restore()
+            }
 
             // ── FIREFLIES ──
             if (dark) {
@@ -704,6 +732,39 @@ export function VisualGarden({ onAddPlant }: { onAddPlant?: () => void }) {
             }
             setSelectedPlantId(null)
             isDragging.current = false
+        } else {
+            // Normal mode: click on plant to show info + sparkle
+            if (!cvs.current) return
+            const W = rect.width
+            const H = rect.height
+            for (let i = plants.length - 1; i >= 0; i--) {
+                const p = plants[i]
+                if (!p.id) continue
+                const px = p.x * W, py = p.y * H
+                const size = p.type === 'tree' ? 180 : 85
+                const scale = p.scale * p.growth
+                const sz = size * scale
+                const centerX = px, centerY = py - sz / 2
+                const dx = clickX - centerX, dy = clickY - centerY
+                if (Math.sqrt(dx * dx + dy * dy) < sz / 2 + 16) {
+                    setClickedPlant({ plant: p, x: clickX, y: clickY })
+                    // Spawn sparkle particles
+                    const colors = ['#10b981', '#f59e0b', '#34d399', '#fbbf24', '#a78bfa']
+                    for (let j = 0; j < 12; j++) {
+                        const angle = (Math.PI * 2 * j) / 12
+                        sparkleRef.current.push({
+                            x: px, y: py - sz / 2,
+                            vx: Math.cos(angle) * (1.5 + Math.random() * 2),
+                            vy: Math.sin(angle) * (1.5 + Math.random()) - 1,
+                            life: 1, color: colors[j % colors.length],
+                            size: 2 + Math.random() * 3,
+                        })
+                    }
+                    setTimeout(() => setClickedPlant(null), 2200)
+                    return
+                }
+            }
+            setClickedPlant(null)
         }
     }
 
@@ -770,7 +831,7 @@ export function VisualGarden({ onAddPlant }: { onAddPlant?: () => void }) {
     else { if (hour >= 6 && hour < 12) todLabel = "Morning"; else if (hour >= 12 && hour < 17) todLabel = "Afternoon"; else if (hour >= 17 && hour < 20) todLabel = "Evening" }
 
     return (
-        <Card className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-sm rounded-3xl overflow-hidden h-full flex flex-col relative group">
+        <Card className="card-zen overflow-hidden h-full flex flex-col relative group">
             <CardHeader className="pb-2 absolute top-0 left-0 z-10 w-full bg-gradient-to-b from-slate-900/40 to-transparent p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between pointer-events-none gap-4">
                 <div className="flex items-center gap-3 pointer-events-auto">
                     <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-white/20 dark:bg-slate-900/50 shadow-sm border border-white/10 backdrop-blur-md">
@@ -938,6 +999,25 @@ export function VisualGarden({ onAddPlant }: { onAddPlant?: () => void }) {
                     className={`min-w-[800px] w-full h-72 sm:h-96 relative ${plantToPlace ? 'cursor-crosshair' : editMode ? 'cursor-move' : ''}`}
                 >
                     <canvas ref={cvs} className="w-full h-full block" />
+
+                    {clickedPlant && (() => {
+                        const name = PLANT_NAMES[clickedPlant.plant.subtype] || clickedPlant.plant.subtype
+                        const growthPct = Math.round(clickedPlant.plant.growth * 100)
+                        return (
+                            <div
+                                className="absolute z-20 pointer-events-none px-3 py-1.5 rounded-lg bg-white/90 dark:bg-slate-800/90 shadow-lg border border-slate-200 dark:border-slate-700 backdrop-blur-md text-sm font-medium text-slate-700 dark:text-slate-300 whitespace-nowrap animate-in fade-in zoom-in duration-200"
+                                style={{
+                                    left: clickedPlant.x,
+                                    top: clickedPlant.y - 12,
+                                    transform: 'translate(-50%, -100%)',
+                                }}
+                            >
+                                <span className="mr-1">{clickedPlant.plant.type === 'tree' ? '🌳' : '🌷'}</span>
+                                {name}
+                                <span className="ml-1.5 text-xs text-slate-400 dark:text-slate-500">{growthPct}%</span>
+                            </div>
+                        )
+                    })()}
                     
                     {editMode && selectedPlantId && (() => {
                         const p = plants.find(p => p.id === selectedPlantId)

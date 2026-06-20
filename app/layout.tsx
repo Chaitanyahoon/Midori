@@ -46,7 +46,7 @@ export default function RootLayout({
           <AuthProvider>
             {children}
             <Toaster />
-            <Toaster as={Sonner} position="top-center" richColors />
+            <Sonner position="top-center" richColors />
           </AuthProvider>
         </ThemeProvider>
         <Analytics />

@@ -1,15 +1,13 @@
 "use client"
 
-import { useState, useEffect, useRef, useMemo } from "react"
+import { useState, useEffect, useMemo } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Progress } from "@/components/ui/progress"
 import { Badge } from "@/components/ui/badge"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Icons } from "@/components/icons"
 import { useData } from "@/components/local-data-provider"
-import { useToast } from "@/hooks/use-toast"
 import { FocusMusicPlayer } from "@/components/dashboard/focus-music-player"
 import { SakuraParticles } from "@/components/dashboard/sakura-particles"
 import { Input } from "@/components/ui/input"
@@ -18,53 +16,43 @@ import { Switch } from "@/components/ui/switch"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { Textarea } from "@/components/ui/textarea"
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
+import { usePomodoro } from "@/lib/hooks/usePomodoro"
 
 export default function PomodoroPage() {
-  const [timeLeft, setTimeLeft] = useState(25 * 60)
-  const [isActive, setIsActive] = useState(false)
-  const [isBreak, setIsBreak] = useState(false)
-  const [sessionStartTime, setSessionStartTime] = useState<string | null>(null)
-  const [selectedTask, setSelectedTask] = useState<string>("general")
-  const [sessionNote, setSessionNote] = useState("")
-  const [autoStartBreaks, setAutoStartBreaks] = useState(false)
-  const [autoStartPomodoros, setAutoStartPomodoros] = useState(false)
-  const [soundEnabled, setSoundEnabled] = useState(true)
-  const [focusGoal, setFocusGoal] = useState(4)
-  const [settings, setSettings] = useState({
-    focusTime: 25,
-    shortBreak: 5,
-    longBreak: 15,
-    sessionsUntilLongBreak: 4,
-  })
+  const {
+    timeLeft,
+    isActive,
+    isBreak,
+    selectedTask,
+    sessionNote,
+    settings,
+    autoStartBreaks,
+    autoStartPomodoros,
+    soundEnabled,
+    focusGoal,
+    pendingTasks,
+    todaySessions,
+    completedSessionsToday,
+    isLongBreakTime,
+    progress,
+    handleStart,
+    handlePause,
+    handleReset,
+    handleSkip,
+    setSelectedTask,
+    setSessionNote,
+    updateTimerSettings,
+    setAutoStartBreaks,
+    setAutoStartPomodoros,
+    setSoundEnabled,
+    setFocusGoal,
+    formatTime,
+  } = usePomodoro()
 
-  // Load settings from localStorage
-  useEffect(() => {
-    const savedSettings = localStorage.getItem("pomodoroSettings")
-    if (savedSettings) {
-      const parsed = JSON.parse(savedSettings)
-      setSettings(parsed.settings || settings)
-      setAutoStartBreaks(parsed.autoStartBreaks || false)
-      setAutoStartPomodoros(parsed.autoStartPomodoros || false)
-      setSoundEnabled(parsed.soundEnabled !== false)
-      setFocusGoal(parsed.focusGoal || 4)
-    }
-  }, [])
-
-  // Save settings to localStorage
-  useEffect(() => {
-    localStorage.setItem(
-      "pomodoroSettings",
-      JSON.stringify({
-        settings,
-        autoStartBreaks,
-        autoStartPomodoros,
-        soundEnabled,
-        focusGoal,
-      }),
-    )
-  }, [settings, autoStartBreaks, autoStartPomodoros, soundEnabled, focusGoal])
+  const { tasks, pomodoros } = useData()
 
   const [isZenMode, setIsZenMode] = useState(false)
+  const [isHistoryOpen, setIsHistoryOpen] = useState(false)
 
   // Toggle Zen Mode on/off
   const toggleZenMode = () => {
@@ -87,194 +75,6 @@ export default function PomodoroPage() {
     window.addEventListener("keydown", handleEsc)
     return () => window.removeEventListener("keydown", handleEsc)
   }, [isZenMode])
-
-  const { tasks, pomodoros, addPomodoro } = useData()
-  const { toast } = useToast()
-
-  const pendingTasks = tasks.filter((task) => !task.completed)
-  const todaySessions = pomodoros.filter((session) => {
-    const today = new Date().toISOString().split("T")[0]
-    return session.startTime.split("T")[0] === today && session.completed
-  })
-
-  const completedSessionsToday = todaySessions.length
-  const isLongBreakTime = completedSessionsToday > 0 && completedSessionsToday % settings.sessionsUntilLongBreak === 0
-
-  const intervalRef = useRef<NodeJS.Timeout | null>(null)
-
-  // Generate encouraging compliments
-  const getCompliment = () => {
-    const compliments = [
-      "Good work, sunshine!",
-      "You're doing amazing, champ!",
-      "Keep it up, superstar!",
-      "You're on fire today!",
-      "Fantastic work, rockstar!",
-      "You're crushing it!",
-      "Amazing progress, warrior!",
-      "You're unstoppable!",
-      "Brilliant work, champion!",
-      "You're a productivity machine!",
-      "Outstanding effort, hero!",
-      "You're absolutely killing it!",
-    ]
-    return compliments[Math.floor(Math.random() * compliments.length)]
-  }
-
-  const getSessionCompliment = (sessionCount: number) => {
-    if (sessionCount >= 8) return "Incredible! You're a focus master!"
-    if (sessionCount >= 6) return "Outstanding dedication today!"
-    if (sessionCount >= 4) return "Great momentum, keep going!"
-    if (sessionCount >= 2) return "Nice progress, you're building a great habit!"
-    return "Great start! Every session counts!"
-  }
-
-  // Clear interval on unmount
-  useEffect(() => {
-    return () => {
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current)
-        intervalRef.current = null
-      }
-    }
-  }, [])
-
-  useEffect(() => {
-    if (isActive && timeLeft > 0) {
-      intervalRef.current = setInterval(() => {
-        setTimeLeft((prevTime) => {
-          if (prevTime <= 1) {
-            setIsActive(false)
-            handleTimerComplete()
-            return 0
-          }
-          return prevTime - 1
-        })
-      }, 1000)
-    } else {
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current)
-        intervalRef.current = null
-      }
-    }
-
-    return () => {
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current)
-        intervalRef.current = null
-      }
-    }
-  }, [isActive, timeLeft])
-
-  const handleTimerComplete = () => {
-    if (!isBreak && sessionStartTime) {
-      // Complete focus session
-      addPomodoro({
-        startTime: sessionStartTime,
-        endTime: new Date().toISOString(),
-        duration: settings.focusTime,
-        taskId: selectedTask === "general" ? undefined : selectedTask,
-        completed: true,
-      })
-
-      // Play completion sound if enabled
-      if (soundEnabled) {
-        const audio = new Audio("data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBTGH0fPTgjMGHm7A7+OZVA4PVK3l77FbGAg+ltryy3kpBSl+zfLZiTYIG2m98OScTgwOUKjk8LZjGwY4kdfyzHksBSR3x/DdkEAKFF606euoVRQKRp/g8r5sIQUxh9Hz04IzBh5uwO/jmVQOD1St5e+xWxgIPpba8st5KQUpfs3y2Yk2CBtpvfDknE4MDlCo5PC2YxsGOJHX8sx5LAUkd8fw3ZBACg==")
-        audio.volume = 0.3
-        audio.play().catch(() => { })
-      }
-
-      const newSessionCount = completedSessionsToday + 1
-      toast({
-        title: `${getCompliment()} 🌟`,
-        description: `${getSessionCompliment(newSessionCount)} You've completed ${newSessionCount} ${newSessionCount === 1 ? 'session' : 'sessions'} today.`,
-      })
-
-      setIsBreak(true)
-      const breakDuration = isLongBreakTime ? settings.longBreak : settings.shortBreak
-      setTimeLeft(breakDuration * 60)
-      setSessionNote("")
-
-      // Auto-start break if enabled
-      if (autoStartBreaks) {
-        setTimeout(() => {
-          setIsActive(true)
-        }, 1000)
-      }
-    } else {
-      // Break completed
-      if (soundEnabled) {
-        const audio = new Audio("data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBTGH0fPTgjMGHm7A7+OZVA4PVK3l77FbGAg+ltryy3kpBSl+zfLZiTYIG2m98OScTgwOUKjk8LZjGwY4kdfyzHksBSR3x/DdkEAKFF606euoVRQKRp/g8r5sIQUxh9Hz04IzBh5uwO/jmVQOD1St5e+xWxgIPpba8st5KQUpfs3y2Yk2CBtpvfDknE4MDlCo5PC2YxsGOJHX8sx5LAUkd8fw3ZBACg==")
-        audio.volume = 0.3
-        audio.play().catch(() => { })
-      }
-
-      const breakCompliments = [
-        "You've earned this break!",
-        "Well-deserved rest!",
-        "Time to recharge and shine!",
-        "You're building great habits!",
-      ]
-      toast({
-        title: isLongBreakTime ? "Long break complete! 💪" : "Break complete! ⚡",
-        description: `${breakCompliments[Math.floor(Math.random() * breakCompliments.length)]} Ready for another focused session?`,
-      })
-
-      setIsBreak(false)
-      setTimeLeft(settings.focusTime * 60)
-
-      // Auto-start next pomodoro if enabled
-      if (autoStartPomodoros) {
-        setTimeout(() => {
-          setSessionStartTime(new Date().toISOString())
-          setIsActive(true)
-        }, 1000)
-      }
-    }
-
-    setSessionStartTime(null)
-  }
-
-  const formatTime = (seconds: number) => {
-    const mins = Math.floor(seconds / 60)
-    const secs = seconds % 60
-    return `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`
-  }
-
-  const getCurrentSessionDuration = () => {
-    if (isBreak) {
-      return isLongBreakTime ? settings.longBreak * 60 : settings.shortBreak * 60
-    }
-    return settings.focusTime * 60
-  }
-
-  const totalTime = getCurrentSessionDuration()
-  const progress = ((totalTime - timeLeft) / totalTime) * 100
-
-  const handleStart = () => {
-    setIsActive(true)
-    if (!sessionStartTime && !isBreak) {
-      setSessionStartTime(new Date().toISOString())
-    }
-    // Play start sound if enabled
-    if (soundEnabled && !isBreak) {
-      const audio = new Audio("data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBTGH0fPTgjMGHm7A7+OZVA4PVK3l77FbGAg+ltryy3kpBSl+zfLZiTYIG2m98OScTgwOUKjk8LZjGwY4kdfyzHksBSR3x/DdkEAKFF606euoVRQKRp/g8r5sIQUxh9Hz04IzBh5uwO/jmVQOD1St5e+xWxgIPpba8st5KQUpfs3y2Yk2CBtpvfDknE4MDlCo5PC2YxsGOJHX8sx5LAUkd8fw3ZBACg==")
-      audio.volume = 0.2
-      audio.play().catch(() => { })
-    }
-  }
-
-  const handlePause = () => setIsActive(false)
-
-  const handleReset = () => {
-    setIsActive(false)
-    if (intervalRef.current) {
-      clearInterval(intervalRef.current)
-      intervalRef.current = null
-    }
-    setTimeLeft(getCurrentSessionDuration())
-    setSessionStartTime(null)
-  }
 
   const sessionHistory = useMemo(() => {
     return pomodoros
@@ -356,7 +156,7 @@ export default function PomodoroPage() {
             {/* Header with status indicator */}
             <div className={`h-2 ${isBreak ? "bg-gradient-to-r from-green-400 to-emerald-500" : "bg-gradient-to-r from-blue-500 to-indigo-600"}`}></div>
 
-            <CardHeader className="text-center pb-6 pt-6">
+            <CardHeader className="relative pb-6 pt-6 text-center">
               <div className="flex items-center justify-center gap-3 mb-2">
                 <div className={`p-3 rounded-2xl ${isBreak ? "bg-green-100 dark:bg-green-900/30" : "bg-blue-100 dark:bg-blue-900/30"}`}>
                   <Icons.timer className={`w-6 h-6 ${isBreak ? "text-green-600 dark:text-green-400" : "text-blue-600 dark:text-blue-400"}`} />
@@ -365,6 +165,162 @@ export default function PomodoroPage() {
                   {isBreak ? (isLongBreakTime ? "Long Break" : "Short Break") : "Focus Session"}
                 </CardTitle>
               </div>
+
+              {/* Gear Settings Button (Dialog Trigger) */}
+              <div className="absolute right-4 top-4">
+                <Dialog>
+                  <DialogTrigger asChild>
+                    <Button variant="ghost" size="icon" className="h-9 w-9 rounded-full text-slate-400 hover:text-emerald-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors" title="Timer Settings">
+                      <Icons.settings className="w-5 h-5" />
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="max-w-md bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border border-emerald-100 dark:border-slate-800 shadow-2xl rounded-3xl p-6">
+                    <DialogHeader className="pb-4 border-b border-slate-100 dark:border-slate-800">
+                      <DialogTitle className="flex items-center gap-2.5 text-xl font-bold text-slate-900 dark:text-white">
+                        <Icons.settings className="w-5 h-5 text-emerald-500" />
+                        Focus Grove Settings
+                      </DialogTitle>
+                    </DialogHeader>
+                    <div className="py-4 space-y-5 text-left max-h-[70vh] overflow-y-auto scrollbar-hide">
+                      
+                      {/* Timer Durations */}
+                      <div className="space-y-3">
+                        <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">Timer Durations</h4>
+                        <div className="space-y-4">
+                          <div>
+                            <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1.5">Focus Time</label>
+                            <Select
+                              value={settings.focusTime.toString()}
+                              onValueChange={(value) => {
+                                const newFocusTime = Number.parseInt(value)
+                                updateTimerSettings({ focusTime: newFocusTime })
+                              }}
+                            >
+                              <SelectTrigger className="bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 h-10 rounded-xl">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="15">15 minutes</SelectItem>
+                                <SelectItem value="20">20 minutes</SelectItem>
+                                <SelectItem value="25">25 minutes</SelectItem>
+                                <SelectItem value="30">30 minutes</SelectItem>
+                                <SelectItem value="45">45 minutes</SelectItem>
+                                <SelectItem value="60">60 minutes</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+
+                          <div className="grid grid-cols-2 gap-3">
+                            <div>
+                              <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1.5">Short Break</label>
+                              <Select
+                                value={settings.shortBreak.toString()}
+                                onValueChange={(value) => {
+                                  const newShortBreak = Number.parseInt(value)
+                                  updateTimerSettings({ shortBreak: newShortBreak })
+                                }}
+                              >
+                                <SelectTrigger className="bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 h-10 rounded-xl">
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="3">3 min</SelectItem>
+                                  <SelectItem value="5">5 min</SelectItem>
+                                  <SelectItem value="10">10 min</SelectItem>
+                                  <SelectItem value="15">15 min</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </div>
+
+                            <div>
+                              <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1.5">Long Break</label>
+                              <Select
+                                value={settings.longBreak.toString()}
+                                onValueChange={(value) => {
+                                  const newLongBreak = Number.parseInt(value)
+                                  updateTimerSettings({ longBreak: newLongBreak })
+                                }}
+                              >
+                                <SelectTrigger className="bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 h-10 rounded-xl">
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="15">15 min</SelectItem>
+                                  <SelectItem value="20">20 min</SelectItem>
+                                  <SelectItem value="30">30 min</SelectItem>
+                                  <SelectItem value="45">45 min</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </div>
+                          </div>
+
+                          <div>
+                            <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1.5">
+                              Sessions Until Long Break
+                            </label>
+                            <Input
+                              type="number"
+                              min="2"
+                              max="10"
+                              value={settings.sessionsUntilLongBreak}
+                              onChange={(e) => updateTimerSettings({ sessionsUntilLongBreak: Number.parseInt(e.target.value) || 4 })}
+                              className="bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 h-10 rounded-xl"
+                            />
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Preferences */}
+                      <div className="pt-4 border-t border-slate-100 dark:border-slate-800 space-y-3">
+                        <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">Preferences</h4>
+                        <div className="space-y-2.5">
+                          <div className="flex items-center justify-between p-2.5 bg-slate-50 dark:bg-slate-800/30 rounded-xl border border-slate-100 dark:border-slate-800">
+                            <div className="space-y-0.5 flex-1">
+                              <Label className="text-sm font-medium text-slate-700 dark:text-slate-300">Auto-start Breaks</Label>
+                              <p className="text-xs text-slate-400">Start break automatically</p>
+                            </div>
+                            <Switch checked={autoStartBreaks} onCheckedChange={setAutoStartBreaks} />
+                          </div>
+
+                          <div className="flex items-center justify-between p-2.5 bg-slate-50 dark:bg-slate-800/30 rounded-xl border border-slate-100 dark:border-slate-800">
+                            <div className="space-y-0.5 flex-1">
+                              <Label className="text-sm font-medium text-slate-700 dark:text-slate-300">Auto-start Pomodoros</Label>
+                              <p className="text-xs text-slate-400">Start next session automatically</p>
+                            </div>
+                            <Switch checked={autoStartPomodoros} onCheckedChange={setAutoStartPomodoros} />
+                          </div>
+
+                          <div className="flex items-center justify-between p-2.5 bg-slate-50 dark:bg-slate-800/30 rounded-xl border border-slate-100 dark:border-slate-800">
+                            <div className="space-y-0.5 flex-1">
+                              <Label className="text-sm font-medium text-slate-700 dark:text-slate-300">Sound Notifications</Label>
+                              <p className="text-xs text-slate-400">Play sounds for events</p>
+                            </div>
+                            <Switch checked={soundEnabled} onCheckedChange={setSoundEnabled} />
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Daily Goal */}
+                      <div className="pt-4 border-t border-slate-100 dark:border-slate-800 space-y-3">
+                        <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">Daily Target Goal</h4>
+                        <div className="p-3 bg-slate-50 dark:bg-slate-800/30 rounded-xl border border-slate-100 dark:border-slate-800">
+                          <Input
+                            type="number"
+                            min="0"
+                            max="20"
+                            value={focusGoal}
+                            onChange={(e) => setFocusGoal(Number.parseInt(e.target.value) || 0)}
+                            className="bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 h-10 mb-1 rounded-xl"
+                            placeholder="Set daily goal"
+                          />
+                        </div>
+                      </div>
+
+                    </div>
+                  </DialogContent>
+                </Dialog>
+              </div>
+
               {!isBreak && selectedTask && (
                 <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
                   Working on: <span className="font-medium">{getTaskTitle(selectedTask === "general" ? undefined : selectedTask)}</span>
@@ -458,6 +414,18 @@ export default function PomodoroPage() {
                     <Icons.reset className="w-5 h-5 mr-2" />
                     Reset
                   </Button>
+
+                  <Button
+                    onClick={handleSkip}
+                    variant="outline"
+                    size="lg"
+                    aria-label="Skip session"
+                    className="px-8 py-6 rounded-2xl border-2 hover:bg-gray-50 dark:hover:bg-slate-800 text-slate-500 hover:text-emerald-500 dark:hover:text-emerald-400"
+                    title="Skip"
+                  >
+                    <Icons.skip className="w-5 h-5 mr-2" />
+                    Skip
+                  </Button>
                 </div>
               </div>
 
@@ -512,9 +480,9 @@ export default function PomodoroPage() {
 
         {/* Sidebar */}
         <div className="space-y-4">
-          <FocusMusicPlayer isActive={isActive} isBreak={isBreak} />
+          <FocusMusicPlayer isActive={isActive} isBreak={isBreak} isZenMode={isZenMode} />
 
-          {/* Today's Stats */}
+          {/* Today's Progress Card with Embedded Collapsible History */}
           <Card className="card-zen card-glow-emerald">
             <CardHeader className="pb-2">
               <CardTitle className="text-lg font-semibold flex items-center gap-2 text-gray-900 dark:text-gray-100">
@@ -574,6 +542,40 @@ export default function PomodoroPage() {
                 </div>
               </div>
 
+              {/* Collapsible History Section */}
+              <div className="pt-2">
+                <Collapsible open={isHistoryOpen} onOpenChange={setIsHistoryOpen} className="w-full space-y-2">
+                  <CollapsibleTrigger asChild>
+                    <Button variant="ghost" size="sm" className="w-full flex items-center justify-between px-2 text-slate-500 dark:text-slate-400 hover:text-emerald-500 dark:hover:text-emerald-400">
+                      <span className="text-xs font-semibold uppercase tracking-wider">Today's Sessions</span>
+                      <Icons.chevronRight className={`w-4 h-4 transition-transform duration-200 ${isHistoryOpen ? 'rotate-90' : ''}`} />
+                    </Button>
+                  </CollapsibleTrigger>
+                  <CollapsibleContent className="space-y-2 max-h-48 overflow-y-auto scrollbar-hide pr-1 animate-in fade-in slide-in-from-top-2 duration-200">
+                    {todaySessions.length === 0 ? (
+                      <p className="text-xs text-slate-400 text-center py-4">No sessions completed today</p>
+                    ) : (
+                      todaySessions.map((session) => (
+                        <div
+                          key={session.id}
+                          className="flex items-center justify-between p-2 bg-slate-50 dark:bg-slate-800/40 rounded-lg border border-slate-100 dark:border-slate-800"
+                        >
+                          <div className="min-w-0 flex-1">
+                            <p className="font-semibold text-xs text-slate-800 dark:text-slate-200 truncate">
+                              {getTaskTitle(session.taskId)}
+                            </p>
+                            <p className="text-[10px] text-slate-400 mt-0.5">
+                              {session.duration} min • {new Date(session.startTime).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })}
+                            </p>
+                          </div>
+                          <span className="text-emerald-500 text-xs font-bold font-mono ml-2">済</span>
+                        </div>
+                      ))
+                    )}
+                  </CollapsibleContent>
+                </Collapsible>
+              </div>
+
               {/* Focus Streak */}
               {(() => {
                 const calculateStreak = () => {
@@ -596,13 +598,13 @@ export default function PomodoroPage() {
                 }
                 const streak = calculateStreak()
                 return streak > 0 ? (
-                  <div className="pt-4 mt-4 border-t border-emerald-200/50 dark:border-emerald-800/50">
-                    <div className="flex items-center justify-between p-3 bg-gradient-to-r from-orange-50 to-amber-50 dark:from-orange-900/20 dark:to-amber-900/10 rounded-xl border border-orange-200/50 dark:border-orange-800/50">
+                  <div className="pt-2">
+                    <div className="flex items-center justify-between p-2.5 bg-gradient-to-r from-orange-50 to-amber-50 dark:from-orange-900/20 dark:to-amber-900/10 rounded-xl border border-orange-200/50 dark:border-orange-800/50">
                       <div className="flex items-center gap-2">
-                        <span className="text-xl">🔥</span>
-                        <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">Focus Streak</span>
+                        <span className="text-sm">🔥</span>
+                        <span className="text-xs font-semibold text-gray-700 dark:text-gray-300">Focus Streak</span>
                       </div>
-                      <Badge className="bg-orange-500 dark:bg-orange-600 text-white font-bold px-3 py-1">
+                      <Badge className="bg-orange-500 dark:bg-orange-600 text-white font-bold px-2 py-0.5 text-xs">
                         {streak} days
                       </Badge>
                     </div>
@@ -611,331 +613,11 @@ export default function PomodoroPage() {
               })()}
             </CardContent>
           </Card>
-
-          {/* Task Analytics */}
-          <Card className="card-zen card-glow-blue">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-lg font-semibold flex items-center gap-2 text-gray-900 dark:text-gray-100">
-                <Icons.insights className="w-5 h-5 text-blue-600 dark:text-blue-400" />
-                Focus Analytics
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-2.5 text-left">
-              {taskAnalytics.length === 0 ? (
-                <p className="text-sm text-gray-500 dark:text-gray-400 text-center py-4">No focus sessions yet</p>
-              ) : (
-                taskAnalytics.map((task, index) => (
-                  <div
-                    key={index}
-                    className="flex items-center justify-between p-4 bg-white/70 dark:bg-slate-700/50 rounded-xl border border-blue-100/50 dark:border-blue-800/50 hover:bg-white/90 dark:hover:bg-slate-700/70 hover:shadow-md transition-all"
-                  >
-                    <div className="flex-1 min-w-0">
-                      <p className="font-semibold text-sm text-gray-900 dark:text-gray-100 truncate">{task.title}</p>
-                      <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
-                        {task.sessions} sessions • {(task.totalTime / 60).toFixed(1)}h
-                      </p>
-                    </div>
-                    <Badge className="bg-blue-500 dark:bg-blue-600 text-white text-xs font-bold ml-3 px-2.5 py-1">
-                      {task.sessions}
-                    </Badge>
-                  </div>
-                ))
-              )}
-            </CardContent>
-          </Card>
-
-          {/* Settings */}
-          <Card className="card-zen card-glow-purple">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-lg font-semibold flex items-center gap-2 text-gray-900 dark:text-gray-100">
-                <Icons.settings className="w-5 h-5 text-purple-600 dark:text-purple-400" />
-                Timer Settings
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4 text-left">
-              {/* Timer Durations */}
-              <div className="space-y-3">
-                <div className="flex items-center gap-2 mb-2">
-                  <Icons.timer className="w-4 h-4 text-purple-600 dark:text-purple-400" />
-                  <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300">Timer Durations</h4>
-                </div>
-
-                <div className="grid grid-cols-1 gap-2.5">
-                  <div>
-                    <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1.5">Focus Time</label>
-                    <Select
-                      value={settings.focusTime.toString()}
-                      onValueChange={(value) => {
-                        const newFocusTime = Number.parseInt(value)
-                        setSettings({ ...settings, focusTime: newFocusTime })
-                        if (!isActive && !isBreak) {
-                          setTimeLeft(newFocusTime * 60)
-                        }
-                      }}
-                    >
-                      <SelectTrigger className="bg-white/75 dark:bg-slate-900/60 border-slate-200 dark:border-slate-700 h-10 focus:ring-purple-500 focus:border-purple-500 rounded-xl">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="15">15 minutes</SelectItem>
-                        <SelectItem value="20">20 minutes</SelectItem>
-                        <SelectItem value="25">25 minutes</SelectItem>
-                        <SelectItem value="30">30 minutes</SelectItem>
-                        <SelectItem value="45">45 minutes</SelectItem>
-                        <SelectItem value="60">60 minutes</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1.5">Short Break</label>
-                      <Select
-                        value={settings.shortBreak.toString()}
-                        onValueChange={(value) => {
-                          const newShortBreak = Number.parseInt(value)
-                          setSettings({ ...settings, shortBreak: newShortBreak })
-                          if (!isActive && isBreak && !isLongBreakTime) {
-                            setTimeLeft(newShortBreak * 60)
-                          }
-                        }}
-                      >
-                        <SelectTrigger className="bg-white/75 dark:bg-slate-900/60 border-slate-200 dark:border-slate-700 h-10 focus:ring-purple-500 focus:border-purple-500 rounded-xl">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="3">3 min</SelectItem>
-                          <SelectItem value="5">5 min</SelectItem>
-                          <SelectItem value="10">10 min</SelectItem>
-                          <SelectItem value="15">15 min</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    <div>
-                      <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1.5">Long Break</label>
-                      <Select
-                        value={settings.longBreak.toString()}
-                        onValueChange={(value) => {
-                          const newLongBreak = Number.parseInt(value)
-                          setSettings({ ...settings, longBreak: newLongBreak })
-                          if (!isActive && isBreak && isLongBreakTime) {
-                            setTimeLeft(newLongBreak * 60)
-                          }
-                        }}
-                      >
-                        <SelectTrigger className="bg-white/75 dark:bg-slate-900/60 border-slate-200 dark:border-slate-700 h-10 focus:ring-purple-500 focus:border-purple-500 rounded-xl">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="15">15 min</SelectItem>
-                          <SelectItem value="20">20 min</SelectItem>
-                          <SelectItem value="30">30 min</SelectItem>
-                          <SelectItem value="45">45 min</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1.5">
-                      Sessions Until Long Break
-                    </label>
-                    <Input
-                      type="number"
-                      min="2"
-                      max="10"
-                      value={settings.sessionsUntilLongBreak}
-                      onChange={(e) => setSettings({ ...settings, sessionsUntilLongBreak: Number.parseInt(e.target.value) || 4 })}
-                      className="bg-white/75 dark:bg-slate-900/60 border-slate-200 dark:border-slate-700 h-10 focus:ring-purple-500 focus:border-purple-500 rounded-xl"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {/* Preferences */}
-              <div className="pt-3 border-t border-purple-200/50 dark:border-purple-800/50 space-y-2.5">
-                <div className="flex items-center gap-2 mb-2">
-                  <Icons.settings className="w-4 h-4 text-purple-600 dark:text-purple-400" />
-                  <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300">Preferences</h4>
-                </div>
-
-                <div className="space-y-2.5">
-                  <div className="flex items-center justify-between p-2.5 bg-white/50 dark:bg-slate-800/50 rounded-xl border border-purple-100/50 dark:border-purple-800/50">
-                    <div className="space-y-0.5 flex-1">
-                      <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">Auto-start Breaks</Label>
-                      <p className="text-xs text-gray-500 dark:text-gray-400">Start break automatically</p>
-                    </div>
-                    <Switch checked={autoStartBreaks} onCheckedChange={setAutoStartBreaks} />
-                  </div>
-
-                  <div className="flex items-center justify-between p-2.5 bg-white/50 dark:bg-slate-800/50 rounded-xl border border-purple-100/50 dark:border-purple-800/50">
-                    <div className="space-y-0.5 flex-1">
-                      <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">Auto-start Pomodoros</Label>
-                      <p className="text-xs text-gray-500 dark:text-gray-400">Start next session automatically</p>
-                    </div>
-                    <Switch checked={autoStartPomodoros} onCheckedChange={setAutoStartPomodoros} />
-                  </div>
-
-                  <div className="flex items-center justify-between p-2.5 bg-white/50 dark:bg-slate-800/50 rounded-xl border border-purple-100/50 dark:border-purple-800/50">
-                    <div className="space-y-0.5 flex-1">
-                      <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">Sound Notifications</Label>
-                      <p className="text-xs text-gray-500 dark:text-gray-400">Play sounds for events</p>
-                    </div>
-                    <Switch checked={soundEnabled} onCheckedChange={setSoundEnabled} />
-                  </div>
-                </div>
-              </div>
-
-              {/* Daily Goal */}
-              <div className="pt-3 border-t border-purple-200/50 dark:border-purple-800/50">
-                <div className="flex items-center gap-2 mb-2">
-                  <Icons.target className="w-4 h-4 text-purple-600 dark:text-purple-400" />
-                  <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300">Daily Goal</h4>
-                </div>
-                <div className="p-2.5 bg-white/40 dark:bg-slate-900/40 rounded-xl border border-purple-200/50 dark:border-purple-800/40">
-                  <Input
-                    type="number"
-                    min="0"
-                    max="20"
-                    value={focusGoal}
-                    onChange={(e) => setFocusGoal(Number.parseInt(e.target.value) || 0)}
-                    className="bg-white/75 dark:bg-slate-900/60 border-slate-200 dark:border-slate-700 h-10 mb-2 focus:ring-purple-500 focus:border-purple-500 rounded-xl"
-                    placeholder="Set daily goal"
-                  />
-                  <p className="text-xs text-gray-500 dark:text-gray-400">
-                    {focusGoal > 0
-                      ? `${completedSessionsToday} of ${focusGoal} sessions completed today`
-                      : "Set a daily focus goal to track your progress"}
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
         </div>
       </div>
-
-      {/* Focus Tips & Motivation */}
-      <Card className="card-zen card-glow-blue">
-        <CardHeader className="pb-3">
-          <CardTitle className="text-xl font-semibold flex items-center gap-2 text-gray-900 dark:text-gray-100">
-            <div className="p-2 bg-indigo-100 dark:bg-indigo-900/30 rounded-xl">
-              <Icons.sparkles className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
-            </div>
-            Focus Tips & Best Practices
-          </CardTitle>
-          <p className="text-sm text-gray-600 dark:text-gray-400 mt-1.5">Enhance your productivity with these proven strategies</p>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            {[
-              { icon: "💡", title: "Eliminate Distractions", text: "Close unnecessary tabs and apps to maintain deep focus" },
-              { icon: "🌿", title: "Respect Your Breaks", text: "Take breaks seriously - they help maintain long-term focus" },
-              { icon: "🎯", title: "Single Task Focus", text: "One task at a time - multitasking reduces productivity" },
-              { icon: "📝", title: "Track Progress", text: "Use session notes to track what you accomplished" },
-              { icon: "🎵", title: "Find Your Sound", text: "Experiment with different focus music to find what works" },
-              { icon: "⏰", title: "Consistent Timing", text: "Stick to your pomodoro schedule for better results" },
-            ].map((tip, i) => (
-              <div
-                key={i}
-                className="group flex flex-col gap-2.5 p-3 bg-white/80 dark:bg-slate-700/60 rounded-xl border border-indigo-100/50 dark:border-indigo-800/50 hover:bg-white dark:hover:bg-slate-700/80 hover:shadow-md hover:border-indigo-200 dark:hover:border-indigo-700 transition-all"
-              >
-                <div className="flex items-center gap-2.5">
-                  <div className="w-9 h-9 bg-indigo-100 dark:bg-indigo-900/30 rounded-lg flex items-center justify-center text-lg group-hover:scale-110 transition-transform flex-shrink-0">
-                    {tip.icon}
-                  </div>
-                  <h4 className="font-semibold text-gray-900 dark:text-gray-100 text-sm">{tip.title}</h4>
-                </div>
-                <p className="text-xs text-gray-600 dark:text-gray-400 leading-relaxed">{tip.text}</p>
-              </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Session History */}
-      <Card className="card-zen card-glow-emerald">
-        <CardHeader>
-          <CardTitle className="text-xl font-semibold text-gray-900 dark:text-gray-100">Recent Sessions</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <Tabs defaultValue="today" className="w-full">
-            <TabsList className="grid w-full grid-cols-2 bg-gray-100 dark:bg-slate-700 rounded-lg">
-              <TabsTrigger value="today" className="rounded-md">
-                Today
-              </TabsTrigger>
-              <TabsTrigger value="all" className="rounded-md">
-                All Time
-              </TabsTrigger>
-            </TabsList>
-
-            <TabsContent value="today" className="mt-3">
-              {todaySessions.length === 0 ? (
-                <div className="text-center py-6">
-                  <Icons.timer className="w-12 h-12 text-gray-400 dark:text-gray-500 mx-auto mb-3" />
-                  <p className="text-gray-500 dark:text-gray-400">No sessions completed today yet.</p>
-                </div>
-              ) : (
-                <div className="space-y-2.5">
-                  {todaySessions.map((session, index) => (
-                    <div
-                      key={session.id}
-                      className="flex items-center space-x-3 p-3 bg-gradient-to-r from-emerald-50/50 to-green-50/50 dark:from-emerald-900/20 dark:to-green-900/10 rounded-xl border border-emerald-100/50 dark:border-emerald-800/50 hover:shadow-md transition-all"
-                    >
-                      <div className="w-10 h-10 bg-emerald-500 dark:bg-emerald-600 rounded-xl flex items-center justify-center shadow-sm">
-                        <Icons.timer className="w-5 h-5 text-white" />
-                      </div>
-                      <div className="flex-1">
-                        <p className="font-semibold text-gray-900 dark:text-gray-100">{getTaskTitle(session.taskId)}</p>
-                        <p className="text-xs text-gray-600 dark:text-gray-400 mt-0.5">
-                          {session.duration} min • {new Date(session.startTime).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })}
-                        </p>
-                      </div>
-                      <div className="w-8 h-8 border-2 border-red-600 dark:border-red-500 outline outline-1 outline-red-600 dark:outline-red-500 outline-offset-2 rounded flex items-center justify-center rotate-[-12deg] bg-red-500/5 select-none flex-shrink-0" title="Completed / 済">
-                        <span className="text-red-600 dark:text-red-500 font-serif font-black text-xs leading-none">済</span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </TabsContent>
-
-            <TabsContent value="all" className="mt-3">
-              {sessionHistory.length === 0 ? (
-                <div className="text-center py-6">
-                  <Icons.timer className="w-12 h-12 text-gray-400 dark:text-gray-500 mx-auto mb-3" />
-                  <p className="text-gray-500 dark:text-gray-400">No sessions completed yet.</p>
-                </div>
-              ) : (
-                <div className="space-y-2.5">
-                  {sessionHistory.map((session) => (
-                    <div
-                      key={session.id}
-                      className="flex items-center space-x-3 p-3 bg-gradient-to-r from-blue-50/50 to-indigo-50/50 dark:from-blue-900/20 dark:to-indigo-900/10 rounded-xl border border-blue-100/50 dark:border-blue-800/50 hover:shadow-md transition-all"
-                    >
-                      <div className="w-10 h-10 bg-blue-500 dark:bg-blue-600 rounded-xl flex items-center justify-center shadow-sm">
-                        <Icons.timer className="w-5 h-5 text-white" />
-                      </div>
-                      <div className="flex-1">
-                        <p className="font-semibold text-gray-900 dark:text-gray-100">{getTaskTitle(session.taskId)}</p>
-                        <p className="text-xs text-gray-600 dark:text-gray-400 mt-0.5">
-                          {session.duration} min • {new Date(session.startTime).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
-                        </p>
-                      </div>
-                      <div className="w-8 h-8 border-2 border-red-600 dark:border-red-500 outline outline-1 outline-red-600 dark:outline-red-500 outline-offset-2 rounded flex items-center justify-center rotate-[-12deg] bg-red-500/5 select-none flex-shrink-0" title="Completed / 済">
-                        <span className="text-red-600 dark:text-red-500 font-serif font-black text-xs leading-none">済</span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </TabsContent>
-          </Tabs>
-        </CardContent>
-      </Card>
       {/* Zen Mode Overlay */}
       {isZenMode && (
-        <div className="fixed inset-0 z-50 bg-gradient-to-b from-slate-950 via-emerald-950/20 to-slate-950 flex flex-col items-center justify-center p-4 animate-in fade-in duration-500">
+        <div className="fixed inset-0 z-50 bg-gradient-to-b from-slate-950 via-emerald-950 to-slate-950 flex flex-col items-center justify-center p-4 animate-in fade-in duration-500">
           <div className="absolute inset-0 washi-overlay pointer-events-none opacity-20" />
           <SakuraParticles count={15} opacity={0.25} className="absolute inset-0 pointer-events-none" />
 
@@ -1000,11 +682,15 @@ export default function PomodoroPage() {
               >
                 <Icons.reset className="w-5 h-5" />
               </Button>
-            </div>
 
-            {/* Minimal Music Player */}
-            <div className="w-full max-w-md mt-8">
-              <FocusMusicPlayer isActive={isActive} isBreak={isBreak} variant="zen" className="animate-in slide-in-from-bottom-4 duration-700 delay-200" />
+              <Button
+                onClick={handleSkip}
+                variant="ghost"
+                className="text-white/40 hover:text-emerald-400 hover:bg-emerald-500/10 rounded-full w-14 h-14 p-0 border border-transparent hover:border-emerald-500/20 hover:scale-105 active:scale-95 transition-all duration-300"
+                title="Skip Session"
+              >
+                <Icons.skip className="w-5 h-5" />
+              </Button>
             </div>
 
           </div>

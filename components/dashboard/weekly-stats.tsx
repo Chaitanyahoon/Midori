@@ -5,12 +5,34 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
 import { Icons } from "@/components/icons"
 import { useData } from "@/components/local-data-provider"
+import { Skeleton } from "@/components/ui/skeleton"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { ChartContainer } from "@/components/ui/chart"
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Tooltip } from "recharts"
 
 export function WeeklyStats() {
-  const { tasks, pomodoros, settings } = useData()
+  const { tasks, pomodoros, settings, loading } = useData()
+
+  if (loading) {
+    return (
+      <div className="animate-fade-in space-y-4">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-full max-w-sm bg-white/40 dark:bg-slate-900/30 backdrop-blur-sm p-4 rounded-3xl border border-white/40 dark:border-slate-800/50">
+            <Skeleton className="h-[80px] w-full rounded-lg" />
+            <Skeleton className="h-3 w-24 mx-auto mt-2" />
+          </div>
+          <div className="flex items-center gap-3 bg-white/50 dark:bg-slate-900/40 backdrop-blur-md px-6 py-3 rounded-3xl border border-white/60 dark:border-slate-700/50">
+            <Skeleton className="w-6 h-6 rounded-full" />
+            <Skeleton className="h-8 w-10" />
+            <div className="space-y-1">
+              <Skeleton className="h-3 w-20" />
+              <Skeleton className="h-2 w-8" />
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  }
 
   // Calculate weekly data with real insights
   const getWeeklyData = () => {

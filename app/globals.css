@@ -533,4 +533,22 @@ html, body {
   background-color: rgba(239, 68, 68, 0.03);
 }
 
+/* Staggered entrance transition system */
+.reveal-staggered {
+  opacity: 0;
+  transform: translateY(16px);
+  transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1), transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.active .reveal-staggered {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.delay-1 { transition-delay: 150ms; }
+.delay-2 { transition-delay: 300ms; }
+.delay-3 { transition-delay: 450ms; }
+.delay-4 { transition-delay: 600ms; }
+.delay-5 { transition-delay: 750ms; }
+
 

@@ -299,13 +299,13 @@ const MUSIC_OPTIONS: MusicTrack[] = [
 export function FocusMusicPlayer({
   isActive,
   isBreak,
-  className,
-  variant = "default"
+  className = "",
+  isZenMode = false,
 }: {
   isActive: boolean;
   isBreak: boolean;
   className?: string;
-  variant?: "default" | "zen"
+  isZenMode?: boolean;
 }) {
   const {
     isPlaying,
@@ -467,11 +467,11 @@ export function FocusMusicPlayer({
               }
               playerRef.current = event.target
             },
-            onError: (err: any) => {
-              console.error("YouTube Player Error:", err)
+            onError: (event?: any) => {
+              console.error("YouTube Player Error:", event?.data ?? event)
               toast({
                 title: "Playback Error ⚠️",
-                description: "Failed to load YouTube track. Autoplay might be blocked or video is unavailable.",
+                description: `Failed to load YouTube track (Error code: ${event?.data ?? "unknown"}). Autoplay might be blocked or video is unavailable.`,
                 variant: "destructive"
               })
             },
@@ -563,8 +563,8 @@ export function FocusMusicPlayer({
               } catch (e) { }
               ambientPlayerRef.current = event.target
             },
-            onError: (err: any) => {
-              console.error("YouTube Ambient Player Error:", err)
+            onError: (event?: any) => {
+              console.error("YouTube Ambient Player Error:", event?.data ?? event)
             },
           },
         })
@@ -703,11 +703,11 @@ export function FocusMusicPlayer({
 
 
   // --- ZEN MODE RENDER ---
-  if (variant === "zen") {
+  if (isZenMode) {
     return (
-      <div className={`w-full max-w-md mx-auto transition-all duration-500 ${className}`}>
+      <div className={`fixed bottom-12 left-1/2 -translate-x-1/2 z-[60] w-full max-w-md px-4 animate-in slide-in-from-bottom-8 duration-700 ${className}`}>
         {/* Minimal Player Container */}
-        <div className="bg-black/20 backdrop-blur-xl rounded-3xl p-6 border border-white/10 text-white">
+        <div className="bg-slate-900/85 dark:bg-black/50 backdrop-blur-2xl rounded-3xl p-6 border border-white/10 text-white shadow-2xl">
 
           {/* Now Playing Info (Centered) */}
           <div className="text-center mb-6">
@@ -716,7 +716,7 @@ export function FocusMusicPlayer({
                 <div className="w-12 h-12 bg-white/10 rounded-full flex items-center justify-center mx-auto mb-3 text-2xl">
                   {currentTrack.icon}
                 </div>
-                <h3 className="font-medium text-lg tracking-wide">{currentTrack.name}</h3>
+                <h3 className="font-medium text-lg tracking-wide text-white">{currentTrack.name}</h3>
                 <p className="text-sm text-white/50">{currentTrack.description}</p>
                 
                 {/* Minimal Player controls */}
@@ -808,6 +808,18 @@ export function FocusMusicPlayer({
               </div>
             )}
           </div>
+
+          {/* Stable Offscreen Players */}
+          {ambientTrack && (
+            <div className="fixed top-[-9999px] left-[-9999px] w-[1px] h-[1px] overflow-hidden opacity-0 pointer-events-none">
+              <div id={`youtube-player-ambient-${extractVideoId(ambientTrack.url) || "default"}`} />
+            </div>
+          )}
+          {currentTrack && (
+            <div className="fixed top-[-9999px] left-[-9999px] w-[1px] h-[1px] overflow-hidden opacity-0 pointer-events-none">
+              <div id={`youtube-player-${extractVideoId(currentTrack.url) || "default"}`} />
+            </div>
+          )}
         </div>
       </div>
     )

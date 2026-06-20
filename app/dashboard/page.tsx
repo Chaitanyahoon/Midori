@@ -13,11 +13,22 @@ import { MotivationalQuote } from "@/components/dashboard/motivational-quote"
 import { useData } from "@/components/local-data-provider"
 import { useAuth } from "@/components/auth-provider"
 import { Icons } from "@/components/icons"
+import { useWeather } from "@/hooks/use-weather"
 
 const VisualGarden = dynamic(() => import('@/components/garden/visual-garden').then(mod => mod.VisualGarden), {
   ssr: false,
   loading: () => <div className="w-full h-72 sm:h-96 bg-slate-100 dark:bg-slate-800 rounded-3xl animate-pulse" />
 })
+
+const getWeatherEmoji = (condition: string) => {
+  switch (condition) {
+    case "clear": return "☀️"
+    case "rain": return "🌧️"
+    case "snow": return "❄️"
+    case "cloudy": return "☁️"
+    default: return "☀️"
+  }
+}
 
 export default function DashboardPage() {
   const router = useRouter()
@@ -26,6 +37,11 @@ export default function DashboardPage() {
   const { tasks, pomodoros, stats, settings } = useData()
   const { user } = useAuth()
   const userName = settings.userName || user?.displayName || user?.email?.split('@')[0] || ""
+
+  const weatherData = useWeather()
+  const weatherLoading = weatherData.loading
+  const weatherCondition = weatherData.weather.condition
+  const weatherTemp = weatherData.weather.temperature
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -63,7 +79,7 @@ export default function DashboardPage() {
   return (
     <div className="w-full h-full ambient-bg">
       {/* Welcome Header Section */}
-      <div className="px-4 sm:px-8 pt-6 sm:pt-8 pb-2">
+      <div className="px-4 sm:px-8 pt-6 sm:pt-8 pb-2 flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="animate-bloom">
           <div className="flex items-baseline gap-3 flex-wrap">
             <h1 className="text-2xl sm:text-4xl lg:text-5xl font-bold bg-gradient-to-r from-emerald-800 to-teal-600 dark:from-emerald-200 dark:to-teal-200 bg-clip-text text-transparent leading-tight">
@@ -84,6 +100,32 @@ export default function DashboardPage() {
             </span>
           </div>
         </div>
+
+        {/* Weather & Balances Widget */}
+        <div className="flex flex-wrap items-center gap-3 animate-bloom select-none">
+          {!weatherLoading && (
+            <div className="flex items-center gap-2 bg-sky-500/10 dark:bg-sky-500/20 text-sky-700 dark:text-sky-300 px-3.5 py-1.5 rounded-2xl border border-sky-500/20 text-xs font-semibold shadow-sm backdrop-blur-sm transition-all duration-300 hover:scale-105">
+              <span className="text-base leading-none">{getWeatherEmoji(weatherCondition)}</span>
+              <span className="capitalize">{weatherCondition}</span>
+              <span className="opacity-50">·</span>
+              <span>{Math.round(weatherTemp)}°C</span>
+            </div>
+          )}
+
+          {/* Sunlight pill */}
+          <div className="flex items-center gap-2 bg-gradient-to-r from-amber-400/20 to-orange-400/20 text-amber-700 dark:text-amber-300 px-4 py-2 rounded-2xl border border-amber-400/30 text-sm font-bold shadow-md hover:shadow-lg backdrop-blur-md transition-all duration-300 hover:scale-105 active:scale-95 group cursor-default">
+            <Icons.sun className="w-4 h-4 text-amber-500 animate-[spin_8s_linear_infinite] group-hover:scale-110 transition-transform" />
+            <span>{settings?.sunlight ?? 0}</span>
+            <span className="text-[10px] uppercase font-bold tracking-wider opacity-75">Sun</span>
+          </div>
+
+          {/* Water drops pill */}
+          <div className="flex items-center gap-2 bg-gradient-to-r from-sky-400/20 to-blue-400/20 text-sky-700 dark:text-sky-300 px-4 py-2 rounded-2xl border border-sky-400/30 text-sm font-bold shadow-md hover:shadow-lg backdrop-blur-md transition-all duration-300 hover:scale-105 active:scale-95 group cursor-default">
+            <Icons.droplets className="w-4 h-4 text-sky-500 animate-[pulse_2s_ease-in-out_infinite] group-hover:scale-110 transition-transform" />
+            <span>{settings?.waterdrops ?? 0}</span>
+            <span className="text-[10px] uppercase font-bold tracking-wider opacity-75">Water</span>
+          </div>
+        </div>
       </div>
 
       {/* Main Content */}
@@ -96,9 +138,10 @@ export default function DashboardPage() {
         {/* Section: Your Progress */}
         <div className="space-y-4 animate-stagger-2">
           <div className="section-label">
-            <h2 className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-[0.15em]">
-              📊 Your Progress
-            </h2>
+            <div className="flex items-center gap-2 text-slate-400 dark:text-slate-500 uppercase tracking-[0.15em] text-xs font-bold">
+              <Icons.insights className="w-3.5 h-3.5 text-emerald-500 dark:text-emerald-400 animate-pulse" />
+              <span>Your Progress</span>
+            </div>
           </div>
           <QuickStats />
         </div>
@@ -106,9 +149,10 @@ export default function DashboardPage() {
         {/* Section: Your Garden */}
         <div className="space-y-4 animate-stagger-3">
           <div className="section-label">
-            <h2 className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-[0.15em]">
-              🌳 Your Garden
-            </h2>
+            <div className="flex items-center gap-2 text-slate-400 dark:text-slate-500 uppercase tracking-[0.15em] text-xs font-bold">
+              <Icons.sprout className="w-3.5 h-3.5 text-emerald-500 dark:text-emerald-400" />
+              <span>Your Garden</span>
+            </div>
           </div>
           <VisualGarden onAddPlant={() => router.push("/dashboard/tasks")} />
         </div>
@@ -116,21 +160,26 @@ export default function DashboardPage() {
         {/* Section: Today's Plan */}
         <div className="space-y-4 animate-stagger-4">
           <div className="section-label">
-            <h2 className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-[0.15em]">
-              📋 Today&apos;s Plan
-            </h2>
+            <div className="flex items-center gap-2 text-slate-400 dark:text-slate-500 uppercase tracking-[0.15em] text-xs font-bold">
+              <Icons.calendar className="w-3.5 h-3.5 text-emerald-500 dark:text-emerald-400" />
+              <span>Today&apos;s Plan</span>
+            </div>
           </div>
-          <div className="grid grid-cols-1 xl:grid-cols-3 gap-4 sm:gap-6">
-            {/* Left Column */}
-            <div className="xl:col-span-2 space-y-4 sm:space-y-6 min-w-0">
-              <TaskCalendar />
-              <RecentActivity />
+          <div className="grid grid-cols-1 xl:grid-cols-3 gap-4 sm:gap-6 items-start">
+            {/* Row 1: TaskList (2 cols) & PomodoroTimer (1 col) */}
+            <div className="xl:col-span-2 min-w-0">
+              <TaskList />
+            </div>
+            <div className="xl:col-span-1 min-w-0">
+              <PomodoroTimer />
             </div>
 
-            {/* Right Column */}
-            <div className="space-y-4 sm:space-y-6 min-w-0">
-              <PomodoroTimer />
-              <TaskList />
+            {/* Row 2: TaskCalendar (2 cols) & RecentActivity (1 col) */}
+            <div className="xl:col-span-2 min-w-0">
+              <TaskCalendar />
+            </div>
+            <div className="xl:col-span-1 min-w-0">
+              <RecentActivity />
             </div>
           </div>
         </div>
@@ -163,7 +212,7 @@ export default function DashboardPage() {
                   Plant Seed
                 </span>
                 <button
-                  onClick={() => (window.location.href = "/dashboard/tasks")}
+                  onClick={() => router.push("/dashboard/tasks")}
                   className="w-12 h-12 bg-green-500 hover:bg-green-600 rounded-xl shadow-md hover:shadow-lg transition-all duration-200 flex items-center justify-center hover:scale-110 active:scale-95 touch-manipulation"
                 >
                   <Icons.leaf className="w-5 h-5 text-white" />
@@ -174,7 +223,7 @@ export default function DashboardPage() {
                   Focus Grove
                 </span>
                 <button
-                  onClick={() => (window.location.href = "/dashboard/pomodoro")}
+                  onClick={() => router.push("/dashboard/pomodoro")}
                   className="w-12 h-12 bg-orange-500 hover:bg-orange-600 rounded-xl shadow-md hover:shadow-lg transition-all duration-200 flex items-center justify-center hover:scale-110 active:scale-95 touch-manipulation"
                 >
                   <Icons.timer className="w-5 h-5 text-white" />
@@ -185,7 +234,7 @@ export default function DashboardPage() {
                   Time Planner
                 </span>
                 <button
-                  onClick={() => (window.location.href = "/dashboard/calendar")}
+                  onClick={() => router.push("/dashboard/calendar")}
                   className="w-12 h-12 bg-purple-500 hover:bg-purple-600 rounded-xl shadow-md hover:shadow-lg transition-all duration-200 flex items-center justify-center hover:scale-110 active:scale-95 touch-manipulation"
                 >
                   <Icons.calendar className="w-5 h-5 text-white" />
@@ -207,7 +256,7 @@ export default function DashboardPage() {
                 <button
                   onClick={() => {
                     setIsQuickActionsOpen(false)
-                    window.location.href = "/dashboard/tasks"
+                    router.push("/dashboard/tasks")
                   }}
                   className="w-12 h-12 bg-green-500 hover:bg-green-600 rounded-xl shadow-md transition-all duration-200 flex items-center justify-center active:scale-95 touch-manipulation"
                 >
@@ -221,7 +270,7 @@ export default function DashboardPage() {
                 <button
                   onClick={() => {
                     setIsQuickActionsOpen(false)
-                    window.location.href = "/dashboard/pomodoro"
+                    router.push("/dashboard/pomodoro")
                   }}
                   className="w-12 h-12 bg-orange-500 hover:bg-orange-600 rounded-xl shadow-md transition-all duration-200 flex items-center justify-center active:scale-95 touch-manipulation"
                 >
@@ -235,7 +284,7 @@ export default function DashboardPage() {
                 <button
                   onClick={() => {
                     setIsQuickActionsOpen(false)
-                    window.location.href = "/dashboard/calendar"
+                    router.push("/dashboard/calendar")
                   }}
                   className="w-12 h-12 bg-purple-500 hover:bg-purple-600 rounded-xl shadow-md transition-all duration-200 flex items-center justify-center active:scale-95 touch-manipulation"
                 >

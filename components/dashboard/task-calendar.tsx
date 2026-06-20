@@ -49,19 +49,6 @@ export function TaskCalendar() {
     return tasks.filter((task) => task.dueDate === dateString)
   }
 
-  const getTodayTasks = () => {
-    // Get today's date in local timezone
-    const today = new Date()
-    const todayString =
-      today.getFullYear() +
-      "-" +
-      String(today.getMonth() + 1).padStart(2, "0") +
-      "-" +
-      String(today.getDate()).padStart(2, "0")
-
-    return tasks.filter((task) => task.dueDate === todayString)
-  }
-
   const days = getDaysInMonth(currentDate)
   const monthNames = [
     "January",
@@ -176,45 +163,6 @@ export function TaskCalendar() {
               </div>
             )
           })}
-        </div>
-
-        <div className="mt-6 sm:mt-8 space-y-3 max-h-[200px] sm:max-h-none overflow-y-auto pr-1">
-          <div className="flex items-center justify-between pb-1">
-            <h4 className="text-xs sm:text-sm font-bold text-slate-800 dark:text-slate-200 uppercase tracking-widest">Today's Agenda</h4>
-            <Badge variant="outline" className="bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800 text-[10px] uppercase font-bold px-2 py-0">
-              {getTodayTasks().length} Tasks
-            </Badge>
-          </div>
-
-          {getTodayTasks().length === 0 ? (
-            <div className="bg-slate-50/50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800 rounded-xl p-4 text-center">
-              <p className="text-xs sm:text-sm font-medium text-slate-500 dark:text-slate-400">Clear skies! No tasks scheduled for today. 🌿</p>
-            </div>
-          ) : (
-            getTodayTasks().map((task) => (
-              <div key={task.id} className="flex items-center space-x-3 sm:space-x-4 p-3 bg-white/70 dark:bg-slate-800/70 backdrop-blur-sm rounded-xl sm:rounded-2xl border border-white dark:border-slate-700 shadow-sm hover:shadow-md hover:bg-white dark:hover:bg-slate-800 transition-all duration-300 group">
-                <div
-                  className={`w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full flex-shrink-0 ${task.priority === "high"
-                    ? "bg-red-500"
-                    : task.priority === "medium"
-                      ? "bg-yellow-500"
-                      : "bg-green-500"
-                    }`}
-                ></div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-xs sm:text-sm font-medium text-gray-900 truncate">{task.title}</p>
-                  <div className="flex items-center space-x-1 sm:space-x-2 mt-1 flex-wrap gap-1">
-                    <Badge variant="outline" className="text-[10px] sm:text-xs px-1.5 sm:px-2 py-0.5">
-                      {task.category}
-                    </Badge>
-                    <Badge variant="outline" className="text-[10px] sm:text-xs px-1.5 sm:px-2 py-0.5">
-                      {task.priority}
-                    </Badge>
-                  </div>
-                </div>
-              </div>
-            ))
-          )}
         </div>
       </CardContent>
     </Card>

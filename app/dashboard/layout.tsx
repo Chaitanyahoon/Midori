@@ -3,6 +3,7 @@
 import type React from "react"
 import { useEffect } from "react"
 import { useRouter, usePathname } from "next/navigation"
+import Link from "next/link"
 import { DataProvider } from "@/components/local-data-provider"
 import { Sidebar } from "@/components/dashboard/sidebar"
 import { TopNav } from "@/components/dashboard/top-nav"
@@ -14,6 +15,7 @@ import { useAuth } from "@/components/auth-provider"
 import { useUIStore } from "@/lib/store"
 import { Icons } from "@/components/icons"
 import { SakuraParticles } from "@/components/dashboard/sakura-particles"
+import { PomodoroProvider } from "@/lib/hooks/usePomodoro"
 
 
 function DashboardContent({ children }: { children: React.ReactNode }) {
@@ -45,7 +47,8 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
 
   return (
     <DataProvider>
-      <div className="h-screen overflow-hidden bg-slate-50 dark:bg-slate-900 flex relative">
+      <PomodoroProvider>
+        <div className="h-screen overflow-hidden bg-slate-50 dark:bg-slate-900 flex relative">
         {/* Washi Texture Overlay */}
         <div className="washi-overlay pointer-events-none" />
         {/* Floating Sakura Particles in background with subtle opacity (12%) */}
@@ -91,7 +94,7 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
           ].map((item) => {
             const isActive = pathname === item.href
             return (
-              <a
+              <Link
                 key={item.href}
                 href={item.href}
                 aria-current={isActive ? "page" : undefined}
@@ -102,7 +105,7 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
               >
                 <item.icon className={`w-5 h-5 ${isActive ? "scale-110 text-emerald-600 dark:text-emerald-400" : ""} transition-transform`} />
                 <span className={`text-[10px] tracking-wide ${isActive ? "font-bold text-emerald-600 dark:text-emerald-400" : "font-medium"}`}>{item.label}</span>
-              </a>
+              </Link>
             )
           })}
         </nav>
@@ -111,6 +114,7 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
         <OfflineIndicator />
         <PlantAIAssistant />
       </div>
+      </PomodoroProvider>
     </DataProvider>
   )
 }

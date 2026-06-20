@@ -416,10 +416,10 @@ export default function CalendarPage() {
                   <div
                     key={index}
                     className={`
-                        min-h-[64px] sm:min-h-[88px] p-2 rounded-lg border transition-all duration-200 cursor-pointer
-                        hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:border-blue-200 dark:hover:border-blue-700
-                        ${isToday(day) ? "bg-gradient-to-br from-emerald-50 to-blue-50 dark:from-emerald-900/30 dark:to-blue-900/30 border-emerald-200 dark:border-emerald-700 shadow-md" : "bg-white dark:bg-slate-800/50 border-gray-100 dark:border-slate-700"}
-                        ${hasHighPriority ? "ring-2 ring-red-200 dark:ring-red-800" : ""}
+                        min-h-[64px] sm:min-h-[88px] p-2 rounded-xl border transition-all duration-300 cursor-pointer
+                        hover:bg-emerald-50/50 dark:hover:bg-emerald-950/20 hover:border-emerald-200 dark:hover:border-emerald-800/50
+                        ${isToday(day) ? "bg-gradient-to-br from-emerald-50 to-teal-50/30 dark:from-emerald-950/40 dark:to-teal-950/20 border-emerald-200 dark:border-emerald-800 shadow-md" : "bg-white dark:bg-slate-800/50 border-gray-100/80 dark:border-slate-700/60"}
+                        ${hasHighPriority ? "ring-1 ring-rose-500/30 dark:ring-rose-500/40" : ""}
                         ${isPast ? "opacity-60 pointer-events-none" : ""}
                       `}
                     onClick={() => handleDateClick(day)}
@@ -435,7 +435,7 @@ export default function CalendarPage() {
                           </Badge>
                         )}
                       </div>
-                      <div className="flex-1 space-y-1">
+                      <div className="flex-1 space-y-1 hidden sm:block">
                         {dayTasks.slice(0, 3).map((task, i) => {
                           const matchesFilter = selectedPriorityFilter === "all" || task.priority === selectedPriorityFilter
                           return (
@@ -443,15 +443,15 @@ export default function CalendarPage() {
                               <Tooltip>
                                 <TooltipTrigger asChild>
                                   <div
-                                    className={`text-xs p-1.5 rounded truncate flex items-center gap-1.5 transition-all cursor-pointer hover:opacity-80 ${
+                                    className={`text-xs p-1.5 rounded-lg truncate flex items-center gap-1.5 transition-all cursor-pointer hover:opacity-90 font-medium ${
                                       !matchesFilter ? "opacity-25" : ""
                                     } ${task.completed
-                                      ? "bg-gray-400 line-through opacity-60"
+                                      ? "bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 line-through border border-slate-200/50 dark:border-slate-800"
                                       : task.priority === "high"
-                                        ? "bg-red-500 text-white"
+                                        ? "bg-rose-500/10 dark:bg-rose-500/20 text-rose-600 dark:text-rose-300 border border-rose-500/20"
                                         : task.priority === "medium"
-                                          ? "bg-yellow-500 text-white"
-                                          : "bg-green-500 text-white"
+                                          ? "bg-amber-500/10 dark:bg-amber-500/20 text-amber-600 dark:text-amber-300 border border-amber-500/20"
+                                          : "bg-emerald-500/10 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-300 border border-emerald-500/20"
                                       }`}
                                     onClick={(e) => e.stopPropagation()}
                                   >
@@ -464,7 +464,7 @@ export default function CalendarPage() {
                                           description: !task.completed ? "Great job! Keep up the momentum." : "Task marked as pending.",
                                         })
                                       }}
-                                      className="h-3 w-3 border-white dark:border-slate-700 data-[state=checked]:bg-white dark:data-[state=checked]:bg-slate-600 data-[state=checked]:text-gray-600 dark:data-[state=checked]:text-gray-200"
+                                      className="h-3.5 w-3.5 border-slate-300 dark:border-slate-650 data-[state=checked]:bg-emerald-500 data-[state=checked]:border-emerald-500 transition-all"
                                       onClick={(e) => e.stopPropagation()}
                                     />
                                     <span className="flex-1 truncate">{task.title}</span>

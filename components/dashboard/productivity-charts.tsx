@@ -8,6 +8,68 @@ import { Icons } from "@/components/icons"
 import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
 
+const WeeklyFocusTooltip = ({ active, payload, label }: any) => {
+  if (active && payload && payload[0]) {
+    const data = payload[0].payload
+    return (
+      <div className="bg-white dark:bg-slate-800 p-3 border dark:border-slate-700 rounded-2xl shadow-lg">
+        <p className="font-medium text-gray-900 dark:text-gray-100">{label}</p>
+        <p className="text-blue-600 dark:text-blue-400 font-semibold">Focus: {data.hours}h</p>
+        <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
+          {data.pomodoros} sessions • {data.tasks} tasks
+        </p>
+      </div>
+    )
+  }
+  return null
+}
+
+const DailySessionsTooltip = ({ active, payload, label }: any) => {
+  if (active && payload && payload[0]) {
+    const data = payload[0].payload
+    return (
+      <div className="bg-white dark:bg-slate-800 p-3 border dark:border-slate-700 rounded-2xl shadow-lg">
+        <p className="font-medium text-gray-900 dark:text-gray-100">{label}</p>
+        <p className="text-green-600 dark:text-green-400 font-semibold">Sessions: {data.pomodoros}</p>
+        <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
+          {data.hours ? data.hours.toFixed(1) : "0.0"}h focus • {data.tasks} tasks
+        </p>
+      </div>
+    )
+  }
+  return null
+}
+
+const CategoryFocusTooltip = ({ active, payload }: any) => {
+  if (active && payload && payload[0]) {
+    const data = payload[0].payload
+    return (
+      <div className="bg-white dark:bg-slate-800 p-3 border dark:border-slate-700 rounded-2xl shadow-lg">
+        <p className="font-medium text-gray-900 dark:text-gray-100">{data.name}</p>
+        <p className="text-sm text-gray-600 dark:text-gray-400 font-semibold">
+          {data.hours}h ({data.value}%)
+        </p>
+      </div>
+    )
+  }
+  return null
+}
+
+const PriorityTooltip = ({ active, payload }: any) => {
+  if (active && payload && payload[0]) {
+    const data = payload[0].payload
+    return (
+      <div className="bg-white dark:bg-slate-800 p-3 border dark:border-slate-700 rounded-2xl shadow-lg">
+        <p className="font-medium text-gray-900 dark:text-gray-100">{data.name} Priority</p>
+        <p className="text-sm text-gray-600 dark:text-gray-400 font-semibold">
+          {data.count} tasks ({data.value}%)
+        </p>
+      </div>
+    )
+  }
+  return null
+}
+
 export function ProductivityCharts() {
   const { tasks, pomodoros } = useData()
   const isDemoData = tasks.length === 0 && pomodoros.length === 0
@@ -348,23 +410,7 @@ export function ProductivityCharts() {
                   <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" className="dark:stroke-slate-700" />
                   <XAxis dataKey="day" stroke="#6B7280" className="dark:stroke-slate-400" />
                   <YAxis stroke="#6B7280" className="dark:stroke-slate-400" />
-                  <ChartTooltip
-                    content={({ active, payload, label }) => {
-                      if (active && payload && payload[0]) {
-                        const data = payload[0].payload
-                        return (
-                          <div className="bg-white dark:bg-slate-800 p-3 border dark:border-slate-700 rounded-2xl shadow-lg">
-                            <p className="font-medium text-gray-900 dark:text-gray-100">{label}</p>
-                            <p className="text-blue-600 dark:text-blue-400 font-semibold">Focus: {data.hours}h</p>
-                            <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
-                              {data.pomodoros} sessions • {data.tasks} tasks
-                            </p>
-                          </div>
-                        )
-                      }
-                      return null
-                    }}
-                  />
+                  <ChartTooltip content={<WeeklyFocusTooltip />} />
                   <Area
                     type="monotone"
                     dataKey="hours"
@@ -412,23 +458,7 @@ export function ProductivityCharts() {
                   <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" className="dark:stroke-slate-700" />
                   <XAxis dataKey="day" stroke="#6B7280" className="dark:stroke-slate-400" />
                   <YAxis stroke="#6B7280" className="dark:stroke-slate-400" />
-                  <ChartTooltip
-                    content={({ active, payload, label }) => {
-                      if (active && payload && payload[0]) {
-                        const data = payload[0].payload
-                        return (
-                          <div className="bg-white dark:bg-slate-800 p-3 border dark:border-slate-700 rounded-2xl shadow-lg">
-                            <p className="font-medium text-gray-900 dark:text-gray-100">{label}</p>
-                            <p className="text-green-600 dark:text-green-400 font-semibold">Sessions: {data.pomodoros}</p>
-                            <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
-                              {data.hours.toFixed(1)}h focus • {data.tasks} tasks
-                            </p>
-                          </div>
-                        )
-                      }
-                      return null
-                    }}
-                  />
+                  <ChartTooltip content={<DailySessionsTooltip />} />
                   <Bar
                     dataKey="pomodoros"
                     fill="url(#colorPomodoros)"
@@ -480,22 +510,7 @@ export function ProductivityCharts() {
                       />
                     ))}
                   </Pie>
-                  <ChartTooltip
-                    content={({ active, payload }) => {
-                      if (active && payload && payload[0]) {
-                        const data = payload[0].payload
-                        return (
-                          <div className="bg-white dark:bg-slate-800 p-3 border dark:border-slate-700 rounded-2xl shadow-lg">
-                            <p className="font-medium text-gray-900 dark:text-gray-100">{data.name}</p>
-                            <p className="text-sm text-gray-600 dark:text-gray-400 font-semibold">
-                              {data.hours}h ({data.value}%)
-                            </p>
-                          </div>
-                        )
-                      }
-                      return null
-                    }}
-                  />
+                  <ChartTooltip content={<CategoryFocusTooltip />} />
                 </PieChart>
               </ResponsiveContainer>
             </div>
@@ -554,22 +569,7 @@ export function ProductivityCharts() {
                       />
                     ))}
                   </Pie>
-                  <ChartTooltip
-                    content={({ active, payload }) => {
-                      if (active && payload && payload[0]) {
-                        const data = payload[0].payload
-                        return (
-                          <div className="bg-white dark:bg-slate-800 p-3 border dark:border-slate-700 rounded-2xl shadow-lg">
-                            <p className="font-medium text-gray-900 dark:text-gray-100">{data.name} Priority</p>
-                            <p className="text-sm text-gray-600 dark:text-gray-400 font-semibold">
-                              {data.count} tasks ({data.value}%)
-                            </p>
-                          </div>
-                        )
-                      }
-                      return null
-                    }}
-                  />
+                  <ChartTooltip content={<PriorityTooltip />} />
                 </PieChart>
               </ResponsiveContainer>
             </div>

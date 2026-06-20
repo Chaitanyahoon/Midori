@@ -6,12 +6,18 @@ import { isSignInWithEmailLink, signInWithEmailLink } from "firebase/auth"
 import { auth } from "@/lib/firebase/client"
 import { toast } from "sonner"
 import { FiLoader as Loader2 } from "react-icons/fi"
+import { ModeToggle } from "@/components/mode-toggle"
 
 export default function VerifyEmailPage() {
     const router = useRouter()
     const [status, setStatus] = useState<"loading" | "promptEmail" | "error" | "success">("loading")
     const [email, setEmail] = useState("")
     const processedRef = useRef(false)
+    const [isActive, setIsActive] = useState(false)
+
+    useEffect(() => {
+        setIsActive(true)
+    }, [])
 
     useEffect(() => {
         // Prevent double-execution in React strict mode
@@ -66,8 +72,14 @@ export default function VerifyEmailPage() {
     }
 
     return (
-        <div className="h-screen w-full flex items-center justify-center zen-gradient-bg relative overflow-hidden font-sans">
+        <div className={`h-screen w-full flex items-center justify-center zen-gradient-bg relative overflow-hidden font-sans ${isActive ? 'active' : ''}`}>
             <div className="washi-overlay pointer-events-none" />
+
+            {/* Theme Toggle in Top Right */}
+            <div className="absolute top-6 right-6 z-50">
+                <ModeToggle />
+            </div>
+
             <div className="absolute inset-0 pointer-events-none select-none opacity-5">
                 <span className="absolute top-4 left-4 text-[3.5rem] font-serif opacity-10">緑</span>
             </div>

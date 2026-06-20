@@ -5,6 +5,7 @@ import { useData } from "@/components/local-data-provider"
 import { useAuth } from "@/components/auth-provider"
 import { Icons } from "@/components/icons"
 import { toast } from "sonner"
+import { Badge } from "@/components/ui/badge"
 import { collection, addDoc, onSnapshot, query, orderBy, limit, doc, getDoc } from "firebase/firestore"
 import { db } from "@/lib/firebase/client"
 
@@ -16,8 +17,17 @@ interface ChatMessage {
     createdAt: string
 }
 
+const PLANT_NAMES: Record<string, string> = {
+    sakura: "Sakura Tree",
+    maple: "Maple Tree",
+    pine: "Pine Tree",
+    sunflower: "Sunflower",
+    tulip: "Tulip",
+    orchid: "Orchid",
+}
+
 export default function CoopPage() {
-    const { sharedGarden, joinSharedGarden, createSharedGarden, updateSettings, settings } = useData()
+    const { sharedGarden, joinSharedGarden, createSharedGarden, updateSettings, settings, updateSharedGarden } = useData()
     const { user } = useAuth()
     const [joinCode, setJoinCode] = useState("")
     const [gardenName, setGardenName] = useState("")
@@ -28,10 +38,121 @@ export default function CoopPage() {
     const chatEndRef = useRef<HTMLDivElement>(null)
     const [activeTab, setActiveTab] = useState<"join" | "create">("join")
     const [memberCount, setMemberCount] = useState(0)
+    const [rightTab, setRightTab] = useState<"chat" | "nursery">("chat")
+
+    const handleNurture = async (plantId: string) => {
+        if (!sharedGarden) return
+        const costSun = 20
+        const costWater = 20
+        
+        if (sharedGarden.sunlightPool < costSun || sharedGarden.waterPool < costWater) {
+            toast.error("Not enough communal resources! Complete tasks & focus sessions to earn more.")
+            return
+        }
+
+        const updatedPlants = (sharedGarden.plants || []).map((p: any) => {
+            if (p.id === plantId) {
+                const currentNurture = p.nurtureLevel ?? 0
+                return { ...p, nurtureLevel: Math.min(currentNurture + 20, 100) }
+            }
+            return p
+        })
+
+        try {
+            await updateSharedGarden({
+                sunlightPool: sharedGarden.sunlightPool - costSun,
+                waterPool: sharedGarden.waterPool - costWater,
+                plants: updatedPlants
+            })
+            toast.success("Communal plant nurtured! Check visual garden to watch it grow. 💧☀️")
+        } catch (e) {
+            console.error("Nurture error:", e)
+            toast.error("Failed to nurture plant")
+        }
+    }
+
+    const handleHarvest = async (plantId: string) => {
+        if (!sharedGarden) return
+        const plant = (sharedGarden.plants || []).find((p: any) => p.id === plantId)
+        if (!plant) return
+        
+        const bonusSun = 100
+        const bonusWater = 50
+
+        const updatedPlants = (sharedGarden.plants || []).map((p: any) => {
+            if (p.id === plantId) {
+                return { ...p, status: "mature", nurtureLevel: 100 }
+            }
+            return p
+        })
+
+        try {
+            await updateSharedGarden({
+                sunlightPool: (sharedGarden.sunlightPool || 0) + bonusSun,
+                waterPool: (sharedGarden.waterPool || 0) + bonusWater,
+                plants: updatedPlants
+            })
+            toast.success(`🎉 Landmark complete! Earned +${bonusSun} Sun & +${bonusWater} Water pool rewards!`)
+        } catch (e) {
+            console.error("Harvest error:", e)
+            toast.error("Failed to harvest plant")
+        }
+    }
+
+    const handleRemovePlant = async (plantId: string) => {
+        if (!sharedGarden) return
+        const updatedPlants = (sharedGarden.plants || []).filter((p: any) => p.id !== plantId)
+        try {
+            await updateSharedGarden({ plants: updatedPlants })
+            toast.info("Plant removed from Co-op Garden.")
+        } catch (e) {
+            toast.error("Failed to remove plant")
+        }
+    }
 
     // Real-time chat listener
     useEffect(() => {
-        if (!sharedGarden?.id || !db) return
+        if (!sharedGarden?.id) return
+        
+        if (!db) {
+            const storageKey = `midori_mock_chat_${sharedGarden.id}`
+            try {
+                const stored = localStorage.getItem(storageKey)
+                if (stored) {
+                    setMessages(JSON.parse(stored))
+                } else {
+                    const defaultMsgs: ChatMessage[] = [
+                        {
+                            id: "mock-1",
+                            text: "Hey everyone! Welcome to our new co-op garden! 🌱",
+                            userId: "user-sora",
+                            userName: "Sora",
+                            createdAt: new Date(Date.now() - 3600000).toISOString()
+                        },
+                        {
+                            id: "mock-2",
+                            text: "Awesome! I just finished a 25-minute Pomodoro, added some water to the pool 💧",
+                            userId: "user-hana",
+                            userName: "Hana",
+                            createdAt: new Date(Date.now() - 1800000).toISOString()
+                        },
+                        {
+                            id: "mock-3",
+                            text: "Nice work Hana! I'm about to finish my daily tasks to get us some sunlight ☀️",
+                            userId: "user-zenmaster",
+                            userName: "ZenMaster",
+                            createdAt: new Date(Date.now() - 900000).toISOString()
+                        }
+                    ]
+                    setMessages(defaultMsgs)
+                    localStorage.setItem(storageKey, JSON.stringify(defaultMsgs))
+                }
+            } catch (e) {
+                console.error("Failed to load mock messages:", e)
+            }
+            return
+        }
+
         const q = query(
             collection(db, "shared_gardens", sharedGarden.id, "messages"),
             orderBy("createdAt", "desc"),
@@ -94,8 +215,58 @@ export default function CoopPage() {
     }
 
     const sendMessage = async () => {
-        if (!newMessage.trim() || !sharedGarden?.id || !user || !db) return
+        if (!newMessage.trim() || !sharedGarden?.id || !user) return
         setSendingMsg(true)
+
+        if (!db) {
+            const newMsg: ChatMessage = {
+                id: Math.random().toString(36).substring(7),
+                text: newMessage.trim(),
+                userId: user.uid,
+                userName: settings.userName || user.displayName || user.email?.split("@")[0] || "Anonymous",
+                createdAt: new Date().toISOString()
+            }
+            
+            setMessages(prev => {
+                const next = [...prev, newMsg]
+                const storageKey = `midori_mock_chat_${sharedGarden.id}`
+                try { localStorage.setItem(storageKey, JSON.stringify(next)) } catch (e) {}
+                return next
+            })
+            setNewMessage("")
+            setSendingMsg(false)
+
+            // Simulate replies from other members for offline sandbox testing
+            setTimeout(() => {
+                const botNames = ["Hana", "Sora", "ZenMaster"]
+                const botResponses = [
+                    "Let's keep going! 🚀",
+                    "Amazing focus! 🌟 Keep it up!",
+                    "Our plants are looking happy today! 🌸",
+                    "Pomodoro time! Let's get that water pool filled 💧",
+                    "Task completed! You're doing great! ☀️"
+                ]
+                const randomName = botNames[Math.floor(Math.random() * botNames.length)]
+                const randomResponse = botResponses[Math.floor(Math.random() * botResponses.length)]
+                
+                const replyMsg: ChatMessage = {
+                    id: Math.random().toString(36).substring(7),
+                    text: randomResponse,
+                    userId: `bot-${randomName.toLowerCase()}`,
+                    userName: randomName,
+                    createdAt: new Date().toISOString()
+                }
+
+                setMessages(prev => {
+                    const next = [...prev, replyMsg]
+                    const storageKey = `midori_mock_chat_${sharedGarden.id}`
+                    try { localStorage.setItem(storageKey, JSON.stringify(next)) } catch (e) {}
+                    return next
+                })
+            }, 1200)
+            return
+        }
+
         try {
             await addDoc(collection(db, "shared_gardens", sharedGarden.id, "messages"), {
                 text: newMessage.trim(),
@@ -233,9 +404,9 @@ export default function CoopPage() {
 
     // ── ACTIVE GARDEN VIEW ──
     return (
-        <div className="w-full h-full flex flex-col lg:flex-row ambient-bg">
+        <div className="w-full h-full flex flex-col md:flex-row ambient-bg">
             {/* Left panel: Garden Info */}
-            <div className="w-full lg:w-80 xl:w-96 flex-shrink-0 border-b lg:border-b-0 lg:border-r border-slate-200/50 dark:border-slate-700/50 bg-white/60 dark:bg-slate-900/60 backdrop-blur-xl p-5 sm:p-6 overflow-y-auto">
+            <div className="w-full md:w-72 lg:w-80 xl:w-96 flex-shrink-0 border-b md:border-b-0 md:border-r border-slate-200/50 dark:border-slate-700/50 bg-white/60 dark:bg-slate-900/60 backdrop-blur-xl p-5 sm:p-6 overflow-y-auto">
                 {/* Garden header */}
                 <div className="flex items-start justify-between mb-6">
                     <div>
@@ -301,73 +472,217 @@ export default function CoopPage() {
                 </button>
             </div>
 
-            {/* Right panel: Chat */}
+            {/* Right panel: Chat / Nursery */}
             <div className="flex-1 flex flex-col min-h-0 bg-transparent">
-                {/* Chat header */}
-                <div className="flex items-center gap-3 px-5 py-4 border-b border-slate-200/50 dark:border-slate-700/50 bg-white/40 dark:bg-slate-900/40 backdrop-blur-xl">
-                    <div className="w-8 h-8 rounded-lg bg-emerald-100 dark:bg-emerald-900/40 flex items-center justify-center">
-                        <Icons.zap className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-                    </div>
-                    <div>
-                        <h2 className="font-bold text-slate-900 dark:text-slate-100 text-sm">Garden Chat</h2>
-                        <p className="text-[11px] text-slate-500">Real-time • {messages.length} messages</p>
-                    </div>
-                </div>
-
-                {/* Messages */}
-                <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-3 custom-scrollbar">
-                    {messages.length === 0 && (
-                        <div className="flex flex-col items-center justify-center h-full text-center py-16">
-                            <span className="text-4xl mb-3">🌱</span>
-                            <p className="text-sm font-semibold text-slate-600 dark:text-slate-400">No messages yet</p>
-                            <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">Say hello to your garden members!</p>
+                {/* Chat & Nursery Header */}
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-5 py-4 border-b border-slate-200/50 dark:border-slate-700/50 bg-white/40 dark:bg-slate-900/40 backdrop-blur-xl flex-shrink-0">
+                    <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-lg bg-emerald-100 dark:bg-emerald-900/40 flex items-center justify-center">
+                            {rightTab === "chat" ? (
+                                <Icons.zap className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                            ) : (
+                                <Icons.sprout className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                            )}
                         </div>
-                    )}
-                    {messages.map(msg => {
-                        const isMe = msg.userId === user?.uid
-                        return (
-                            <div key={msg.id} className={`flex ${isMe ? "justify-end" : "justify-start"}`}>
-                                <div className={`max-w-[75%] sm:max-w-[60%] ${isMe ? "order-2" : ""}`}>
-                                    {!isMe && (
-                                        <p className="text-[10px] font-semibold text-slate-500 mb-1 px-1">{msg.userName}</p>
-                                    )}
-                                    <div className={`px-4 py-2.5 rounded-2xl text-sm leading-relaxed ${isMe
-                                        ? "bg-emerald-500 text-white rounded-br-md"
-                                        : "bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-700 rounded-bl-md"
-                                        }`}>
-                                        {msg.text}
-                                    </div>
-                                    <p className={`text-[9px] text-slate-400 mt-1 px-1 ${isMe ? "text-right" : ""}`}>
-                                        {new Date(msg.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
-                                    </p>
-                                </div>
+                        <div>
+                            <div className="flex items-center gap-2">
+                                <h2 className="font-bold text-slate-900 dark:text-slate-100 text-sm">
+                                    {rightTab === "chat" ? "Garden Chat" : "Kyōei Nursery"}
+                                </h2>
+                                {!db && (
+                                    <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-medium bg-amber-100 dark:bg-amber-900/40 text-amber-800 dark:text-amber-300 animate-pulse">
+                                        Simulated Offline
+                                    </span>
+                                )}
                             </div>
-                        )
-                    })}
-                    <div ref={chatEndRef} />
-                </div>
+                            <p className="text-[11px] text-slate-500">
+                                {rightTab === "chat" 
+                                    ? `${!db ? "Local Sandbox" : "Real-time"} • ${messages.length} messages` 
+                                    : `Communal Growth • ${(sharedGarden.plants || []).length} active projects`}
+                            </p>
+                        </div>
+                    </div>
 
-                {/* Chat Input */}
-                <div className="border-t border-slate-200/50 dark:border-slate-700/50 bg-white/40 dark:bg-slate-900/40 backdrop-blur-xl p-4">
-                    <div className="flex gap-2">
-                        <input
-                            type="text"
-                            placeholder="Type a message..."
-                            className="flex-1 h-11 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-4 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-400 transition-all"
-                            value={newMessage}
-                            onChange={e => setNewMessage(e.target.value)}
-                            onKeyDown={e => e.key === "Enter" && !e.shiftKey && sendMessage()}
-                            disabled={sendingMsg}
-                        />
+                    {/* Tab Switch Buttons */}
+                    <div className="flex bg-slate-100 dark:bg-slate-800 p-0.5 rounded-lg border border-slate-200/40 dark:border-slate-700/40 self-start sm:self-auto">
                         <button
-                            onClick={sendMessage}
-                            disabled={sendingMsg || !newMessage.trim()}
-                            className="h-11 w-11 bg-emerald-500 hover:bg-emerald-600 disabled:bg-slate-300 dark:disabled:bg-slate-700 text-white rounded-xl flex items-center justify-center transition-colors disabled:cursor-not-allowed flex-shrink-0"
+                            onClick={() => setRightTab("chat")}
+                            className={`px-3 py-1.5 rounded-md text-[10px] font-bold tracking-wide uppercase transition-all ${
+                                rightTab === "chat" 
+                                    ? "bg-white dark:bg-slate-700 text-emerald-700 dark:text-emerald-300 shadow-sm" 
+                                    : "text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200"
+                            }`}
                         >
-                            <Icons.chevronRight className="w-5 h-5" />
+                            💬 Chat
+                        </button>
+                        <button
+                            onClick={() => setRightTab("nursery")}
+                            className={`px-3 py-1.5 rounded-md text-[10px] font-bold tracking-wide uppercase transition-all ${
+                                rightTab === "nursery" 
+                                    ? "bg-white dark:bg-slate-700 text-emerald-700 dark:text-emerald-300 shadow-sm" 
+                                    : "text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200"
+                            }`}
+                        >
+                            🌱 Nursery
                         </button>
                     </div>
                 </div>
+
+                {rightTab === "chat" ? (
+                    <>
+                        {/* Messages */}
+                        <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-3 custom-scrollbar">
+                            {messages.length === 0 && (
+                                <div className="flex flex-col items-center justify-center h-full text-center py-16">
+                                    <span className="text-4xl mb-3">🌱</span>
+                                    <p className="text-sm font-semibold text-slate-600 dark:text-slate-400">No messages yet</p>
+                                    <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">Say hello to your garden members!</p>
+                                </div>
+                            )}
+                            {messages.map(msg => {
+                                const isMe = msg.userId === user?.uid
+                                return (
+                                    <div key={msg.id} className={`flex ${isMe ? "justify-end" : "justify-start"}`}>
+                                        <div className={`max-w-[75%] sm:max-w-[60%] ${isMe ? "order-2" : ""}`}>
+                                            {!isMe && (
+                                                <p className="text-[10px] font-semibold text-slate-500 mb-1 px-1">{msg.userName}</p>
+                                            )}
+                                            <div className={`px-4 py-2.5 rounded-2xl text-sm leading-relaxed ${isMe
+                                                ? "bg-emerald-500 text-white rounded-br-md"
+                                                : "bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-700 rounded-bl-md"
+                                                }`}>
+                                                {msg.text}
+                                            </div>
+                                            <p className={`text-[9px] text-slate-400 mt-1 px-1 ${isMe ? "text-right" : ""}`}>
+                                                {new Date(msg.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                                            </p>
+                                        </div>
+                                    </div>
+                                )
+                            })}
+                            <div ref={chatEndRef} />
+                        </div>
+
+                        {/* Chat Input */}
+                        <div className="border-t border-slate-200/50 dark:border-slate-700/50 bg-white/40 dark:bg-slate-900/40 backdrop-blur-xl p-4 flex-shrink-0">
+                            <div className="flex gap-2">
+                                <input
+                                    type="text"
+                                    placeholder="Type a message..."
+                                    className="flex-1 h-11 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-4 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-400 transition-all"
+                                    value={newMessage}
+                                    onChange={e => setNewMessage(e.target.value)}
+                                    onKeyDown={e => e.key === "Enter" && !e.shiftKey && sendMessage()}
+                                    disabled={sendingMsg}
+                                />
+                                <button
+                                    onClick={sendMessage}
+                                    disabled={sendingMsg || !newMessage.trim()}
+                                    className="h-11 w-11 bg-emerald-500 hover:bg-emerald-600 disabled:bg-slate-300 dark:disabled:bg-slate-700 text-white rounded-xl flex items-center justify-center transition-colors disabled:cursor-not-allowed flex-shrink-0"
+                                >
+                                    <Icons.chevronRight className="w-5 h-5" />
+                                </button>
+                            </div>
+                        </div>
+                    </>
+                ) : (
+                    /* NURSERY TAB */
+                    <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4 custom-scrollbar">
+                        <div className="mb-2">
+                            <h3 className="font-bold text-slate-800 dark:text-slate-100 text-sm">Active Growth Projects</h3>
+                            <p className="text-xs text-slate-500">Nurture plants by spending communal Sunlight and Water points</p>
+                        </div>
+
+                        {(sharedGarden.plants || []).length === 0 ? (
+                            <div className="flex flex-col items-center justify-center py-16 text-center card-zen p-6">
+                                <span className="text-4xl mb-3">🍁</span>
+                                <p className="text-sm font-semibold text-slate-600 dark:text-slate-400">No active growth projects</p>
+                                <p className="text-xs text-slate-400 dark:text-slate-500 mt-1.5 max-w-xs leading-relaxed">
+                                    To plant seeds here, go to the **Visual Garden** on your Dashboard home page, click **Shared View**, open the plant store, and purchase a seed!
+                                </p>
+                            </div>
+                        ) : (
+                            <div className="grid gap-4 grid-cols-1 sm:grid-cols-2">
+                                {(sharedGarden.plants || []).map((plant: any) => {
+                                    const nurture = plant.nurtureLevel ?? 0
+                                    const isMature = plant.status === "mature" || nurture >= 100
+                                    const name = PLANT_NAMES[plant.subtype] || plant.subtype || "Unknown Plant"
+                                    const plantIcons: Record<string, string> = {
+                                        sakura: "🌸", maple: "🍁", pine: "🌲", sunflower: "🌻", tulip: "🌷", orchid: "🌺"
+                                    }
+                                    const icon = plantIcons[plant.subtype] || (plant.type === 'tree' ? '🌳' : '🌱')
+                                    
+                                    return (
+                                        <div key={plant.id} className="card-zen p-4 flex flex-col justify-between border-slate-200/50 dark:border-slate-800/80 hover:translate-y-0 hover:scale-[1.02] transition-all">
+                                            <div className="flex items-start justify-between gap-3 mb-3">
+                                                <div className="flex items-center gap-3">
+                                                    <div className="w-10 h-10 rounded-xl bg-emerald-100 dark:bg-emerald-950/40 flex items-center justify-center text-xl">
+                                                        {icon}
+                                                    </div>
+                                                    <div>
+                                                        <h4 className="text-sm font-bold text-slate-800 dark:text-slate-100">{name}</h4>
+                                                        <p className="text-[10px] uppercase font-bold text-emerald-600 dark:text-emerald-400 tracking-wider">
+                                                            {plant.type}
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                                {isMature ? (
+                                                    <Badge className="bg-emerald-500 text-white border-none font-bold text-[10px] uppercase px-2 py-0.5 animate-bounce">
+                                                        ⭐ Mature
+                                                    </Badge>
+                                                ) : (
+                                                    <Badge variant="outline" className="text-slate-500 border-slate-200 text-[10px] dark:border-slate-800 dark:text-slate-400">
+                                                        {nurture}% Grown
+                                                    </Badge>
+                                                )}
+                                            </div>
+
+                                            <div className="space-y-3 mt-auto">
+                                                {/* Progress Bar */}
+                                                <div className="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-2 overflow-hidden">
+                                                    <div
+                                                        className="bg-gradient-to-r from-emerald-400 to-teal-500 h-full transition-all duration-500"
+                                                        style={{ width: `${nurture}%` }}
+                                                    />
+                                                </div>
+
+                                                {/* Actions */}
+                                                <div className="flex gap-2 pt-1">
+                                                    {!isMature ? (
+                                                        <button
+                                                            onClick={() => handleNurture(plant.id)}
+                                                            className="flex-1 py-2 rounded-lg bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-bold transition-all flex items-center justify-center gap-1 active:scale-95 shadow-sm hover:shadow-emerald-500/10"
+                                                        >
+                                                            <span>💧☀️</span> Nurture (-20)
+                                                        </button>
+                                                    ) : plant.status !== "mature" ? (
+                                                        <button
+                                                            onClick={() => handleHarvest(plant.id)}
+                                                            className="flex-1 py-2 rounded-lg bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold transition-all flex items-center justify-center gap-1 active:scale-95 shadow-sm hover:shadow-amber-500/10"
+                                                        >
+                                                            <span>🎉</span> Harvest (+100 Sun)
+                                                        </button>
+                                                    ) : (
+                                                        <div className="flex-1 text-center py-2 text-xs font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-500/5 dark:bg-emerald-950/10 rounded-lg border border-emerald-500/20">
+                                                            Communal Trophy 🏆
+                                                        </div>
+                                                    )}
+                                                    <button
+                                                        onClick={() => handleRemovePlant(plant.id)}
+                                                        className="p-2 rounded-lg border border-red-200 dark:border-red-950/40 hover:bg-red-50 dark:hover:bg-red-950/20 text-red-500 transition-all active:scale-95"
+                                                        title="Remove plant"
+                                                    >
+                                                        <Icons.trash className="w-3.5 h-3.5" />
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    )
+                                })}
+                            </div>
+                        )}
+                    </div>
+                )}
             </div>
         </div>
     )

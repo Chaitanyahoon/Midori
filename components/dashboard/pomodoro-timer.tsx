@@ -194,7 +194,7 @@ export function PomodoroTimer() {
             className="h-11 w-11 rounded-xl border-slate-200 dark:border-slate-700 bg-white/50 dark:bg-slate-800/50 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 flex-shrink-0"
             title="Skip"
           >
-            <Icons.chevronRight className="w-4 h-4" />
+            <Icons.skip className="w-4 h-4" />
           </Button>
         </div>
       </CardContent>

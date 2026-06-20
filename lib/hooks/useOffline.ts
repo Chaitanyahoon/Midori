@@ -78,7 +78,7 @@ export function useOfflineCache() {
 export function useOfflineIndicator() {
   const state = useOfflineState()
 
-  if (!state) return { isOnline: true, showIndicator: false }
+  if (!state) return { isOnline: true, showIndicator: false, pendingChanges: 0, isSyncing: false }
 
   return {
     isOnline: state.isOnline,

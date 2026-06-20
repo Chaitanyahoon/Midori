@@ -71,7 +71,7 @@ export function SettingsDialog({ children }: { children?: React.ReactNode }) {
     const [saved, setSaved] = useState(false)
 
     const initials = name.trim()
-        ? name.trim().split(" ").map((w) => w[0]).join("").toUpperCase().slice(0, 2)
+        ? name.trim().split(" ").map((w: string) => w[0]).join("").toUpperCase().slice(0, 2)
         : "ME"
 
     const handleSave = () => {

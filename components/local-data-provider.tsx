@@ -442,11 +442,42 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
 
   const updateSharedGarden = useCallback(async (updates: Partial<SharedGarden>) => {
     if (!settings.activeSharedGardenId) return
+    if (!db) {
+      setSharedGarden(prev => {
+        if (!prev) return null
+        const next = { ...prev, ...updates }
+        try {
+          localStorage.setItem(`midori_shared_garden_${settings.activeSharedGardenId}`, JSON.stringify(next))
+        } catch (e) {}
+        return next
+      })
+      return
+    }
     await updateDoc(doc(db, "shared_gardens", settings.activeSharedGardenId), updates)
   }, [settings.activeSharedGardenId])
 
   const joinSharedGarden = useCallback(async (gardenId: string) => {
     if (!uid) return
+    if (!db) {
+      let gardenData = null
+      try {
+        const stored = localStorage.getItem(`midori_shared_garden_${gardenId}`)
+        if (stored) {
+          gardenData = JSON.parse(stored)
+        } else {
+          gardenData = {
+            id: gardenId,
+            name: `Co-op Garden ${gardenId}`,
+            sunlightPool: 25,
+            waterPool: 15,
+            plants: []
+          }
+          localStorage.setItem(`midori_shared_garden_${gardenId}`, JSON.stringify(gardenData))
+        }
+      } catch (e) {}
+      await updateSettings({ activeSharedGardenId: gardenId })
+      return
+    }
     const ref = doc(db, "shared_gardens", gardenId)
     const snap = await getDoc(ref)
     if (!snap.exists()) throw new Error("Garden not found")
@@ -456,21 +487,48 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
   const createSharedGarden = useCallback(async (name: string) => {
     if (!uid) return ""
     const gardenId = Math.random().toString(36).substring(2, 8).toUpperCase()
-    await setDoc(doc(db, "shared_gardens", gardenId), {
+    const newGarden = {
       id: gardenId,
       name,
       sunlightPool: 0,
       waterPool: 0,
       plants: []
-    })
+    }
+    if (!db) {
+      try {
+        localStorage.setItem(`midori_shared_garden_${gardenId}`, JSON.stringify(newGarden))
+      } catch (e) {}
+      await updateSettings({ activeSharedGardenId: gardenId })
+      return gardenId
+    }
+    await setDoc(doc(db, "shared_gardens", gardenId), newGarden)
     await updateSettings({ activeSharedGardenId: gardenId })
     return gardenId
   }, [uid, updateSettings])
 
   // Shared Garden Listener
   useEffect(() => {
-    if (!settings.activeSharedGardenId || !db) {
+    if (!settings.activeSharedGardenId) {
       setSharedGarden(null)
+      return
+    }
+    if (!db) {
+      try {
+        const stored = localStorage.getItem(`midori_shared_garden_${settings.activeSharedGardenId}`)
+        if (stored) {
+          setSharedGarden(JSON.parse(stored))
+        } else {
+          const mockGarden = {
+            id: settings.activeSharedGardenId,
+            name: `Co-op Garden ${settings.activeSharedGardenId}`,
+            sunlightPool: 25,
+            waterPool: 15,
+            plants: []
+          }
+          setSharedGarden(mockGarden)
+          localStorage.setItem(`midori_shared_garden_${settings.activeSharedGardenId}`, JSON.stringify(mockGarden))
+        }
+      } catch (e) {}
       return
     }
     const unsub = onSnapshot(doc(db, "shared_gardens", settings.activeSharedGardenId), (docSnap) => {

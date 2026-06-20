@@ -1,18 +1,24 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { FiLoader as Loader2, FiArrowLeft as ArrowLeft } from "react-icons/fi"
 import { sendPasswordResetEmail } from "firebase/auth"
 import { toast } from "sonner"
 import { auth } from "@/lib/firebase/client"
+import { ModeToggle } from "@/components/mode-toggle"
 
 export default function ForgotPasswordPage() {
     const router = useRouter()
     const [email, setEmail] = useState("")
     const [success, setSuccess] = useState(false)
     const [loading, setLoading] = useState(false)
+    const [isActive, setIsActive] = useState(false)
+
+    useEffect(() => {
+        setIsActive(true)
+    }, [])
 
     const handleReset = async (e: React.FormEvent) => {
         e.preventDefault()
@@ -39,7 +45,11 @@ export default function ForgotPasswordPage() {
     }
 
     return (
-        <div className="h-screen w-full flex items-center justify-center zen-gradient-bg relative overflow-hidden font-sans">
+        <div className={`h-screen w-full flex items-center justify-center zen-gradient-bg relative overflow-hidden font-sans ${isActive ? 'active' : ''}`}>
+            {/* Theme Toggle in Top Right */}
+            <div className="absolute top-6 right-6 z-50 reveal-staggered delay-1">
+                <ModeToggle />
+            </div>
             {/* Washi Texture Overlay */}
             <div className="washi-overlay pointer-events-none" />
 

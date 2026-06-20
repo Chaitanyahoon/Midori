@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { FiEye as Eye, FiEyeOff as EyeOff, FiLoader as Loader2 } from "react-icons/fi"
@@ -14,6 +14,7 @@ import {
 } from "firebase/auth"
 import { auth } from "@/lib/firebase/client"
 import { useAuth } from "@/components/auth-provider"
+import { ModeToggle } from "@/components/mode-toggle"
 
 export default function LoginPage() {
     const router = useRouter()
@@ -26,6 +27,11 @@ export default function LoginPage() {
     const [password, setPassword] = useState("")
     const [showPassword, setShowPassword] = useState(false)
     const [loading, setLoading] = useState(false)
+    const [isActive, setIsActive] = useState(false)
+
+    useEffect(() => {
+        setIsActive(true)
+    }, [])
 
 
 
@@ -108,9 +114,14 @@ export default function LoginPage() {
     }
 
     return (
-        <div className="h-screen w-full flex items-center justify-center zen-gradient-bg relative overflow-hidden font-sans">
+        <div className={`h-screen w-full flex items-center justify-center zen-gradient-bg relative overflow-hidden font-sans ${isActive ? 'active' : ''}`}>
             {/* Washi Texture Overlay */}
             <div className="washi-overlay pointer-events-none" />
+
+            {/* Theme Toggle in Top Right */}
+            <div className="absolute top-6 right-6 z-50 reveal-staggered delay-1">
+                <ModeToggle />
+            </div>
 
             {/* Simplified background for compact layout */}
             <div className="absolute inset-0 pointer-events-none select-none opacity-5">

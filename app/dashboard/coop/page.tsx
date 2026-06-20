@@ -17,6 +17,13 @@ interface ChatMessage {
     createdAt: string
 }
 
+interface CoopSign {
+    id: string
+    text: string
+    userName: string
+    createdAt: string
+}
+
 const PLANT_NAMES: Record<string, string> = {
     sakura: "Sakura Tree",
     maple: "Maple Tree",
@@ -38,7 +45,9 @@ export default function CoopPage() {
     const chatEndRef = useRef<HTMLDivElement>(null)
     const [activeTab, setActiveTab] = useState<"join" | "create">("join")
     const [memberCount, setMemberCount] = useState(0)
-    const [rightTab, setRightTab] = useState<"chat" | "nursery">("chat")
+    const [rightTab, setRightTab] = useState<"chat" | "nursery" | "board">("chat")
+    const [signs, setSigns] = useState<CoopSign[]>([])
+    const [newSignText, setNewSignText] = useState("")
 
     const handleNurture = async (plantId: string) => {
         if (!sharedGarden) return
@@ -107,6 +116,89 @@ export default function CoopPage() {
             toast.info("Plant removed from Co-op Garden.")
         } catch (e) {
             toast.error("Failed to remove plant")
+        }
+    }
+
+    // Real-time signs listener
+    useEffect(() => {
+        if (!sharedGarden?.id) return
+        
+        if (!db) {
+            const storageKey = `midori_mock_signs_${sharedGarden.id}`
+            try {
+                const stored = localStorage.getItem(storageKey)
+                if (stored) {
+                    setSigns(JSON.parse(stored))
+                } else {
+                    const defaultSigns: CoopSign[] = [
+                        {
+                            id: "sign-1",
+                            text: "Remember to breathe today! 🧘‍♂️",
+                            userName: "ZenMaster",
+                            createdAt: new Date(Date.now() - 7200000).toISOString()
+                        },
+                        {
+                            id: "sign-2",
+                            text: "Let's focus on the Sakura tree! 🌸",
+                            userName: "Hana",
+                            createdAt: new Date(Date.now() - 3600000).toISOString()
+                        }
+                    ]
+                    setSigns(defaultSigns)
+                    localStorage.setItem(storageKey, JSON.stringify(defaultSigns))
+                }
+            } catch (e) {}
+            return
+        }
+
+        const q = query(
+            collection(db, "shared_gardens", sharedGarden.id, "signs"),
+            orderBy("createdAt", "desc"),
+            limit(10)
+        )
+        const unsub = onSnapshot(q, (snap) => {
+            const list = snap.docs.map(d => ({ id: d.id, ...d.data() } as CoopSign)).reverse()
+            setSigns(list)
+        }, (err) => {
+            console.error("Signs listener error:", err)
+        })
+        return () => unsub()
+    }, [sharedGarden?.id])
+
+    const handlePinSign = async () => {
+        if (!newSignText.trim() || !sharedGarden?.id || !user) return
+        const text = newSignText.trim()
+        
+        if (!db) {
+            const newSign: CoopSign = {
+                id: Math.random().toString(36).substring(7),
+                text,
+                userName: settings.userName || user.displayName || user.email?.split("@")[0] || "Anonymous",
+                createdAt: new Date().toISOString()
+            }
+            setSigns(prev => {
+                const next = [...prev, newSign]
+                const storageKey = `midori_mock_signs_${sharedGarden.id}`
+                try { localStorage.setItem(storageKey, JSON.stringify(next)) } catch (e) {}
+                return next
+            })
+            setNewSignText("")
+            toast.success("Wooden sign pinned to the master board! 🪵")
+            return
+        }
+
+        try {
+            await addDoc(collection(db, "shared_gardens", sharedGarden.id, "signs"), {
+                text,
+                userId: user.uid,
+                userName: settings.userName || user.displayName || user.email?.split("@")[0] || "Anonymous",
+                createdAt: new Date().toISOString()
+            })
+            setNewSignText("")
+            toast.success("Wooden sign pinned to the master board! 🪵")
+        } catch (e) {
+            console.error("Pin sign error:", e)
+            toast.error("Failed to pin sign")
         }
     }
 
@@ -487,7 +579,7 @@ export default function CoopPage() {
                         <div>
                             <div className="flex items-center gap-2">
                                 <h2 className="font-bold text-slate-900 dark:text-slate-100 text-sm">
-                                    {rightTab === "chat" ? "Garden Chat" : "Kyōei Nursery"}
+                                    {rightTab === "chat" ? "Garden Chat" : rightTab === "nursery" ? "Kyōei Nursery" : "Master Board"}
                                 </h2>
                                 {!db && (
                                     <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-medium bg-amber-100 dark:bg-amber-900/40 text-amber-800 dark:text-amber-300 animate-pulse">
@@ -498,13 +590,15 @@ export default function CoopPage() {
                             <p className="text-[11px] text-slate-500">
                                 {rightTab === "chat" 
                                     ? `${!db ? "Local Sandbox" : "Real-time"} • ${messages.length} messages` 
-                                    : `Communal Growth • ${(sharedGarden.plants || []).length} active projects`}
+                                    : rightTab === "nursery"
+                                        ? `Communal Growth • ${(sharedGarden.plants || []).length} active projects`
+                                        : `Leaderboards & Signs • ${signs.length} signs pinned`}
                             </p>
                         </div>
                     </div>
 
                     {/* Tab Switch Buttons */}
-                    <div className="flex bg-slate-100 dark:bg-slate-800 p-0.5 rounded-lg border border-slate-200/40 dark:border-slate-700/40 self-start sm:self-auto">
+                    <div className="flex bg-slate-100 dark:bg-slate-800 p-0.5 rounded-lg border border-slate-200/40 dark:border-slate-700/40 self-start sm:self-auto gap-0.5">
                         <button
                             onClick={() => setRightTab("chat")}
                             className={`px-3 py-1.5 rounded-md text-[10px] font-bold tracking-wide uppercase transition-all ${
@@ -524,6 +618,16 @@ export default function CoopPage() {
                             }`}
                         >
                             🌱 Nursery
+                        </button>
+                        <button
+                            onClick={() => setRightTab("board")}
+                            className={`px-3 py-1.5 rounded-md text-[10px] font-bold tracking-wide uppercase transition-all ${
+                                rightTab === "board" 
+                                    ? "bg-white dark:bg-slate-700 text-emerald-700 dark:text-emerald-300 shadow-sm" 
+                                    : "text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200"
+                            }`}
+                        >
+                            🏆 Board
                         </button>
                     </div>
                 </div>
@@ -585,7 +689,7 @@ export default function CoopPage() {
                             </div>
                         </div>
                     </>
-                ) : (
+                ) : rightTab === "nursery" ? (
                     /* NURSERY TAB */
                     <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4 custom-scrollbar">
                         <div className="mb-2">
@@ -681,6 +785,103 @@ export default function CoopPage() {
                                 })}
                             </div>
                         )}
+                    </div>
+                ) : (
+                    /* MASTER BOARD TAB */
+                    <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-8 custom-scrollbar">
+                        {/* Leaderboard Section */}
+                        <div className="space-y-4">
+                            <div>
+                                <h3 className="font-bold text-slate-800 dark:text-slate-100 text-sm">🏆 Master Garden Leaderboard</h3>
+                                <p className="text-xs text-slate-500">All-time contribution ranks in the co-op garden</p>
+                            </div>
+                            <div className="card-zen p-0 overflow-hidden divide-y divide-slate-100 dark:divide-slate-800/80">
+                                {[
+                                    { rank: "🥇", name: "ZenMaster", sun: 310, water: 240, role: "Master Gardener" },
+                                    { rank: "🥈", name: "Hana", sun: 220, water: 180, role: "Active Sprouts" },
+                                    { rank: "🥉", name: "Sora", sun: 150, water: 120, role: "Sprout Helper" },
+                                    {
+                                        rank: "🌿",
+                                        name: settings.userName || user?.displayName || user?.email?.split("@")[0] || "You",
+                                        sun: settings.sunlight || 0,
+                                        water: settings.waterdrops || 0,
+                                        role: "Member (You)"
+                                    }
+                                ]
+                                .sort((a, b) => (b.sun + b.water) - (a.sun + a.water))
+                                .map((member, idx) => (
+                                    <div key={member.name} className="flex items-center justify-between p-4 hover:bg-slate-50/50 dark:hover:bg-slate-850/50 transition-colors">
+                                        <div className="flex items-center gap-3">
+                                            <span className="text-xl font-bold w-6 text-center">{idx + 1 === 1 ? "🥇" : idx + 1 === 2 ? "🥈" : idx + 1 === 3 ? "🥉" : "🌿"}</span>
+                                            <div>
+                                                <h4 className="text-sm font-bold text-slate-800 dark:text-slate-100">{member.name}</h4>
+                                                <p className="text-[10px] text-slate-400 font-semibold">{member.role}</p>
+                                            </div>
+                                        </div>
+                                        <div className="flex items-center gap-4 text-xs font-bold">
+                                            <span className="text-amber-600 dark:text-amber-400">☀️ {member.sun}</span>
+                                            <span className="text-blue-600 dark:text-blue-400">💧 {member.water}</span>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+
+                        {/* Wooden Signs Section */}
+                        <div className="space-y-4">
+                            <div>
+                                <h3 className="font-bold text-slate-800 dark:text-slate-100 text-sm">🪵 Communal Wooden Signs</h3>
+                                <p className="text-xs text-slate-500">Pin a message for the co-op garden members to see</p>
+                            </div>
+
+                            {/* Sign Pinning Form */}
+                            <div className="flex gap-2 max-w-md">
+                                <input
+                                    type="text"
+                                    placeholder="Write a message for the wooden sign..."
+                                    className="flex-1 h-11 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-4 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-400 transition-all"
+                                    value={newSignText}
+                                    onChange={e => setNewSignText(e.target.value)}
+                                    maxLength={80}
+                                    onKeyDown={e => e.key === "Enter" && handlePinSign()}
+                                />
+                                <button
+                                    onClick={handlePinSign}
+                                    disabled={!newSignText.trim()}
+                                    className="h-11 px-5 bg-amber-700 hover:bg-amber-800 disabled:bg-slate-200 dark:disabled:bg-slate-800 text-white font-bold rounded-xl text-xs transition-colors flex items-center gap-1 flex-shrink-0 shadow-sm"
+                                >
+                                    Pin Sign 📌
+                                </button>
+                            </div>
+
+                            {/* signs board */}
+                            {signs.length === 0 ? (
+                                <p className="text-xs text-slate-400 italic">No signs pinned yet. Be the first to write a message!</p>
+                            ) : (
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                    {signs.map(sign => (
+                                        <div
+                                            key={sign.id}
+                                            className="bg-gradient-to-br from-amber-850 via-amber-900 to-amber-950 border border-amber-950 text-amber-50 rounded-2xl shadow-md p-5 relative pt-6 flex flex-col justify-between hover:scale-[1.02] transition-transform duration-250"
+                                        >
+                                            {/* Tack */}
+                                            <div className="w-2.5 h-2.5 bg-rose-600 rounded-full absolute top-2.5 left-1/2 -translate-x-1/2 border border-rose-800 shadow" />
+                                            
+                                            <p className="text-sm font-medium leading-relaxed italic text-amber-100">
+                                                "{sign.text}"
+                                            </p>
+                                            
+                                            <div className="flex justify-between items-center mt-4 border-t border-amber-900/40 pt-2 text-[10px] text-amber-300 font-bold">
+                                                <span>By {sign.userName}</span>
+                                                <span>
+                                                    {new Date(sign.createdAt).toLocaleDateString([], { month: "short", day: "numeric" })}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
                     </div>
                 )}
             </div>

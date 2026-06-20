@@ -28,6 +28,8 @@ export default function TasksPage() {
   const [sortBy, setSortBy] = useState<"priority" | "dueDate" | "category" | "title">("priority")
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
   const [quickAddValue, setQuickAddValue] = useState("")
+  const [expandedTasks, setExpandedTasks] = useState<Record<string, boolean>>({})
+  const [newSubTaskTitles, setNewSubTaskTitles] = useState<Record<string, string>>({})
   const [newTask, setNewTask] = useState({
     title: "",
     description: "",
@@ -164,6 +166,46 @@ export default function TasksPage() {
         description: completed ? 'Great job! Keep growing.' : 'Task returned to the garden.',
       })
     }
+  }
+
+  const toggleExpand = (taskId: string) => {
+    setExpandedTasks((prev) => ({ ...prev, [taskId]: !prev[taskId] }))
+  }
+
+  const handleAddSubTask = (taskId: string) => {
+    const title = newSubTaskTitles[taskId]?.trim()
+    if (!title) return
+    const task = tasks.find((t) => t.id === taskId)
+    if (!task) return
+
+    const subtasks = task.subtasks || []
+    const newSub = {
+      id: Math.random().toString(36).substring(7),
+      title,
+      completed: false,
+    }
+    updateTask(taskId, { subtasks: [...subtasks, newSub] })
+    setNewSubTaskTitles((prev) => ({ ...prev, [taskId]: "" }))
+    toast({
+      title: "Step added! 🌿",
+      description: "Sub-task added successfully.",
+    })
+  }
+
+  const handleToggleSubTask = (taskId: string, subTaskId: string, completed: boolean) => {
+    const task = tasks.find((t) => t.id === taskId)
+    if (!task) return
+    const subtasks = (task.subtasks || []).map((sub) =>
+      sub.id === subTaskId ? { ...sub, completed } : sub
+    )
+    updateTask(taskId, { subtasks })
+  }
+
+  const handleDeleteSubTask = (taskId: string, subTaskId: string) => {
+    const task = tasks.find((t) => t.id === taskId)
+    if (!task) return
+    const subtasks = (task.subtasks || []).filter((sub) => sub.id !== subTaskId)
+    updateTask(taskId, { subtasks })
   }
 
   const getPriorityColor = (priority: string) => {
@@ -518,6 +560,107 @@ export default function TasksPage() {
                                   </Badge>
                                 )}
                               </div>
+
+                              {/* Subtasks Progress / Toggle button */}
+                              <div className="flex items-center gap-3 mt-4">
+                                <button
+                                  type="button"
+                                  onClick={(e) => { e.preventDefault(); toggleExpand(task.id); }}
+                                  className="text-xs font-bold text-slate-500 hover:text-emerald-600 dark:text-slate-400 dark:hover:text-emerald-450 transition-colors flex items-center gap-1.5"
+                                >
+                                  {expandedTasks[task.id] ? (
+                                    <Icons.chevronUp className="w-3.5 h-3.5" />
+                                  ) : (
+                                    <Icons.chevronDown className="w-3.5 h-3.5" />
+                                  )}
+                                  {task.subtasks && task.subtasks.length > 0 ? (
+                                    <span>
+                                      Steps ({task.subtasks.filter((s) => s.completed).length}/{task.subtasks.length})
+                                    </span>
+                                  ) : (
+                                    <span>Add Steps</span>
+                                  )}
+                                </button>
+                                {task.subtasks && task.subtasks.length > 0 && (
+                                  <div className="flex-1 max-w-[120px] bg-slate-100 dark:bg-slate-800 rounded-full h-1.5 overflow-hidden">
+                                    <div
+                                      className="bg-emerald-500 h-full transition-all duration-300"
+                                      style={{
+                                        width: `${
+                                          (task.subtasks.filter((s) => s.completed).length / task.subtasks.length) * 100
+                                        }%`,
+                                      }}
+                                    />
+                                  </div>
+                                )}
+                              </div>
+
+                              {/* Expanded Checklist */}
+                              {expandedTasks[task.id] && (
+                                <div className="mt-4 pl-1 border-t border-slate-100 dark:border-slate-800 pt-3 space-y-2 animate-in fade-in slide-in-from-top-2 duration-200">
+                                  {task.subtasks && task.subtasks.length > 0 ? (
+                                    <div className="space-y-2 max-w-lg">
+                                      {task.subtasks.map((sub) => (
+                                        <div key={sub.id} className="flex items-center justify-between gap-3 group/sub pl-1">
+                                          <div className="flex items-center gap-2.5">
+                                            <Checkbox
+                                              checked={sub.completed}
+                                              onCheckedChange={(checked) =>
+                                                handleToggleSubTask(task.id, sub.id, checked as boolean)
+                                              }
+                                              className="w-4 h-4 rounded-full border border-slate-300 data-[state=checked]:bg-emerald-500 data-[state=checked]:border-emerald-500 transition-all scale-90"
+                                            />
+                                            <span
+                                              className={`text-sm font-medium ${
+                                                sub.completed
+                                                  ? "line-through text-slate-400 dark:text-slate-500"
+                                                  : "text-slate-700 dark:text-slate-300"
+                                              }`}
+                                            >
+                                              {sub.title}
+                                            </span>
+                                          </div>
+                                          <button
+                                            type="button"
+                                            onClick={() => handleDeleteSubTask(task.id, sub.id)}
+                                            className="text-slate-400 hover:text-rose-500 opacity-0 group-hover/sub:opacity-100 transition-opacity p-0.5"
+                                          >
+                                            <Icons.close className="w-3.5 h-3.5" />
+                                          </button>
+                                        </div>
+                                      ))}
+                                    </div>
+                                  ) : (
+                                    <p className="text-[11px] text-slate-400 italic">No sub-tasks yet. Break it down! 🌿</p>
+                                  )}
+
+                                  {/* Add new sub-task inline */}
+                                  <div className="flex items-center gap-2 max-w-sm mt-3 pt-1">
+                                    <Input
+                                      placeholder="Add a step..."
+                                      value={newSubTaskTitles[task.id] || ""}
+                                      onChange={(e) =>
+                                        setNewSubTaskTitles((prev) => ({ ...prev, [task.id]: e.target.value }))
+                                      }
+                                      onKeyDown={(e) => {
+                                        if (e.key === "Enter") {
+                                          e.preventDefault()
+                                          handleAddSubTask(task.id)
+                                        }
+                                      }}
+                                      className="h-8 text-xs bg-slate-50/50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 focus:border-emerald-400 rounded-lg px-2.5"
+                                    />
+                                    <Button
+                                      size="sm"
+                                      type="button"
+                                      onClick={() => handleAddSubTask(task.id)}
+                                      className="h-8 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg px-2.5"
+                                    >
+                                      <Icons.plus className="w-3.5 h-3.5" />
+                                    </Button>
+                                  </div>
+                                </div>
+                              )}
                             </div>
 
                             <div className="flex items-center self-end sm:self-start opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">

@@ -43,6 +43,8 @@ import {
   FiMousePointer,
   FiRepeat,
   FiSkipForward,
+  FiChevronDown,
+  FiChevronUp,
 } from "react-icons/fi"
 
 import {
@@ -110,4 +112,6 @@ export const Icons = {
   download: FiDownloadCloud,
   repeat: FiRepeat,
   skip: FiSkipForward,
+  chevronDown: FiChevronDown,
+  chevronUp: FiChevronUp,
 }

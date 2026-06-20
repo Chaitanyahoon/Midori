@@ -28,6 +28,7 @@ export interface Task {
     maxOccurrences?: number
   }
   parentTaskId?: string
+  subtasks?: { id: string; title: string; completed: boolean }[]
 }
 
 export interface PomodoroSession {

@@ -1,7 +1,7 @@
 "use client"
 
 import type React from "react"
-import { useState, useCallback, useMemo, memo } from "react"
+import { useState, useCallback, useMemo, memo, useEffect } from "react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
@@ -166,8 +166,118 @@ export function PlantAIAssistant({ onCloseAction }: PlantAIAssistantProps) {
   const [prompt, setPrompt] = useState("")
   const [isLoading, setIsLoading] = useState(false)
   const [chatHistory, setChatHistory] = useState<ChatMessage[]>([])
-  const { tasks, pomodoros, stats, addTask, settings } = useData()
+  const { tasks, pomodoros, stats, addTask, settings, updateSettings, updateSharedGarden, sharedGarden } = useData()
   const { isAIModalOpen, setAIModalOpen } = useUIStore()
+
+  // Guided breathing tab & states
+  const [activeTab, setActiveTab] = useState<"chat" | "breather">("chat")
+  const [breathState, setBreathState] = useState<"idle" | "inhale" | "hold1" | "exhale" | "hold2">("idle")
+  const [breathTimeLeft, setBreathTimeLeft] = useState(4)
+  const [sessionTimeLeft, setSessionTimeLeft] = useState(60)
+  const [isBreathActive, setIsBreathActive] = useState(false)
+
+  const { toast } = useToast()
+
+  useEffect(() => {
+    let interval: NodeJS.Timeout
+    if (isBreathActive) {
+      interval = setInterval(() => {
+        setSessionTimeLeft((prev) => {
+          if (prev <= 1) {
+            setIsBreathActive(false)
+            setBreathState("idle")
+            
+            // Award rewards
+            updateSettings({
+              sunlight: (settings.sunlight || 0) + 15,
+              waterdrops: (settings.waterdrops || 0) + 15,
+            })
+            
+            if (settings.activeSharedGardenId) {
+              updateSharedGarden({
+                sunlightPool: (sharedGarden?.sunlightPool || 0) + 15,
+                waterPool: (sharedGarden?.waterPool || 0) + 15,
+              })
+            }
+            
+            toast({
+              title: "Breathing Complete! 🌸",
+              description: "You completed a mindfulness breather and earned +15 Sunlight and +15 Water drops.",
+            })
+            return 60
+          }
+          return prev - 1
+        })
+
+        setBreathTimeLeft((prevTime) => {
+          if (prevTime <= 1) {
+            setBreathState((prevState) => {
+              switch (prevState) {
+                case "inhale":
+                  return "hold1"
+                case "hold1":
+                  return "exhale"
+                case "exhale":
+                  return "hold2"
+                case "hold2":
+                default:
+                  return "inhale"
+              }
+            })
+            return 4
+          }
+          return prevTime - 1
+        })
+      }, 1000)
+    }
+    return () => clearInterval(interval)
+  }, [isBreathActive, settings.sunlight, settings.waterdrops, settings.activeSharedGardenId, sharedGarden])
+
+  const startBreather = () => {
+    setIsBreathActive(true)
+    setBreathState("inhale")
+    setBreathTimeLeft(4)
+    setSessionTimeLeft(60)
+  }
+
+  const stopBreather = () => {
+    setIsBreathActive(false)
+    setBreathState("idle")
+    setBreathTimeLeft(4)
+    setSessionTimeLeft(60)
+  }
+
+  const getBreathLabel = () => {
+    switch (breathState) {
+      case "inhale":
+        return "Inhale slowly... 🌬️"
+      case "hold1":
+        return "Hold your breath... 🧘"
+      case "exhale":
+        return "Exhale gently... 🍃"
+      case "hold2":
+        return "Hold... 🌸"
+      case "idle":
+      default:
+        return "Ready to begin? 🌿"
+    }
+  }
+
+  const getBreathCircleScale = () => {
+    switch (breathState) {
+      case "inhale":
+        return "scale-[1.3] bg-emerald-400/80 shadow-[0_0_30px_rgba(52,211,153,0.6)] duration-[4000ms]"
+      case "hold1":
+        return "scale-[1.3] bg-teal-400/95 shadow-[0_0_40px_rgba(45,212,191,0.8)] duration-500 animate-pulse"
+      case "exhale":
+        return "scale-90 bg-emerald-500/60 shadow-[0_0_15px_rgba(16,185,129,0.3)] duration-[4000ms]"
+      case "hold2":
+        return "scale-90 bg-emerald-600/40 shadow-none duration-500"
+      case "idle":
+      default:
+        return "scale-100 bg-emerald-500/50 shadow-sm duration-1000"
+    }
+  }
 
   const userContext = useMemo((): UserContext => {
     const today = new Date().toISOString().split("T")[0]
@@ -209,9 +319,6 @@ export function PlantAIAssistant({ onCloseAction }: PlantAIAssistantProps) {
     if (score >= 8) return { level: 2, name: "Growing Sprout" }
     return { level: 1, name: "Tiny Seed" }
   }, [stats])
-
-
-  const { toast } = useToast()
 
   const handleAddSuggestedTask = useCallback(
     (suggestion: any) => {
@@ -392,9 +499,97 @@ export function PlantAIAssistant({ onCloseAction }: PlantAIAssistantProps) {
           )}
         </DialogHeader>
 
-        <div className="flex-1 overflow-hidden flex flex-col px-6">
-          {chatHistory.length === 0 ? (
-            <div className="flex-1 w-full p-6 overflow-y-auto custom-scrollbar">
+        {/* Tab Selector */}
+        <div className="flex bg-emerald-100/50 dark:bg-slate-800 p-1 rounded-xl max-w-[240px] mx-auto mt-4 flex-shrink-0 border border-emerald-200/50 dark:border-slate-700/50">
+          <button
+            type="button"
+            onClick={() => setActiveTab("chat")}
+            className={`flex-1 py-1.5 px-3 rounded-lg text-xs font-bold tracking-wide uppercase transition-all ${
+              activeTab === "chat"
+                ? "bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-sm"
+                : "text-emerald-700 dark:text-emerald-300 hover:text-emerald-900"
+            }`}
+          >
+            💬 Chat
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveTab("breather")}
+            className={`flex-1 py-1.5 px-3 rounded-lg text-xs font-bold tracking-wide uppercase transition-all ${
+              activeTab === "breather"
+                ? "bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-sm"
+                : "text-emerald-700 dark:text-emerald-300 hover:text-emerald-900"
+            }`}
+          >
+            🧘 Breather
+          </button>
+        </div>
+
+        <div className="flex-grow flex-1 overflow-hidden flex flex-col px-6">
+          {activeTab === "breather" ? (
+            <div className="flex-grow flex flex-col items-center justify-center p-6 text-center space-y-8 animate-in fade-in duration-300">
+              <div className="space-y-2">
+                <h3 className="text-xl font-bold text-emerald-800 dark:text-emerald-250">Guided Box Breather</h3>
+                <p className="text-sm text-emerald-600 dark:text-emerald-400 max-w-sm">
+                  Box breathing (4-4-4-4) is a powerful technique to clear your mind, relieve stress, and restore focus.
+                </p>
+              </div>
+
+              {/* Breathing Circle Container */}
+              <div className="relative w-64 h-64 flex items-center justify-center">
+                {/* Outermost ring */}
+                <div className="absolute inset-0 rounded-full border border-emerald-250/20 animate-spin-slow"></div>
+                {/* Outer guide ring */}
+                <div className="absolute w-48 h-48 rounded-full border border-emerald-500/10"></div>
+                
+                {/* Core Breathing Circle */}
+                <div
+                  className={`w-32 h-32 rounded-full flex flex-col items-center justify-center text-white font-bold transition-all ease-linear ${getBreathCircleScale()}`}
+                >
+                  {isBreathActive && (
+                    <span className="text-3xl font-black font-mono tracking-tighter">
+                      {breathTimeLeft}
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              {/* Status Message */}
+              <div className="space-y-1 min-h-[60px]">
+                <div className="text-lg font-bold text-emerald-700 dark:text-emerald-300 transition-all duration-500">
+                  {getBreathLabel()}
+                </div>
+                {isBreathActive && (
+                  <div className="text-xs text-emerald-500 font-mono">
+                    Time remaining: {sessionTimeLeft}s
+                  </div>
+                )}
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex gap-4">
+                {!isBreathActive ? (
+                  <Button
+                    type="button"
+                    onClick={startBreather}
+                    className="btn-organic px-8 py-3 rounded-full font-bold shadow-lg hover:shadow-emerald-500/20 active:scale-95 transition-all text-sm"
+                  >
+                    Start Breather (1 Min)
+                  </Button>
+                ) : (
+                  <Button
+                    type="button"
+                    onClick={stopBreather}
+                    variant="outline"
+                    className="border-rose-250 hover:bg-rose-50/50 text-rose-600 px-8 py-3 rounded-full font-bold active:scale-95 transition-all text-sm"
+                  >
+                    Exit Breather
+                  </Button>
+                )}
+              </div>
+            </div>
+          ) : chatHistory.length === 0 ? (
+            <div className="flex-grow flex-1 w-full p-6 overflow-y-auto custom-scrollbar">
               <div className="text-center space-y-4 max-w-sm mx-auto mt-10">
                 <div className="w-16 h-16 bg-gradient-to-br from-emerald-100 to-teal-100 rounded-2xl flex items-center justify-center mx-auto shadow-sm transform -rotate-3">
                   <svg className="w-8 h-8 text-emerald-600" fill="currentColor" viewBox="0 0 20 20">
@@ -407,7 +602,6 @@ export function PlantAIAssistant({ onCloseAction }: PlantAIAssistantProps) {
                   </h3>
                   <div className="mt-1 text-sm text-emerald-600/80 font-medium">Where wisdom grows and productivity flourishes 🌱</div>
                 </div>
-
               </div>
 
               <div className="grid grid-cols-2 gap-3 mt-6">
@@ -426,7 +620,7 @@ export function PlantAIAssistant({ onCloseAction }: PlantAIAssistantProps) {
 
                 <div className="space-y-2">
                   {userContext.overdueTasks > 0 && (
-                    <button onClick={() => setPrompt("Help me prioritize my overdue tasks")} className="group w-full bg-white hover:bg-rose-50 p-3 rounded-xl border border-rose-100 hover:border-rose-200 transition-all duration-200 text-left shadow-sm hover:shadow-md">
+                    <button type="button" onClick={() => setPrompt("Help me prioritize my overdue tasks")} className="group w-full bg-white hover:bg-rose-50 p-3 rounded-xl border border-rose-100 hover:border-rose-200 transition-all duration-200 text-left shadow-sm hover:shadow-md">
                       <div className="flex items-center gap-3">
                         <span className="text-xl">⚡</span>
                         <div>
@@ -437,7 +631,7 @@ export function PlantAIAssistant({ onCloseAction }: PlantAIAssistantProps) {
                     </button>
                   )}
 
-                  <button onClick={() => setPrompt("What should I focus on today?")} className="group w-full bg-white hover:bg-emerald-50 p-3 rounded-xl border border-emerald-100 hover:border-emerald-200 transition-all duration-200 text-left shadow-sm hover:shadow-md">
+                  <button type="button" onClick={() => setPrompt("What should I focus on today?")} className="group w-full bg-white hover:bg-emerald-50 p-3 rounded-xl border border-emerald-100 hover:border-emerald-200 transition-all duration-200 text-left shadow-sm hover:shadow-md">
                     <div className="flex items-center gap-3">
                       <span className="text-xl">🌱</span>
                       <div>
@@ -447,7 +641,7 @@ export function PlantAIAssistant({ onCloseAction }: PlantAIAssistantProps) {
                     </div>
                   </button>
 
-                  <button onClick={() => setPrompt("Suggest a break activity")} className="group w-full bg-white hover:bg-blue-50 p-3 rounded-xl border border-blue-100 hover:border-blue-200 transition-all duration-200 text-left shadow-sm hover:shadow-md">
+                  <button type="button" onClick={() => setPrompt("Suggest a break activity")} className="group w-full bg-white hover:bg-blue-50 p-3 rounded-xl border border-blue-100 hover:border-blue-200 transition-all duration-200 text-left shadow-sm hover:shadow-md">
                     <div className="flex items-center gap-3">
                       <span className="text-xl">🧘</span>
                       <div>
@@ -459,9 +653,8 @@ export function PlantAIAssistant({ onCloseAction }: PlantAIAssistantProps) {
                 </div>
               </div>
             </div>
-
           ) : (
-            <ScrollArea className="flex-1 w-full">
+            <ScrollArea className="flex-grow flex-1 w-full">
               <div className="space-y-6 p-6">
                 {chatHistory.map((message, index) => (
                   <ChatMessageComponent key={index} message={message} onAddSuggestedTask={handleAddSuggestedTask} />
@@ -485,66 +678,68 @@ export function PlantAIAssistant({ onCloseAction }: PlantAIAssistantProps) {
           )}
         </div>
 
-        <form
-          onSubmit={handleSubmit}
-          className="border-t border-emerald-100 bg-white/50 backdrop-blur-sm p-4 sticky bottom-0 z-10 flex-shrink-0"
-        >
-          {chatHistory.length > 0 && (
-            <div className="flex gap-2 mb-3 overflow-x-auto scrollbar-hide py-1 max-w-3xl mx-auto px-1 select-none">
-              {[
-                { label: "Prioritize Tasks", prompt: "Look at my tasks and help me prioritize what to do next based on deadlines & priority." },
-                { label: "Suggest a Breather", prompt: "Recommend a brief, offline focus-restoring mindfulness break activity for me." },
-                { label: "Daily Zen Quote", prompt: "Share an encouraging Zen quote and explain how it relates to my daily growth." },
-                { label: "Give me a Challenge", prompt: "Set a small, fun productivity challenge for me based on my current stats." }
-              ].map((chip, idx) => (
-                <button
-                  key={idx}
-                  type="button"
-                  onClick={() => setPrompt(chip.prompt)}
-                  className="px-3 py-1.5 rounded-full bg-emerald-50/60 hover:bg-emerald-100/80 border border-emerald-200/40 text-emerald-700 text-xs font-bold whitespace-nowrap transition-all hover:scale-105 active:scale-95 flex items-center gap-1.5 shadow-sm"
+        {activeTab === "chat" && (
+          <form
+            onSubmit={handleSubmit}
+            className="border-t border-emerald-100 bg-white/50 backdrop-blur-sm p-4 sticky bottom-0 z-10 flex-shrink-0"
+          >
+            {chatHistory.length > 0 && (
+              <div className="flex gap-2 mb-3 overflow-x-auto scrollbar-hide py-1 max-w-3xl mx-auto px-1 select-none">
+                {[
+                  { label: "Prioritize Tasks", prompt: "Look at my tasks and help me prioritize what to do next based on deadlines & priority." },
+                  { label: "Suggest a Breather", prompt: "Recommend a brief, offline focus-restoring mindfulness break activity for me." },
+                  { label: "Daily Zen Quote", prompt: "Share an encouraging Zen quote and explain how it relates to my daily growth." },
+                  { label: "Give me a Challenge", prompt: "Set a small, fun productivity challenge for me based on my current stats." }
+                ].map((chip, idx) => (
+                  <button
+                    key={idx}
+                    type="button"
+                    onClick={() => setPrompt(chip.prompt)}
+                    className="px-3 py-1.5 rounded-full bg-emerald-50/60 hover:bg-emerald-100/80 border border-emerald-200/40 text-emerald-700 text-xs font-bold whitespace-nowrap transition-all hover:scale-105 active:scale-95 flex items-center gap-1.5 shadow-sm"
+                  >
+                    <span>✨</span> {chip.label}
+                  </button>
+                ))}
+              </div>
+            )}
+
+            <div className="relative max-w-3xl mx-auto">
+              <Textarea
+                placeholder="Ask for schedule advice, break ideas, or motivation..."
+                value={prompt}
+                onChange={(e) => setPrompt(e.target.value)}
+                className="min-h-[60px] max-h-[120px] w-full resize-none rounded-2xl border border-emerald-200 focus:border-emerald-400 focus:ring-4 focus:ring-emerald-500/10 bg-white shadow-sm transition-all duration-200 py-3 pl-4 pr-14 text-sm text-emerald-900 placeholder:text-emerald-400/70"
+                onKeyDown={handleKeyDown}
+              />
+
+              <div className="absolute right-2 bottom-2">
+                <Button
+                  size="icon"
+                  type="submit"
+                  disabled={!prompt.trim() || isLoading}
+                  className={`h-9 w-9 rounded-xl transition-all duration-300 ${!prompt.trim() || isLoading
+                    ? "bg-slate-100 text-slate-300"
+                    : "bg-gradient-to-br from-emerald-500 to-teal-600 hover:scale-105 hover:shadow-lg text-white"
+                    }`}
                 >
-                  <span>✨</span> {chip.label}
-                </button>
-              ))}
+                  {isLoading ? (
+                    <svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                  ) : (
+                    <svg className="w-4 h-4 ml-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 12h14M12 5l7 7-7 7" />
+                    </svg>
+                  )}
+                </Button>
+              </div>
             </div>
-          )}
-
-          <div className="relative max-w-3xl mx-auto">
-            <Textarea
-              placeholder="Ask for schedule advice, break ideas, or motivation..."
-              value={prompt}
-              onChange={(e) => setPrompt(e.target.value)}
-              className="min-h-[60px] max-h-[120px] w-full resize-none rounded-2xl border border-emerald-200 focus:border-emerald-400 focus:ring-4 focus:ring-emerald-500/10 bg-white shadow-sm transition-all duration-200 py-3 pl-4 pr-14 text-sm text-emerald-900 placeholder:text-emerald-400/70"
-              onKeyDown={handleKeyDown}
-            />
-
-            <div className="absolute right-2 bottom-2">
-              <Button
-                size="icon"
-                onClick={() => handleSubmit()}
-                disabled={!prompt.trim() || isLoading}
-                className={`h-9 w-9 rounded-xl transition-all duration-300 ${!prompt.trim() || isLoading
-                  ? "bg-slate-100 text-slate-300"
-                  : "bg-gradient-to-br from-emerald-500 to-teal-600 hover:scale-105 hover:shadow-lg text-white"
-                  }`}
-              >
-                {isLoading ? (
-                  <svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                  </svg>
-                ) : (
-                  <svg className="w-4 h-4 ml-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 12h14M12 5l7 7-7 7" />
-                  </svg>
-                )}
-              </Button>
+            <div className="text-center mt-2">
+              <span className="text-[10px] text-emerald-400/60 font-medium">Press Enter to send • Shift+Enter for new line</span>
             </div>
-          </div>
-          <div className="text-center mt-2">
-            <span className="text-[10px] text-emerald-400/60 font-medium">Press Enter to send • Shift+Enter for new line</span>
-          </div>
-        </form>
+          </form>
+        )}
       </DialogContent>
     </Dialog >
   )

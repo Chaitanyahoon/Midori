@@ -202,6 +202,25 @@ export default function CoopPage() {
         }
     }
 
+    // Cross-tab real-time sync for offline/mock messages and signs
+    useEffect(() => {
+        if (db || !sharedGarden?.id) return
+        const handleStorage = (e: StorageEvent) => {
+            try {
+                if (e.key === `midori_mock_chat_${sharedGarden.id}` && e.newValue) {
+                    setMessages(JSON.parse(e.newValue))
+                }
+                if (e.key === `midori_mock_signs_${sharedGarden.id}` && e.newValue) {
+                    setSigns(JSON.parse(e.newValue))
+                }
+            } catch (err) {
+                console.error("Storage event chat/signs sync error:", err)
+            }
+        }
+        window.addEventListener("storage", handleStorage)
+        return () => window.removeEventListener("storage", handleStorage)
+    }, [sharedGarden?.id, db])
+
     // Real-time chat listener
     useEffect(() => {
         if (!sharedGarden?.id) return

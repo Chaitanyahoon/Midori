@@ -208,6 +208,32 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     return () => unsubs.forEach(u => u())
   }, [uid])
 
+  // Cross-tab real-time sync for offline/mock sandbox mode
+  useEffect(() => {
+    if (db) return
+    const handleStorageChange = (e: StorageEvent) => {
+      if (!uid) return
+      try {
+        if (e.key === `midori_tasks_${uid}` && e.newValue) {
+          setTasks(JSON.parse(e.newValue))
+        }
+        if (e.key === `midori_pomodoros_${uid}` && e.newValue) {
+          setPomodoros(JSON.parse(e.newValue))
+        }
+        if (e.key === `midori_settings_${uid}` && e.newValue) {
+          setSettings(JSON.parse(e.newValue))
+        }
+        if (settings.activeSharedGardenId && e.key === `midori_shared_garden_${settings.activeSharedGardenId}` && e.newValue) {
+          setSharedGarden(JSON.parse(e.newValue))
+        }
+      } catch (err) {
+        console.error("Storage event sync error:", err)
+      }
+    }
+    window.addEventListener("storage", handleStorageChange)
+    return () => window.removeEventListener("storage", handleStorageChange)
+  }, [uid, db, settings.activeSharedGardenId])
+
   // Derived stats
   const stats = useMemo((): UserStats => {
     const totalTasks = tasks.length

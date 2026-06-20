@@ -13,9 +13,11 @@ import {
     updateProfile,
 } from "firebase/auth"
 import { auth } from "@/lib/firebase/client"
+import { useAuth } from "@/components/auth-provider"
 
 export default function LoginPage() {
     const router = useRouter()
+    const { setMockUser } = useAuth()
     const [activeTab, setActiveTab] = useState(0) // 0: Log In, 1: Sign Up
     const isSignUp = activeTab === 1
     
@@ -26,6 +28,16 @@ export default function LoginPage() {
     const [loading, setLoading] = useState(false)
 
 
+
+    const handleMockLogin = () => {
+        setMockUser({
+            uid: "mock-user-123",
+            email: "gardener@midori.local",
+            displayName: "Zen Gardener",
+        })
+        toast.success("Welcome back! (Mock Mode)")
+        router.push("/dashboard")
+    }
 
     const handleEmailAuth = async (e: React.FormEvent) => {
         e.preventDefault()
@@ -244,6 +256,14 @@ export default function LoginPage() {
                             className="w-full h-10 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-medium text-sm shadow-sm transition-transform active:scale-95 disabled:opacity-50 flex items-center justify-center gap-2 mt-3"
                         >
                             {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : (isSignUp ? "Sign up" : "Sign in")}
+                        </button>
+
+                        <button
+                            type="button"
+                            onClick={handleMockLogin}
+                            className="w-full h-10 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-emerald-950/20 dark:hover:bg-emerald-950/40 text-slate-700 dark:text-emerald-300 font-medium text-sm shadow-sm transition-transform active:scale-95 flex items-center justify-center gap-2 mt-2 border border-slate-200 dark:border-emerald-500/10"
+                        >
+                            <span>⚡</span> Bypass Login (Mock Mode)
                         </button>
                     </form>
 

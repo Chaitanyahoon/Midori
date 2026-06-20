@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { Icons } from "@/components/icons"
 
 const motivationalQuotes = [
   {
@@ -83,6 +84,8 @@ const motivationalQuotes = [
 export function MotivationalQuote() {
   const [currentQuote, setCurrentQuote] = useState(motivationalQuotes[0])
   const [isVisible, setIsVisible] = useState(false)
+  const [isFading, setIsFading] = useState(false)
+  const [spinRefresh, setSpinRefresh] = useState(false)
 
   useEffect(() => {
     const randomIndex = Math.floor(Math.random() * motivationalQuotes.length)
@@ -91,6 +94,23 @@ export function MotivationalQuote() {
     const timer = setTimeout(() => setIsVisible(true), 100)
     return () => clearTimeout(timer)
   }, [])
+
+  const handleRefresh = () => {
+    if (isFading) return
+    setIsFading(true)
+    setSpinRefresh(true)
+    setTimeout(() => {
+      let nextQuote = currentQuote
+      while (nextQuote.text === currentQuote.text) {
+        const randomIndex = Math.floor(Math.random() * motivationalQuotes.length)
+        nextQuote = motivationalQuotes[randomIndex]
+      }
+      setCurrentQuote(nextQuote)
+      setIsFading(false)
+      // reset spin after half a second
+      setTimeout(() => setSpinRefresh(false), 500)
+    }, 300)
+  }
 
   return (
     <div
@@ -103,18 +123,35 @@ export function MotivationalQuote() {
 
       {/* Decorative kanji */}
       <div
-        className="absolute -right-2 -bottom-4 text-[7rem] sm:text-[9rem] font-black leading-none select-none pointer-events-none text-emerald-500/[0.04] dark:text-emerald-400/[0.06] font-serif-luxury"
+        className={`absolute -right-2 -bottom-4 text-[7rem] sm:text-[9rem] font-black leading-none select-none pointer-events-none text-emerald-500/[0.04] dark:text-emerald-400/[0.06] font-serif-luxury transition-all duration-300 ${
+          isFading ? "opacity-0 scale-75" : "opacity-100 scale-100"
+        }`}
         aria-hidden="true"
       >
         {currentQuote.kanji}
       </div>
 
+      {/* Refresh Button */}
+      <button
+        onClick={handleRefresh}
+        className="absolute top-4 right-4 z-20 p-2 text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 rounded-full hover:bg-slate-100/50 dark:hover:bg-slate-800/50 transition-all duration-300 focus:outline-none"
+        title="Refresh Quote"
+      >
+        <Icons.reset
+          className={`w-4 h-4 transition-transform duration-500 ${
+            spinRefresh ? "rotate-[360deg]" : ""
+          }`}
+        />
+      </button>
+
       {/* Content */}
-      <div className="relative z-10 flex items-start gap-4 sm:gap-5">
+      <div className="relative z-10 flex items-start gap-4 sm:gap-5 pr-8">
         {/* Decorative accent line */}
         <div className="hidden sm:block w-1 self-stretch rounded-full bg-gradient-to-b from-emerald-400/60 via-emerald-500/40 to-transparent flex-shrink-0" />
 
-        <div className="flex-1 min-w-0">
+        <div className={`flex-1 min-w-0 transition-all duration-300 ${
+          isFading ? "opacity-0 translate-x-1" : "opacity-100 translate-x-0"
+        }`}>
           <blockquote className="font-serif-luxury text-lg sm:text-xl lg:text-2xl text-slate-700 dark:text-slate-200 leading-relaxed tracking-wide italic">
             &ldquo;{currentQuote.text}&rdquo;
           </blockquote>
@@ -129,4 +166,5 @@ export function MotivationalQuote() {
     </div>
   )
 }
+
 

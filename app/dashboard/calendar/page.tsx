@@ -20,6 +20,7 @@ export default function CalendarPage() {
   const [selectedDate, setSelectedDate] = useState<string | null>(null)
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
   const [viewMode, setViewMode] = useState<"month" | "day">("month")
+  const [selectedPriorityFilter, setSelectedPriorityFilter] = useState<"all" | "high" | "medium" | "low">("all")
   const { tasks, addTask, updateTask } = useData()
   const { toast } = useToast()
 
@@ -212,61 +213,134 @@ export default function CalendarPage() {
           </div>
         </div>
         <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-          <DialogContent className="max-w-md w-full">
-            <DialogHeader>
-              <DialogTitle>Schedule a Task</DialogTitle>
+          <DialogContent className="max-w-lg bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border border-emerald-100 dark:border-emerald-900 shadow-2xl rounded-3xl p-0 overflow-hidden">
+            <DialogHeader className="bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-emerald-900/20 dark:to-teal-900/20 p-6 border-b border-emerald-100/50 dark:border-emerald-900/50">
+              <DialogTitle className="flex items-center space-x-3 text-2xl">
+                <div className="w-12 h-12 bg-gradient-to-br from-emerald-400 to-teal-500 rounded-2xl flex items-center justify-center shadow-lg transform rotate-3 flex-shrink-0">
+                  <Icons.seedling className="w-6 h-6 text-white" />
+                </div>
+                <div>
+                  <span className="text-emerald-900 dark:text-emerald-100 font-bold block">
+                    Schedule New Seed
+                  </span>
+                  <p className="text-sm text-emerald-600/80 dark:text-emerald-300/80 font-medium mt-0.5">
+                    Plan your tasks and watch them bloom.
+                  </p>
+                </div>
+              </DialogTitle>
             </DialogHeader>
-            <div className="space-y-4">
-              <div>
-                <Label htmlFor="title">Title</Label>
-                <Input id="title" value={newTask.title} onChange={e => setNewTask({ ...newTask, title: e.target.value })} autoFocus />
+            <div className="p-6 space-y-5">
+              <div className="space-y-2">
+                <Label htmlFor="title" className="text-sm font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-2">
+                  <Icons.type className="w-4 h-4 text-emerald-500" />
+                  Task Name <span className="text-rose-500">*</span>
+                </Label>
+                <Input
+                  id="title"
+                  value={newTask.title}
+                  onChange={(e) => setNewTask({ ...newTask, title: e.target.value })}
+                  placeholder="E.g., Water the plants..."
+                  className="bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 focus:border-emerald-400 focus:ring-emerald-400/20 h-12 text-lg rounded-xl transition-all"
+                  autoFocus
+                />
               </div>
-              <div>
-                <Label htmlFor="description">Description</Label>
-                <Textarea id="description" value={newTask.description} onChange={e => setNewTask({ ...newTask, description: e.target.value })} />
+
+              <div className="space-y-2">
+                <Label htmlFor="description" className="text-sm font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-2">
+                  <Icons.alignLeft className="w-4 h-4 text-slate-400" />
+                  Notes
+                </Label>
+                <Textarea
+                  id="description"
+                  value={newTask.description}
+                  onChange={(e) => setNewTask({ ...newTask, description: e.target.value })}
+                  placeholder="Add details..."
+                  className="bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 focus:border-emerald-400 focus:ring-emerald-400/20 resize-none rounded-xl"
+                  rows={2}
+                />
               </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-1.5">
-                  <Label>Priority</Label>
-                  <Select value={newTask.priority} onValueChange={val => setNewTask({ ...newTask, priority: val as any })}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label className="text-sm font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-2">
+                    <Icons.target className="w-4 h-4 text-amber-500" />
+                    Priority
+                  </Label>
+                  <Select
+                    value={newTask.priority}
+                    onValueChange={(val: any) => setNewTask({ ...newTask, priority: val })}
+                  >
+                    <SelectTrigger className="bg-slate-50/50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 focus:border-emerald-400 h-11 rounded-xl">
+                      <SelectValue />
+                    </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="high">High</SelectItem>
-                      <SelectItem value="medium">Medium</SelectItem>
-                      <SelectItem value="low">Low</SelectItem>
+                      <SelectItem value="low">🌱 Low</SelectItem>
+                      <SelectItem value="medium">🌿 Medium</SelectItem>
+                      <SelectItem value="high">🔥 High</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
-                <div className="space-y-1.5">
-                  <Label>Category</Label>
-                  <Select value={newTask.category} onValueChange={val => setNewTask({ ...newTask, category: val as any })}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
+                <div className="space-y-2">
+                  <Label className="text-sm font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-2">
+                    <Icons.tag className="w-4 h-4 text-blue-500" />
+                    Category
+                  </Label>
+                  <Select
+                    value={newTask.category}
+                    onValueChange={(val: any) => setNewTask({ ...newTask, category: val })}
+                  >
+                    <SelectTrigger className="bg-slate-50/50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 focus:border-emerald-400 h-11 rounded-xl">
+                      <SelectValue />
+                    </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="work">Work</SelectItem>
-                      <SelectItem value="personal">Personal</SelectItem>
-                      <SelectItem value="learning">Learning</SelectItem>
-                      <SelectItem value="health">Health</SelectItem>
+                      <SelectItem value="work">💼 Work</SelectItem>
+                      <SelectItem value="personal">👤 Personal</SelectItem>
+                      <SelectItem value="learning">📚 Learning</SelectItem>
+                      <SelectItem value="health">🧘‍♀️ Health</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
-                <div className="space-y-1.5">
-                  <Label>Time</Label>
-                  <Select value={newTask.scheduledTime} onValueChange={(val) => setNewTask({ ...newTask, scheduledTime: val })}>
-                    <SelectTrigger><SelectValue placeholder="All Day" /></SelectTrigger>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label className="text-sm font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-2">
+                    <Icons.clock className="w-4 h-4 text-purple-500" />
+                    Time
+                  </Label>
+                  <Select
+                    value={newTask.scheduledTime}
+                    onValueChange={(val) => setNewTask({ ...newTask, scheduledTime: val })}
+                  >
+                    <SelectTrigger className="bg-slate-50/50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 focus:border-emerald-400 h-11 rounded-xl">
+                      <SelectValue placeholder="All Day" />
+                    </SelectTrigger>
                     <SelectContent className="max-h-56">
-                      <SelectItem value="none">All Day</SelectItem>
-                      {HOURS.map(h => {
-                        const timeStr = `${h.toString().padStart(2, '0')}:00`
-                        const label = h > 12 ? `${h - 12}:00 PM` : h === 12 ? `12:00 PM` : `${h}:00 AM`
-                        return <SelectItem key={timeStr} value={timeStr}>{label}</SelectItem>
+                      <SelectItem value="none">✨ All Day</SelectItem>
+                      {HOURS.map((h) => {
+                        const timeStr = `${h.toString().padStart(2, "0")}:00`
+                        const label = h > 12 ? `${h - 12}:00 PM` : h === 12 ? "12:00 PM" : `${h}:00 AM`
+                        return (
+                          <SelectItem key={timeStr} value={timeStr}>
+                            {label}
+                          </SelectItem>
+                        )
                       })}
                     </SelectContent>
                   </Select>
                 </div>
-                <div className="space-y-1.5">
-                  <Label>Repeat</Label>
-                  <Select value={newTask.recurrence} onValueChange={val => setNewTask({ ...newTask, recurrence: val as any })}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
+                <div className="space-y-2">
+                  <Label className="text-sm font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-2">
+                    <Icons.reset className="w-4 h-4 text-pink-500" />
+                    Repeat
+                  </Label>
+                  <Select
+                    value={newTask.recurrence}
+                    onValueChange={(val: any) => setNewTask({ ...newTask, recurrence: val })}
+                  >
+                    <SelectTrigger className="bg-slate-50/50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 focus:border-emerald-400 h-11 rounded-xl">
+                      <SelectValue />
+                    </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="none">None</SelectItem>
                       <SelectItem value="daily">Daily</SelectItem>
@@ -276,10 +350,23 @@ export default function CalendarPage() {
                   </Select>
                 </div>
               </div>
-              <Button className="w-full mt-2" onClick={handleAddTask}>
-                <Icons.seedling className="w-4 h-4 mr-2" />
-                Add Task
-              </Button>
+
+              <div className="pt-2 flex gap-3">
+                <Button
+                  variant="ghost"
+                  onClick={() => setIsAddDialogOpen(false)}
+                  className="flex-1 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={handleAddTask}
+                  disabled={!newTask.title.trim()}
+                  className="flex-1 btn-organic h-11 rounded-xl text-base shadow-lg disabled:opacity-50 disabled:shadow-none"
+                >
+                  Schedule Seed
+                </Button>
+              </div>
             </div>
           </DialogContent>
         </Dialog>
@@ -340,7 +427,7 @@ export default function CalendarPage() {
                     <div className="h-full flex flex-col">
                       <div className="flex items-center justify-between mb-2">
                         <span className={`text-sm font-medium ${isToday(day) ? "text-emerald-700 dark:text-emerald-400" : "text-gray-900 dark:text-gray-100"}`}>
-                          {day}
+                           {day}
                         </span>
                         {dayTasks.length > 0 && (
                           <Badge variant="secondary" className="text-xs h-5 px-1.5">
@@ -349,43 +436,48 @@ export default function CalendarPage() {
                         )}
                       </div>
                       <div className="flex-1 space-y-1">
-                        {dayTasks.slice(0, 3).map((task, i) => (
-                          <TooltipProvider key={i}>
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <div
-                                  className={`text-xs p-1.5 rounded truncate flex items-center gap-1.5 transition-all cursor-pointer hover:opacity-80 ${task.completed
-                                    ? "bg-gray-400 line-through opacity-60"
-                                    : task.priority === "high"
-                                      ? "bg-red-500 text-white"
-                                      : task.priority === "medium"
-                                        ? "bg-yellow-500 text-white"
-                                        : "bg-green-500 text-white"
-                                    }`}
-                                  onClick={(e) => e.stopPropagation()}
-                                >
-                                  <Checkbox
-                                    checked={task.completed}
-                                    onCheckedChange={() => {
-                                      updateTask(task.id, { completed: !task.completed })
-                                      toast({
-                                        title: !task.completed ? "Task completed! 🎉" : "Task reopened",
-                                        description: !task.completed ? "Great job! Keep up the momentum." : "Task marked as pending.",
-                                      })
-                                    }}
-                                    className="h-3 w-3 border-white dark:border-slate-700 data-[state=checked]:bg-white dark:data-[state=checked]:bg-slate-600 data-[state=checked]:text-gray-600 dark:data-[state=checked]:text-gray-200"
+                        {dayTasks.slice(0, 3).map((task, i) => {
+                          const matchesFilter = selectedPriorityFilter === "all" || task.priority === selectedPriorityFilter
+                          return (
+                            <TooltipProvider key={i}>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <div
+                                    className={`text-xs p-1.5 rounded truncate flex items-center gap-1.5 transition-all cursor-pointer hover:opacity-80 ${
+                                      !matchesFilter ? "opacity-25" : ""
+                                    } ${task.completed
+                                      ? "bg-gray-400 line-through opacity-60"
+                                      : task.priority === "high"
+                                        ? "bg-red-500 text-white"
+                                        : task.priority === "medium"
+                                          ? "bg-yellow-500 text-white"
+                                          : "bg-green-500 text-white"
+                                      }`}
                                     onClick={(e) => e.stopPropagation()}
-                                  />
-                                  <span className="flex-1 truncate">{task.title}</span>
-                                </div>
-                              </TooltipTrigger>
-                              <TooltipContent className="bg-slate-800 dark:bg-slate-900 text-white border-slate-700">
-                                <p className="text-xs">{task.title}</p>
-                                {task.description && <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">{task.description}</p>}
-                              </TooltipContent>
-                            </Tooltip>
-                          </TooltipProvider>
-                        ))}
+                                  >
+                                    <Checkbox
+                                      checked={task.completed}
+                                      onCheckedChange={() => {
+                                        updateTask(task.id, { completed: !task.completed })
+                                        toast({
+                                          title: !task.completed ? "Task completed! 🎉" : "Task reopened",
+                                          description: !task.completed ? "Great job! Keep up the momentum." : "Task marked as pending.",
+                                        })
+                                      }}
+                                      className="h-3 w-3 border-white dark:border-slate-700 data-[state=checked]:bg-white dark:data-[state=checked]:bg-slate-600 data-[state=checked]:text-gray-600 dark:data-[state=checked]:text-gray-200"
+                                      onClick={(e) => e.stopPropagation()}
+                                    />
+                                    <span className="flex-1 truncate">{task.title}</span>
+                                  </div>
+                                </TooltipTrigger>
+                                <TooltipContent className="bg-slate-800 dark:bg-slate-900 text-white border-slate-700">
+                                  <p className="text-xs">{task.title}</p>
+                                  {task.description && <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">{task.description}</p>}
+                                </TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>
+                          )
+                        })}
                         {dayTasks.length > 3 && (
                           <div className="text-xs text-gray-500 dark:text-gray-400 text-center py-1">+{dayTasks.length - 3} more</div>
                         )}
@@ -404,31 +496,36 @@ export default function CalendarPage() {
                         All Day
                       </div>
                       <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-2">
-                        {getTasksForDate(currentDate.getDate()).filter(t => !t.scheduledTime).map(task => (
-                          <div
-                            key={task.id}
-                            className={`p-3 rounded-lg border flex items-center gap-3 transition-all ${task.completed
-                              ? "bg-slate-100 dark:bg-slate-800 border-slate-200 dark:border-slate-700 opacity-60"
-                              : "bg-white dark:bg-slate-800 border-emerald-200 dark:border-emerald-800 shadow-sm"
-                              }`}
-                          >
-                            <Checkbox
-                              checked={task.completed}
-                              onCheckedChange={() => updateTask(task.id, { completed: !task.completed })}
-                              className="h-4 w-4 border-slate-300 dark:border-slate-600 data-[state=checked]:bg-emerald-500 data-[state=checked]:text-white"
-                            />
-                            <div className="flex-1 min-w-0">
-                              <p className={`text-sm font-medium truncate ${task.completed ? "text-slate-500 line-through" : "text-slate-900 dark:text-slate-100"}`}>
-                                {task.title}
-                              </p>
-                              {task.description && (
-                                <p className="text-xs text-slate-500 dark:text-slate-400 truncate">{task.description}</p>
-                              )}
+                        {getTasksForDate(currentDate.getDate()).filter(t => !t.scheduledTime).map(task => {
+                          const matchesFilter = selectedPriorityFilter === "all" || task.priority === selectedPriorityFilter
+                          return (
+                            <div
+                              key={task.id}
+                              className={`p-3 rounded-lg border flex items-center gap-3 transition-all ${
+                                !matchesFilter ? "opacity-25" : ""
+                              } ${task.completed
+                                ? "bg-slate-100 dark:bg-slate-800 border-slate-200 dark:border-slate-700 opacity-60"
+                                : "bg-white dark:bg-slate-800 border-emerald-200 dark:border-emerald-800 shadow-sm"
+                                }`}
+                            >
+                              <Checkbox
+                                checked={task.completed}
+                                onCheckedChange={() => updateTask(task.id, { completed: !task.completed })}
+                                className="h-4 w-4 border-slate-300 dark:border-slate-600 data-[state=checked]:bg-emerald-500 data-[state=checked]:text-white"
+                              />
+                              <div className="flex-1 min-w-0">
+                                <p className={`text-sm font-medium truncate ${task.completed ? "text-slate-500 line-through" : "text-slate-900 dark:text-slate-100"}`}>
+                                  {task.title}
+                                </p>
+                                {task.description && (
+                                  <p className="text-xs text-slate-500 dark:text-slate-400 truncate">{task.description}</p>
+                                )}
+                              </div>
+                              {task.priority === "high" && <div className="w-2 h-2 rounded-full bg-red-500 ml-auto flex-shrink-0" />}
+                              {task.priority === "medium" && <div className="w-2 h-2 rounded-full bg-yellow-500 ml-auto flex-shrink-0" />}
                             </div>
-                            {task.priority === "high" && <div className="w-2 h-2 rounded-full bg-red-500 ml-auto flex-shrink-0" />}
-                            {task.priority === "medium" && <div className="w-2 h-2 rounded-full bg-yellow-500 ml-auto flex-shrink-0" />}
-                          </div>
-                        ))}
+                          )
+                        })}
                         {getTasksForDate(currentDate.getDate()).filter(t => !t.scheduledTime).length === 0 && (
                           <div className="text-sm text-slate-400 italic py-2">No unassigned tasks</div>
                         )}
@@ -455,29 +552,34 @@ export default function CalendarPage() {
                             }}
                           >
                             <div className="flex flex-col gap-2">
-                              {hourTasks.map(task => (
-                                <div
-                                  key={task.id}
-                                  onClick={(e) => e.stopPropagation()}
-                                  className={`p-2.5 rounded-lg border flex items-center gap-3 transition-colors ${task.completed
-                                    ? "bg-slate-100 dark:bg-slate-800/60 border-slate-200 dark:border-slate-700 opacity-60"
-                                    : task.priority === "high"
-                                      ? "bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800/50"
-                                      : "bg-emerald-50 dark:bg-emerald-900/20 border-emerald-200 dark:border-emerald-800/50"
-                                    }`}
-                                >
-                                  <Checkbox
-                                    checked={task.completed}
-                                    onCheckedChange={() => updateTask(task.id, { completed: !task.completed })}
-                                    className="h-4 w-4 border-slate-300 dark:border-slate-600 data-[state=checked]:bg-emerald-500 data-[state=checked]:text-white"
-                                  />
-                                  <div className="flex-1 min-w-0">
-                                    <p className={`text-sm font-medium truncate ${task.completed ? "text-slate-500 line-through" : "text-slate-900 dark:text-slate-100"}`}>
-                                      {task.title}
-                                    </p>
+                              {hourTasks.map(task => {
+                                const matchesFilter = selectedPriorityFilter === "all" || task.priority === selectedPriorityFilter
+                                return (
+                                  <div
+                                    key={task.id}
+                                    onClick={(e) => e.stopPropagation()}
+                                    className={`p-2.5 rounded-lg border flex items-center gap-3 transition-all ${
+                                      !matchesFilter ? "opacity-25" : ""
+                                    } ${task.completed
+                                      ? "bg-slate-100 dark:bg-slate-800/60 border-slate-200 dark:border-slate-700 opacity-60"
+                                      : task.priority === "high"
+                                        ? "bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800/50"
+                                        : "bg-emerald-50 dark:bg-emerald-900/20 border-emerald-200 dark:border-emerald-800/50"
+                                      }`}
+                                  >
+                                    <Checkbox
+                                      checked={task.completed}
+                                      onCheckedChange={() => updateTask(task.id, { completed: !task.completed })}
+                                      className="h-4 w-4 border-slate-300 dark:border-slate-600 data-[state=checked]:bg-emerald-500 data-[state=checked]:text-white"
+                                    />
+                                    <div className="flex-1 min-w-0">
+                                      <p className={`text-sm font-medium truncate ${task.completed ? "text-slate-500 line-through" : "text-slate-900 dark:text-slate-100"}`}>
+                                        {task.title}
+                                      </p>
+                                    </div>
                                   </div>
-                                </div>
-                              ))}
+                                )
+                              })}
                             </div>
                           </div>
                         </div>
@@ -489,19 +591,40 @@ export default function CalendarPage() {
           </div>
 
           {/* Legend */}
-          <div className="mt-6 flex items-center justify-center space-x-6">
-            <div className="flex items-center space-x-2">
-              <div className="w-3 h-3 bg-red-500 rounded"></div>
-              <span className="text-sm text-gray-600 dark:text-gray-400">High Priority</span>
-            </div>
-            <div className="flex items-center space-x-2">
-              <div className="w-3 h-3 bg-yellow-500 rounded"></div>
-              <span className="text-sm text-gray-600 dark:text-gray-400">Medium Priority</span>
-            </div>
-            <div className="flex items-center space-x-2">
-              <div className="w-3 h-3 bg-green-500 rounded"></div>
-              <span className="text-sm text-gray-600 dark:text-gray-400">Low Priority</span>
-            </div>
+          <div className="mt-6 flex flex-wrap items-center justify-center gap-4 sm:gap-6 border-t border-slate-100 dark:border-slate-800/60 pt-6">
+            <button
+              onClick={() => setSelectedPriorityFilter(selectedPriorityFilter === "high" ? "all" : "high")}
+              className={`flex items-center space-x-2 px-3 py-1.5 rounded-xl border text-xs sm:text-sm font-semibold transition-all ${
+                selectedPriorityFilter === "high"
+                  ? "bg-red-500/10 border-red-500 text-red-700 dark:text-red-300 ring-2 ring-red-500/20"
+                  : "bg-white/40 dark:bg-slate-800/40 border-slate-200/40 dark:border-slate-700/40 hover:bg-slate-50 dark:hover:bg-slate-800 text-gray-600 dark:text-gray-400"
+              }`}
+            >
+              <div className="w-3 h-3 bg-red-500 rounded-full"></div>
+              <span>High Priority</span>
+            </button>
+            <button
+              onClick={() => setSelectedPriorityFilter(selectedPriorityFilter === "medium" ? "all" : "medium")}
+              className={`flex items-center space-x-2 px-3 py-1.5 rounded-xl border text-xs sm:text-sm font-semibold transition-all ${
+                selectedPriorityFilter === "medium"
+                  ? "bg-yellow-500/10 border-yellow-500 text-yellow-700 dark:text-yellow-300 ring-2 ring-yellow-500/20"
+                  : "bg-white/40 dark:bg-slate-800/40 border-slate-200/40 dark:border-slate-700/40 hover:bg-slate-50 dark:hover:bg-slate-800 text-gray-600 dark:text-gray-400"
+              }`}
+            >
+              <div className="w-3 h-3 bg-yellow-500 rounded-full"></div>
+              <span>Medium Priority</span>
+            </button>
+            <button
+              onClick={() => setSelectedPriorityFilter(selectedPriorityFilter === "low" ? "all" : "low")}
+              className={`flex items-center space-x-2 px-3 py-1.5 rounded-xl border text-xs sm:text-sm font-semibold transition-all ${
+                selectedPriorityFilter === "low"
+                  ? "bg-green-500/10 border-green-500 text-green-700 dark:text-green-300 ring-2 ring-green-500/20"
+                  : "bg-white/40 dark:bg-slate-800/40 border-slate-200/40 dark:border-slate-700/40 hover:bg-slate-50 dark:hover:bg-slate-800 text-gray-600 dark:text-gray-400"
+              }`}
+            >
+              <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+              <span>Low Priority</span>
+            </button>
           </div>
         </CardContent>
       </Card>

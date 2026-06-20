@@ -2,17 +2,50 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
-// Removed unused Badge import
+import { Badge } from "@/components/ui/badge"
 import { Icons } from "@/components/icons"
 import { useData } from "@/components/local-data-provider"
 
 export function ProductivityTrends() {
   const { tasks, pomodoros, stats, settings } = useData()
+  const isDemoData = tasks.length === 0 && pomodoros.length === 0
+
+  const activeStats = isDemoData ? {
+    totalTasks: 15,
+    completedTasks: 13,
+    totalPomodoros: 19,
+    totalFocusTime: 570, // 9.5 hours
+    streak: 5,
+    lastActiveDate: new Date().toISOString().split("T")[0]
+  } : stats
 
   // Calculate weekly trends with real data
   const getWeeklyData = () => {
     const today = new Date()
     const weekData = []
+
+    if (isDemoData) {
+      // High-fidelity mock data for the last 7 days
+      const mockTasks = [2, 1, 3, 0, 2, 4, 1] // sum = 13 tasks
+      const mockPomodoros = [3, 2, 4, 0, 3, 5, 2] // sum = 19 pomodoros
+      const mockFocusTime = [1.5, 1.0, 2.0, 0.0, 1.5, 2.5, 1.0]
+
+      for (let i = 6; i >= 0; i--) {
+        const date = new Date(today)
+        date.setDate(today.getDate() - i)
+        const dateString = date.toISOString().split("T")[0]
+        
+        weekData.push({
+          day: date.toLocaleDateString("en", { weekday: "short" }),
+          date: dateString,
+          tasks: mockTasks[6 - i],
+          pomodoros: mockPomodoros[6 - i],
+          focusTime: mockFocusTime[6 - i],
+          isToday: i === 0,
+        })
+      }
+      return weekData
+    }
 
     for (let i = 6; i >= 0; i--) {
       const date = new Date(today)
@@ -56,6 +89,13 @@ export function ProductivityTrends() {
 
   // Get productivity insights
   const getProductivityInsight = () => {
+    if (isDemoData) {
+      return {
+        level: "Highly Productive",
+        color: "green",
+        message: "Excellent! You're consistently hitting your goals on most days.",
+      }
+    }
     if (totalTasksThisWeek === 0)
       return { level: "Getting Started", color: "blue", message: "Complete your first task to start tracking!" }
     if (avgTasksPerDay >= dailyGoalTasks)
@@ -75,6 +115,21 @@ export function ProductivityTrends() {
 
   // Add after the existing getProductivityInsight function
   const getDailyProgressInsights = () => {
+    if (isDemoData) {
+      return [
+        {
+          type: "positive",
+          title: "Great Progress! 📈",
+          message: "You completed 2 more tasks than yesterday. Keep it up!",
+        },
+        {
+          type: "achievement",
+          title: "Focus Master! 🎯",
+          message: "4 focus sessions today! You're crushing it.",
+        }
+      ]
+    }
+
     const today = new Date().toISOString().split("T")[0]
     const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString().split("T")[0]
 
@@ -134,6 +189,11 @@ export function ProductivityTrends() {
             <div className="flex items-center">
               <Icons.trendingUp className="w-5 h-5 mr-2 text-purple-600 dark:text-purple-400" />
               Productivity Insights
+              {isDemoData && (
+                <Badge variant="secondary" className="ml-3 bg-purple-500/10 dark:bg-purple-500/20 text-purple-600 dark:text-purple-400 border border-purple-500/30 text-[10px] font-bold uppercase tracking-wider">
+                  Preview
+                </Badge>
+              )}
             </div>
             <span className="text-sm font-serif opacity-30">洞察</span>
           </CardTitle>
@@ -157,11 +217,11 @@ export function ProductivityTrends() {
                 <div className="flex justify-between text-sm mb-2 font-semibold">
                   <span className="text-slate-600 dark:text-slate-400">Completion Rate</span>
                   <span className="text-emerald-600 dark:text-emerald-400">
-                    {stats.totalTasks > 0 ? Math.round((stats.completedTasks / stats.totalTasks) * 100) : 0}%
+                    {activeStats.totalTasks > 0 ? Math.round((activeStats.completedTasks / activeStats.totalTasks) * 100) : 0}%
                   </span>
                 </div>
                 <Progress
-                  value={stats.totalTasks > 0 ? (stats.completedTasks / stats.totalTasks) * 100 : 0}
+                  value={activeStats.totalTasks > 0 ? (activeStats.completedTasks / activeStats.totalTasks) * 100 : 0}
                   className="h-2.5 bg-slate-200 dark:bg-slate-800"
                 />
               </div>
@@ -182,20 +242,20 @@ export function ProductivityTrends() {
               <div>
                 <div className="flex justify-between text-sm mb-2 font-semibold">
                   <span className="text-slate-600 dark:text-slate-400">Current Streak</span>
-                  <span className="text-amber-600 dark:text-amber-400">{stats.streak} days</span>
+                  <span className="text-amber-600 dark:text-amber-400">{activeStats.streak} days</span>
                 </div>
-                <Progress value={Math.min((stats.streak / 7) * 100, 100)} className="h-2.5 bg-slate-200 dark:bg-slate-800" />
+                <Progress value={Math.min((activeStats.streak / 7) * 100, 100)} className="h-2.5 bg-slate-200 dark:bg-slate-800" />
               </div>
             </div>
 
             {/* Quick Stats */}
             <div className="grid grid-cols-2 gap-4">
               <div className="flex flex-col items-center p-4 bg-white/60 dark:bg-slate-800/60 backdrop-blur-md rounded-2xl border border-white/60 dark:border-slate-700/50 shadow-sm hover:shadow-md transition-all">
-                <div className="text-3xl font-black text-slate-800 dark:text-slate-100 mb-1">{(stats.totalFocusTime / 60).toFixed(1)}<span className="text-base font-bold text-slate-500">h</span></div>
+                <div className="text-3xl font-black text-slate-800 dark:text-slate-100 mb-1">{(activeStats.totalFocusTime / 60).toFixed(1)}<span className="text-base font-bold text-slate-500">h</span></div>
                 <div className="text-xs font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">Total Focus</div>
               </div>
               <div className="flex flex-col items-center p-4 bg-white/60 dark:bg-slate-800/60 backdrop-blur-md rounded-2xl border border-white/60 dark:border-slate-700/50 shadow-sm hover:shadow-md transition-all">
-                <div className="text-3xl font-black text-slate-800 dark:text-slate-100 mb-1">{stats.totalPomodoros}</div>
+                <div className="text-3xl font-black text-slate-800 dark:text-slate-100 mb-1">{activeStats.totalPomodoros}</div>
                 <div className="text-xs font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">Sessions</div>
               </div>
             </div>

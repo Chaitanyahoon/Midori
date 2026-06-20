@@ -1,12 +1,17 @@
 "use client"
 
 import dynamic from "next/dynamic"
+import { useData } from "@/components/local-data-provider"
+import { InsightsDemoBanner } from "@/components/dashboard/insights-demo-banner"
 
 const ProductivityCharts = dynamic(() => import("@/components/dashboard/productivity-charts").then(m => ({ default: m.ProductivityCharts })), { ssr: false })
 const WeeklyStats = dynamic(() => import("@/components/dashboard/weekly-stats").then(m => ({ default: m.WeeklyStats })), { ssr: false })
 const ProductivityTrends = dynamic(() => import("@/components/dashboard/productivity-trends").then(m => ({ default: m.ProductivityTrends })), { ssr: false })
 
 export default function InsightsPage() {
+  const { tasks, pomodoros } = useData()
+  const isDemoData = tasks.length === 0 && pomodoros.length === 0
+
   return (
     <div className="w-full min-h-full ambient-bg px-4 sm:px-6 lg:px-8 py-6 sm:py-10 relative overflow-hidden">
       {/* Decorative vertical text (Ma) */}
@@ -25,6 +30,12 @@ export default function InsightsPage() {
             </h2>
             <p className="text-slate-500 dark:text-slate-400 font-semibold uppercase tracking-widest text-xs">Track your productivity journey — <span className="text-emerald-600 dark:text-emerald-400 italic">Satori</span></p>
           </div>
+
+          {isDemoData && (
+            <div className="reveal-staggered delay-1">
+              <InsightsDemoBanner />
+            </div>
+          )}
 
           <div className="grid grid-cols-1 gap-8">
             {/* 1. Habit Streak & Weekly Growth */}

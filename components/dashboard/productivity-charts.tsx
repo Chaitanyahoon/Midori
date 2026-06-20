@@ -10,6 +10,37 @@ import { Progress } from "@/components/ui/progress"
 
 export function ProductivityCharts() {
   const { tasks, pomodoros } = useData()
+  const isDemoData = tasks.length === 0 && pomodoros.length === 0
+
+  const DEMO_WEEKLY_DATA = [
+    { day: "Mon", tasks: 2, pomodoros: 3, hours: 1.5 },
+    { day: "Tue", tasks: 4, pomodoros: 5, hours: 2.5 },
+    { day: "Wed", tasks: 1, pomodoros: 2, hours: 1.0 },
+    { day: "Thu", tasks: 5, pomodoros: 6, hours: 3.2 },
+    { day: "Fri", tasks: 3, pomodoros: 4, hours: 2.0 },
+    { day: "Sat", tasks: 6, pomodoros: 8, hours: 4.5 },
+    { day: "Sun", tasks: 2, pomodoros: 3, hours: 1.8 },
+  ]
+
+  const DEMO_TASK_DISTRIBUTION = [
+    { name: "Work", value: 40, color: "#3B82F6", count: 4 },
+    { name: "Personal", value: 30, color: "#10B981", count: 3 },
+    { name: "Learning", value: 20, color: "#8B5CF6", count: 2 },
+    { name: "Health", value: 10, color: "#F59E0B", count: 1 },
+  ]
+
+  const DEMO_PRIORITY_DISTRIBUTION = [
+    { name: "High", value: 30, color: "#EF4444", count: 3 },
+    { name: "Medium", value: 50, color: "#F59E0B", count: 5 },
+    { name: "Low", value: 20, color: "#10B981", count: 2 },
+  ]
+
+  const DEMO_FOCUS_TIME_BY_CATEGORY = [
+    { name: "Work", value: 45, color: "#3B82F6", hours: 7.5 },
+    { name: "Personal", value: 20, color: "#10B981", hours: 3.2 },
+    { name: "Learning", value: 25, color: "#8B5CF6", hours: 4.0 },
+    { name: "Health", value: 10, color: "#F59E0B", hours: 1.5 },
+  ]
 
   // Calculate weekly data with real insights
   const getWeeklyData = () => {
@@ -174,14 +205,14 @@ export function ProductivityCharts() {
     ].filter((item) => item.value > 0)
   }
 
-  const weeklyData = getWeeklyData()
-  const taskDistribution = getTaskDistribution()
-  const priorityDistribution = getPriorityDistribution()
-  const focusTimeByCategory = getFocusTimeByCategory()
+  const weeklyData = isDemoData ? DEMO_WEEKLY_DATA : getWeeklyData()
+  const taskDistribution = isDemoData ? DEMO_TASK_DISTRIBUTION : getTaskDistribution()
+  const priorityDistribution = isDemoData ? DEMO_PRIORITY_DISTRIBUTION : getPriorityDistribution()
+  const focusTimeByCategory = isDemoData ? DEMO_FOCUS_TIME_BY_CATEGORY : getFocusTimeByCategory()
 
   // Calculate insights
-  const totalTasks = tasks.length
-  const completedTasks = tasks.filter((t) => t.completed).length
+  const totalTasks = isDemoData ? 10 : tasks.length
+  const completedTasks = isDemoData ? 7 : tasks.filter((t) => t.completed).length
   const overallCompletionRate = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0
   const avgFocusPerDay = weeklyData.reduce((sum, day) => sum + day.hours, 0) / 7
   const mostProductiveDay = weeklyData.reduce((max, day) => (day.tasks > max.tasks ? day : max), weeklyData[0])
@@ -218,6 +249,11 @@ export function ProductivityCharts() {
             <div className="flex items-center">
               <Icons.sparkles className="w-5 h-5 mr-2 text-emerald-600 dark:text-emerald-400" />
               Productivity Summary
+              {isDemoData && (
+                <Badge variant="secondary" className="ml-3 bg-emerald-500/10 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 text-[10px] font-bold uppercase tracking-wider">
+                  Preview
+                </Badge>
+              )}
             </div>
             <span className="text-sm font-serif opacity-30">総括</span>
           </CardTitle>
@@ -288,6 +324,11 @@ export function ProductivityCharts() {
               <CardTitle className="flex items-center text-xl font-bold bg-gradient-to-r from-blue-800 to-indigo-600 dark:from-blue-300 dark:to-indigo-300 bg-clip-text text-transparent">
                 <Icons.clock className="w-5 h-5 mr-2 text-blue-600 dark:text-blue-400" />
                 Weekly Focus Flow
+                {isDemoData && (
+                  <Badge variant="outline" className="ml-2 border-slate-300 dark:border-slate-700 text-slate-500 text-[9px] uppercase tracking-widest font-semibold">
+                    Sample
+                  </Badge>
+                )}
               </CardTitle>
               <Badge className="bg-blue-500/10 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800 rounded-full px-3 py-1 font-bold">
                 {totalFocusThisWeek.toFixed(1)}h total
@@ -347,6 +388,11 @@ export function ProductivityCharts() {
               <CardTitle className="flex items-center text-xl font-bold bg-gradient-to-r from-green-800 to-emerald-600 dark:from-green-300 dark:to-emerald-300 bg-clip-text text-transparent">
                 <Icons.timer className="w-5 h-5 mr-2 text-green-600 dark:text-green-400" />
                 Daily Focus Sessions
+                {isDemoData && (
+                  <Badge variant="outline" className="ml-2 border-slate-300 dark:border-slate-700 text-slate-500 text-[9px] uppercase tracking-widest font-semibold">
+                    Sample
+                  </Badge>
+                )}
               </CardTitle>
               <Badge className="bg-green-500/10 dark:bg-green-900/30 text-green-700 dark:text-green-300 border border-green-200 dark:border-green-800 rounded-full px-3 py-1 font-bold">
                 {totalPomodorosThisWeek} total
@@ -403,6 +449,11 @@ export function ProductivityCharts() {
             <CardTitle className="flex items-center text-xl font-bold bg-gradient-to-r from-purple-800 to-fuchsia-600 dark:from-purple-300 dark:to-fuchsia-300 bg-clip-text text-transparent">
               <Icons.target className="w-5 h-5 mr-2 text-purple-600 dark:text-purple-400" />
               Focus By Category
+              {isDemoData && (
+                <Badge variant="outline" className="ml-2 border-slate-300 dark:border-slate-700 text-slate-500 text-[9px] uppercase tracking-widest font-semibold">
+                  Sample
+                </Badge>
+              )}
             </CardTitle>
           </CardHeader>
           <CardContent className="pt-6">
@@ -472,6 +523,11 @@ export function ProductivityCharts() {
             <CardTitle className="flex items-center text-xl font-bold bg-gradient-to-r from-orange-800 to-amber-600 dark:from-orange-300 dark:to-amber-300 bg-clip-text text-transparent">
               <Icons.zap className="w-5 h-5 mr-2 text-orange-600 dark:text-orange-400" />
               Priority Distribution
+              {isDemoData && (
+                <Badge variant="outline" className="ml-2 border-slate-300 dark:border-slate-700 text-slate-500 text-[9px] uppercase tracking-widest font-semibold">
+                  Sample
+                </Badge>
+              )}
             </CardTitle>
           </CardHeader>
           <CardContent className="pt-6">

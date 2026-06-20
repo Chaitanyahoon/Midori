@@ -157,28 +157,40 @@ export default function DashboardPage() {
 
           {/* Desktop: Hover actions */}
           <div className="absolute bottom-14 sm:bottom-16 right-0 opacity-0 group-hover:opacity-100 transition-all duration-200 transform translate-y-2 group-hover:translate-y-0 pointer-events-auto hidden sm:block">
-            <div className="flex flex-col space-y-2">
-              <button
-                onClick={() => (window.location.href = "/dashboard/tasks")}
-                className="w-12 h-12 bg-green-500 hover:bg-green-600 rounded-xl shadow-md hover:shadow-lg transition-all duration-200 flex items-center justify-center hover:scale-110 active:scale-95 touch-manipulation"
-                title="Add Task"
-              >
-                <Icons.leaf className="w-5 h-5 text-white" />
-              </button>
-              <button
-                onClick={() => (window.location.href = "/dashboard/pomodoro")}
-                className="w-12 h-12 bg-orange-500 hover:bg-orange-600 rounded-xl shadow-md hover:shadow-lg transition-all duration-200 flex items-center justify-center hover:scale-110 active:scale-95 touch-manipulation"
-                title="Start Focus Session"
-              >
-                <Icons.timer className="w-5 h-5 text-white" />
-              </button>
-              <button
-                onClick={() => (window.location.href = "/dashboard/calendar")}
-                className="w-12 h-12 bg-purple-500 hover:bg-purple-600 rounded-xl shadow-md hover:shadow-lg transition-all duration-200 flex items-center justify-center hover:scale-110 active:scale-95 touch-manipulation"
-                title="Schedule Task"
-              >
-                <Icons.calendar className="w-5 h-5 text-white" />
-              </button>
+            <div className="flex flex-col space-y-2 items-end">
+              <div className="flex items-center gap-2">
+                <span className="bg-slate-900/90 text-white text-[11px] font-semibold px-2 py-1 rounded-md shadow-sm whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 delay-75">
+                  Plant Seed
+                </span>
+                <button
+                  onClick={() => (window.location.href = "/dashboard/tasks")}
+                  className="w-12 h-12 bg-green-500 hover:bg-green-600 rounded-xl shadow-md hover:shadow-lg transition-all duration-200 flex items-center justify-center hover:scale-110 active:scale-95 touch-manipulation"
+                >
+                  <Icons.leaf className="w-5 h-5 text-white" />
+                </button>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="bg-slate-900/90 text-white text-[11px] font-semibold px-2 py-1 rounded-md shadow-sm whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 delay-100">
+                  Focus Grove
+                </span>
+                <button
+                  onClick={() => (window.location.href = "/dashboard/pomodoro")}
+                  className="w-12 h-12 bg-orange-500 hover:bg-orange-600 rounded-xl shadow-md hover:shadow-lg transition-all duration-200 flex items-center justify-center hover:scale-110 active:scale-95 touch-manipulation"
+                >
+                  <Icons.timer className="w-5 h-5 text-white" />
+                </button>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="bg-slate-900/90 text-white text-[11px] font-semibold px-2 py-1 rounded-md shadow-sm whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 delay-150">
+                  Time Planner
+                </span>
+                <button
+                  onClick={() => (window.location.href = "/dashboard/calendar")}
+                  className="w-12 h-12 bg-purple-500 hover:bg-purple-600 rounded-xl shadow-md hover:shadow-lg transition-all duration-200 flex items-center justify-center hover:scale-110 active:scale-95 touch-manipulation"
+                >
+                  <Icons.calendar className="w-5 h-5 text-white" />
+                </button>
+              </div>
             </div>
           </div>
 
@@ -187,37 +199,49 @@ export default function DashboardPage() {
             ? 'opacity-100 translate-y-0 pointer-events-auto'
             : 'opacity-0 translate-y-4 pointer-events-none'
             }`}>
-            <div className="flex flex-col space-y-2">
-              <button
-                onClick={() => {
-                  setIsQuickActionsOpen(false)
-                  window.location.href = "/dashboard/tasks"
-                }}
-                className="w-12 h-12 bg-green-500 hover:bg-green-600 rounded-xl shadow-md transition-all duration-200 flex items-center justify-center active:scale-95 touch-manipulation"
-                title="Add Task"
-              >
-                <Icons.leaf className="w-5 h-5 text-white" />
-              </button>
-              <button
-                onClick={() => {
-                  setIsQuickActionsOpen(false)
-                  window.location.href = "/dashboard/pomodoro"
-                }}
-                className="w-12 h-12 bg-orange-500 hover:bg-orange-600 rounded-xl shadow-md transition-all duration-200 flex items-center justify-center active:scale-95 touch-manipulation"
-                title="Start Focus Session"
-              >
-                <Icons.timer className="w-5 h-5 text-white" />
-              </button>
-              <button
-                onClick={() => {
-                  setIsQuickActionsOpen(false)
-                  window.location.href = "/dashboard/calendar"
-                }}
-                className="w-12 h-12 bg-purple-500 hover:bg-purple-600 rounded-xl shadow-md transition-all duration-200 flex items-center justify-center active:scale-95 touch-manipulation"
-                title="Schedule Task"
-              >
-                <Icons.calendar className="w-5 h-5 text-white" />
-              </button>
+            <div className="flex flex-col space-y-2 items-end">
+              <div className="flex items-center gap-2">
+                <span className="bg-slate-900/90 text-white text-[10px] font-semibold px-2 py-1 rounded-md shadow-sm whitespace-nowrap">
+                  Plant Seed
+                </span>
+                <button
+                  onClick={() => {
+                    setIsQuickActionsOpen(false)
+                    window.location.href = "/dashboard/tasks"
+                  }}
+                  className="w-12 h-12 bg-green-500 hover:bg-green-600 rounded-xl shadow-md transition-all duration-200 flex items-center justify-center active:scale-95 touch-manipulation"
+                >
+                  <Icons.leaf className="w-5 h-5 text-white" />
+                </button>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="bg-slate-900/90 text-white text-[10px] font-semibold px-2 py-1 rounded-md shadow-sm whitespace-nowrap">
+                  Focus Grove
+                </span>
+                <button
+                  onClick={() => {
+                    setIsQuickActionsOpen(false)
+                    window.location.href = "/dashboard/pomodoro"
+                  }}
+                  className="w-12 h-12 bg-orange-500 hover:bg-orange-600 rounded-xl shadow-md transition-all duration-200 flex items-center justify-center active:scale-95 touch-manipulation"
+                >
+                  <Icons.timer className="w-5 h-5 text-white" />
+                </button>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="bg-slate-900/90 text-white text-[10px] font-semibold px-2 py-1 rounded-md shadow-sm whitespace-nowrap">
+                  Time Planner
+                </span>
+                <button
+                  onClick={() => {
+                    setIsQuickActionsOpen(false)
+                    window.location.href = "/dashboard/calendar"
+                  }}
+                  className="w-12 h-12 bg-purple-500 hover:bg-purple-600 rounded-xl shadow-md transition-all duration-200 flex items-center justify-center active:scale-95 touch-manipulation"
+                >
+                  <Icons.calendar className="w-5 h-5 text-white" />
+                </button>
+              </div>
             </div>
           </div>
         </div>

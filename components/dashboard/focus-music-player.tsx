@@ -1002,10 +1002,10 @@ export function FocusMusicPlayer({
           </div>
           <div className="flex gap-2">
             {[
-              { name: "Rain Sounds", icon: <Icons.cloudRain className="w-4 h-4" /> },
-              { name: "Forest Sounds", icon: <Icons.tree className="w-4 h-4" /> },
-              { name: "Ocean Waves", icon: <Icons.droplets className="w-4 h-4" /> },
-              { name: "Fireplace Sounds", icon: <Icons.sun className="w-4 h-4" /> }
+              { name: "Rain Sounds", icon: <Icons.cloudRain className="w-4 h-4" />, label: "Rain" },
+              { name: "Forest Sounds", icon: <Icons.tree className="w-4 h-4" />, label: "Forest" },
+              { name: "Ocean Waves", icon: <Icons.droplets className="w-4 h-4" />, label: "Ocean" },
+              { name: "Fireplace Sounds", icon: <Icons.sun className="w-4 h-4" />, label: "Fire" }
             ].map((scape) => {
               const track = MUSIC_OPTIONS.find(t => t.name === scape.name)
               const active = isAmbientPlaying && ambientTrack?.name === scape.name
@@ -1016,12 +1016,13 @@ export function FocusMusicPlayer({
                   key={scape.name}
                   onClick={() => handlePlayAmbient(track)}
                   title={scape.name}
-                  className={`flex-1 flex flex-col items-center justify-center py-2.5 rounded-xl transition-all min-h-[44px] ${active
-                      ? "bg-emerald-100 dark:bg-emerald-900/50 ring-1 ring-emerald-400 text-emerald-600 dark:text-emerald-400"
-                      : "hover:bg-white dark:hover:bg-slate-700 text-slate-400 hover:text-slate-600"
+                  className={`flex-1 flex flex-col items-center justify-center py-2 rounded-xl transition-all min-h-[54px] border ${active
+                      ? "bg-emerald-100 dark:bg-emerald-900/50 border-emerald-400 text-emerald-600 dark:text-emerald-400 shadow-sm"
+                      : "bg-white/40 hover:bg-white dark:bg-slate-800/40 dark:hover:bg-slate-700 text-slate-400 hover:text-slate-600 border-slate-200/40 dark:border-slate-700/40"
                     }`}
                 >
                   {scape.icon}
+                  <span className="text-[9px] mt-1 font-semibold tracking-wide">{scape.label}</span>
                 </button>
               )
             })}

@@ -164,7 +164,13 @@ export default function CoopPage() {
                                     <input
                                         type="text"
                                         placeholder="e.g. A7X9BQ"
-                                        className="w-full h-12 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-4 text-lg font-mono uppercase tracking-widest text-center placeholder:text-slate-300 dark:placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-emerald-500/40 focus:border-emerald-400 transition-all"
+                                        className={`w-full h-12 bg-slate-50 dark:bg-slate-900 border rounded-xl px-4 text-lg font-mono uppercase tracking-widest text-center placeholder:text-slate-300 dark:placeholder:text-slate-600 focus:outline-none transition-all ${
+                                            joinCode.trim().length === 6
+                                                ? "border-emerald-500 focus:ring-2 focus:ring-emerald-500/40 dark:border-emerald-500"
+                                                : joinCode.trim().length > 0
+                                                    ? "border-amber-400 focus:ring-2 focus:ring-amber-400/40 dark:border-amber-400"
+                                                    : "border-slate-200 dark:border-slate-700 focus:ring-2 focus:ring-emerald-500/40 focus:border-emerald-400"
+                                        }`}
                                         value={joinCode}
                                         onChange={e => setJoinCode(e.target.value.replace(/[^a-zA-Z0-9]/g, ""))}
                                         maxLength={6}
@@ -213,7 +219,7 @@ export default function CoopPage() {
                             { icon: "💧", title: "Shared Water", desc: "Pomodoro sessions fill the communal water reserve" },
                             { icon: "💬", title: "Real-time Chat", desc: "Talk with your garden members while you focus" },
                         ].map(card => (
-                            <div key={card.title} className="card-zen p-4 text-center">
+                            <div key={card.title} className="card-zen p-4 text-center hover:scale-105 transition-transform duration-300 cursor-default">
                                 <span className="text-2xl">{card.icon}</span>
                                 <h3 className="font-bold text-slate-800 dark:text-slate-200 text-sm mt-2">{card.title}</h3>
                                 <p className="text-[11px] text-slate-500 mt-1">{card.desc}</p>

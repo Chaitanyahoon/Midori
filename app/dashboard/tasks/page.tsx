@@ -366,13 +366,13 @@ export default function TasksPage() {
 
       {/* Filters (Glass Bar) */}
       <div className="card-zen p-3 flex flex-wrap gap-2 items-center sticky top-4 z-30 transition-all duration-300 hover:translate-y-0">
-        <div className="flex-1 min-w-[200px] relative group">
-          <Icons.search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-emerald-500 transition-colors" />
+        <div className="flex-1 min-w-[200px] relative rounded-xl bg-slate-100/40 dark:bg-slate-800/40 border border-slate-200/50 dark:border-slate-700/50 focus-within:border-emerald-400 dark:focus-within:border-emerald-500 focus-within:ring-2 focus-within:ring-emerald-400/20 dark:focus-within:ring-emerald-500/20 transition-all duration-200">
+          <Icons.search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 transition-colors" />
           <Input
             placeholder="Find a seed..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-9 bg-transparent border-none focus-visible:ring-0 placeholder:text-slate-400"
+            className="pl-9 bg-transparent border-none focus-visible:ring-0 placeholder:text-slate-400 dark:placeholder:text-slate-500 h-9 text-sm"
           />
         </div>
         <div className="h-6 w-px bg-slate-200 dark:bg-slate-700 mx-2 hidden sm:block"></div>
@@ -416,16 +416,34 @@ export default function TasksPage() {
       {/* Tasks List */}
       <div className="space-y-8 pb-10">
         {Object.keys(groupedTasks).length === 0 || sortedTasks.length === 0 ? (
-          <div className="text-center py-20 opacity-0 animate-in fade-in zoom-in-95 duration-700 fill-mode-forwards">
-            <div className="w-24 h-24 bg-emerald-50 dark:bg-emerald-900/20 rounded-full flex items-center justify-center mx-auto mb-6 shadow-xl animate-float">
-              <Icons.seedling className="w-12 h-12 text-emerald-300 dark:text-emerald-700" />
-            </div>
-            <h3 className="text-xl font-bold text-slate-700 dark:text-slate-200 mb-2">The garden is empty</h3>
-            <p className="text-slate-500 dark:text-slate-400 max-w-sm mx-auto">
-              {tasks.length === 0
-                ? "Plant your first seed to start your productivity journey!"
-                : "No matching seeds found. Try adjusting your filters."}
-            </p>
+          <div className="text-center py-16 opacity-0 animate-in fade-in scale-in duration-500 fill-mode-forwards">
+            {tasks.length === 0 ? (
+              <div className="max-w-md mx-auto card-zen p-8 text-center bg-gradient-to-br from-emerald-500/[0.02] via-white/50 to-teal-500/[0.02] dark:from-emerald-500/[0.05] dark:via-slate-900/40 dark:to-teal-500/[0.05] shadow-xl border border-emerald-100/50 dark:border-emerald-900/30">
+                <div className="w-20 h-20 bg-gradient-to-br from-emerald-100 to-teal-100 dark:from-emerald-900/40 dark:to-teal-900/40 rounded-full flex items-center justify-center mx-auto mb-6 shadow-md animate-float">
+                  <Icons.seedling className="w-10 h-10 text-emerald-600 dark:text-emerald-400" />
+                </div>
+                <h3 className="text-xl font-bold text-slate-800 dark:text-slate-100 mb-3">Your Garden is Empty</h3>
+                <p className="text-sm text-slate-500 dark:text-slate-400 leading-relaxed mb-6">
+                  Midori is a quiet space to grow your productivity. Plant your first seed to track your goals and see them bloom in your visual garden.
+                </p>
+                <Button
+                  onClick={() => setIsAddDialogOpen(true)}
+                  className="btn-organic px-6 h-11 text-sm font-semibold shadow-md hover:shadow-emerald-500/20 hover:scale-[1.02] active:scale-[0.98] transition-all"
+                >
+                  <Icons.plus className="w-4 h-4 mr-2" /> Plant Your First Seed
+                </Button>
+              </div>
+            ) : (
+              <div className="max-w-md mx-auto card-zen p-8 text-center">
+                <div className="w-16 h-16 bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center mx-auto mb-4 shadow-sm">
+                  <Icons.search className="w-7 h-7 text-slate-400" />
+                </div>
+                <h3 className="text-lg font-bold text-slate-700 dark:text-slate-200 mb-2">No Matching Seeds</h3>
+                <p className="text-sm text-slate-500 dark:text-slate-400 max-w-xs mx-auto">
+                  Try adjusting your search terms or filters to find what you are looking for.
+                </p>
+              </div>
+            )}
           </div>
         ) : (
           Object.entries(groupedTasks).map(([groupName, groupTasks], groupIndex) => (

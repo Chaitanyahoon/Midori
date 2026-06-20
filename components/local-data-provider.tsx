@@ -469,7 +469,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
 
   // Shared Garden Listener
   useEffect(() => {
-    if (!settings.activeSharedGardenId) {
+    if (!settings.activeSharedGardenId || !db) {
       setSharedGarden(null)
       return
     }

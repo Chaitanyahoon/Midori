@@ -106,7 +106,7 @@ Follow the prompts. Auto-renews every 90 days. 🔒
 ## Updating the App (Future Deploys)
 
 ```bash
-cd /var/www/planthesia
+cd /var/www/midori
 git pull
 npm run build && pm2 restart midori
 ```
@@ -117,7 +117,7 @@ npm run build && pm2 restart midori
 
 ```bash
 pm2 list
-pm2 logs planthesia
+pm2 logs midori
 pm2 restart midori
-pm2 stop planthesia
+pm2 stop midori
 ```

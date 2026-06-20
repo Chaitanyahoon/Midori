@@ -264,7 +264,34 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     if (!uid) return
     const applyLocalUpdate = () => {
       setTasks(prev => {
-        const next = prev.map(t => t.id === id ? { ...t, ...updates } : t)
+        const next = prev.map(t => {
+          if (t.id === id) {
+            if (updates.completed === true && t.completed !== true) {
+              setSettings(s => {
+                const newSunlight = (s.sunlight || 0) + 10
+                const nextSettings = { ...s, sunlight: newSunlight }
+                try { localStorage.setItem(`midori_settings_${uid}`, JSON.stringify(nextSettings)) } catch (e) {}
+                
+                if (s.activeSharedGardenId) {
+                  try {
+                    const storedG = localStorage.getItem(`midori_shared_garden_${s.activeSharedGardenId}`)
+                    const gData = storedG ? JSON.parse(storedG) : { sunlightPool: 0, waterPool: 0, plants: [] }
+                    const nextG = {
+                      ...gData,
+                      sunlightPool: (gData.sunlightPool || 0) + 5
+                    }
+                    localStorage.setItem(`midori_shared_garden_${s.activeSharedGardenId}`, JSON.stringify(nextG))
+                    setSharedGarden(prevG => prevG && prevG.id === s.activeSharedGardenId ? nextG : prevG)
+                  } catch (e) {}
+                }
+                return nextSettings
+              })
+            }
+            const completedAt = updates.completed === true ? new Date().toISOString() : (updates.completed === false ? undefined : t.completedAt)
+            return { ...t, ...updates, completedAt }
+          }
+          return t
+        })
         try { localStorage.setItem(`midori_tasks_${uid}`, JSON.stringify(next)) } catch (e) {}
         return next
       })
@@ -346,6 +373,19 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
           const newWaterdrops = (prev.waterdrops || 0) + earned
           const nextSettings = { ...prev, waterdrops: newWaterdrops }
           try { localStorage.setItem(`midori_settings_${uid}`, JSON.stringify(nextSettings)) } catch (e) {}
+          
+          if (prev.activeSharedGardenId) {
+            try {
+              const storedG = localStorage.getItem(`midori_shared_garden_${prev.activeSharedGardenId}`)
+              const gData = storedG ? JSON.parse(storedG) : { sunlightPool: 0, waterPool: 0, plants: [] }
+              const nextG = {
+                ...gData,
+                waterPool: (gData.waterPool || 0) + earned
+              }
+              localStorage.setItem(`midori_shared_garden_${prev.activeSharedGardenId}`, JSON.stringify(nextG))
+              setSharedGarden(prevG => prevG && prevG.id === prev.activeSharedGardenId ? nextG : prevG)
+            } catch (e) {}
+          }
           return nextSettings
         })
       }

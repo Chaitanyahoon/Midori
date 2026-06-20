@@ -12,6 +12,7 @@ import { RecentActivity } from "@/components/dashboard/recent-activity"
 import { MotivationalQuote } from "@/components/dashboard/motivational-quote"
 import { useData } from "@/components/local-data-provider"
 import { useAuth } from "@/components/auth-provider"
+import { Icons } from "@/components/icons"
 
 const VisualGarden = dynamic(() => import('@/components/garden/visual-garden').then(mod => mod.VisualGarden), {
   ssr: false,

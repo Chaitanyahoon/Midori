@@ -159,7 +159,9 @@ export function TopNav() {
   }
 
   return (
-    <header className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm border-b border-slate-200/50 dark:border-slate-700/50 px-4 lg:px-8 py-3 lg:py-5 sticky top-0 z-50">
+    <header className="relative bg-white/60 dark:bg-slate-900/60 backdrop-blur-xl px-4 lg:px-8 py-3 lg:py-4 sticky top-0 z-50">
+      {/* Subtle bottom gradient fade instead of hard border */}
+      <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-slate-200/60 dark:via-slate-700/40 to-transparent" />
       <div className="flex items-center justify-between gap-2 lg:gap-4">
         {/* Mobile Menu Button */}
         <Button
@@ -179,41 +181,22 @@ export function TopNav() {
           {pageTitle}
         </span>
 
-        <div className="flex items-center space-x-2 lg:space-x-6 flex-1 min-w-0">
-          {/* Greeting removed, name now shown in main header */}
-          {/* Status Badges */}
-          <div className="flex items-center space-x-1 lg:space-x-3 flex-wrap gap-1 lg:gap-0">
-            {todayTasksCount > 0 && (
-              <Badge className="bg-gradient-to-r from-emerald-100 to-teal-100 text-emerald-700 border border-emerald-200 px-3 py-1.5 rounded-full shadow-sm text-xs flex items-center gap-2">
-                <div className="w-4 h-4 rounded-full bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center">
-                  <Icons.seedling className="w-2.5 h-2.5 text-white" />
-                </div>
-                <span className="hidden sm:inline">{todayTasksCount} tasks blooming</span>
-                <span className="sm:hidden">{todayTasksCount}</span>
-              </Badge>
-            )}
-
-            {overdueTasks.length > 0 && (
-              <Badge className="bg-gradient-to-r from-rose-100 to-pink-100 text-rose-700 border border-rose-200 px-3 py-1.5 rounded-full shadow-sm text-xs flex items-center gap-2">
-                <div className="w-4 h-4 rounded-full bg-gradient-to-br from-rose-500 to-pink-500 flex items-center justify-center">
-                  <Icons.clock className="w-2.5 h-2.5 text-white" />
-                </div>
-                <span className="hidden sm:inline">{overdueTasks.length} need attention</span>
-                <span className="sm:hidden">{overdueTasks.length}</span>
-              </Badge>
-            )}
-
-            {pendingTasks > 0 && (
-              <Badge className="bg-gradient-to-r from-violet-100 to-indigo-100 text-violet-700 border border-violet-200 px-3 py-1.5 rounded-full shadow-sm text-xs flex items-center gap-2">
-                <div className="w-4 h-4 rounded-full bg-gradient-to-br from-violet-500 to-indigo-500 flex items-center justify-center">
-                  <Icons.tasks className="w-2.5 h-2.5 text-white" />
-                </div>
-                <span className="hidden sm:inline">{pendingTasks} in progress</span>
-                <span className="sm:hidden">{pendingTasks}</span>
-              </Badge>
-            )}
-          </div>
+        {/* Status badges — only on mobile where QuickStats aren't immediately visible */}
+        <div className="flex items-center space-x-1 flex-1 min-w-0 lg:hidden">
+          {overdueTasks.length > 0 && (
+            <Badge className="bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20 px-2.5 py-1 rounded-full text-[10px] font-semibold flex items-center gap-1.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse" />
+              {overdueTasks.length}
+            </Badge>
+          )}
+          {todayTasksCount > 0 && (
+            <Badge className="bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 px-2.5 py-1 rounded-full text-[10px] font-semibold">
+              {todayTasksCount} today
+            </Badge>
+          )}
         </div>
+        {/* Spacer on desktop */}
+        <div className="hidden lg:flex flex-1" />
 
         {/* Action Buttons */}
         <div className="flex items-center space-x-1 lg:space-x-4 flex-shrink-0">

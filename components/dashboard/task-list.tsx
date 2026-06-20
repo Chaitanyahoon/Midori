@@ -157,7 +157,7 @@ export function TaskList() {
   }
 
   return (
-    <Card className="flex flex-col h-[500px] sm:h-[600px] bg-white/60 dark:bg-slate-900/60 backdrop-blur-xl border border-white/40 dark:border-slate-700/50 shadow-xl shadow-slate-200/40 dark:shadow-slate-950/40 rounded-3xl overflow-hidden relative group card-glow-emerald">
+    <Card className="flex flex-col h-[500px] sm:h-[600px] card-zen overflow-hidden relative group card-glow-emerald">
       {/* Subtle background glow */}
       <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-400/5 dark:bg-emerald-500/5 rounded-full blur-3xl -z-10 pointer-events-none group-hover:bg-emerald-400/10 transition-colors duration-1000" />
 

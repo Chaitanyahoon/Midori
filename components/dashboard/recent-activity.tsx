@@ -66,7 +66,7 @@ export function RecentActivity() {
   }
 
   return (
-    <Card className="flex flex-col bg-white/60 dark:bg-slate-900/60 backdrop-blur-xl border border-white/40 dark:border-slate-700/50 shadow-xl shadow-slate-200/40 dark:shadow-slate-950/40 rounded-3xl overflow-hidden relative group card-glow-emerald">
+    <Card className="flex flex-col card-zen overflow-hidden relative group card-glow-emerald">
       <CardHeader className="pb-3 px-6 pt-6">
         <CardTitle className="text-xl font-bold bg-gradient-to-r from-emerald-800 to-teal-600 dark:from-emerald-300 dark:to-teal-300 bg-clip-text text-transparent flex items-center">
           <Icons.clock className="w-5 h-5 mr-2 text-emerald-600 dark:text-emerald-400" />

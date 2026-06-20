@@ -419,6 +419,83 @@ html, body {
   animation: breatheGlowEmerald 5s ease-in-out infinite;
 }
 
+/* ── Unified Zen Card System ── */
+.card-zen {
+  background: rgba(255, 255, 255, 0.55);
+  backdrop-filter: blur(20px) saturate(1.6);
+  -webkit-backdrop-filter: blur(20px) saturate(1.6);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  box-shadow:
+    0 8px 32px -8px rgba(0, 0, 0, 0.06),
+    0 2px 8px -2px rgba(0, 0, 0, 0.04),
+    inset 0 0 0 0.5px rgba(255, 255, 255, 0.6);
+  border-radius: 1.25rem;
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.card-zen:hover {
+  box-shadow:
+    0 16px 48px -12px rgba(0, 0, 0, 0.1),
+    0 4px 16px -4px rgba(0, 0, 0, 0.06),
+    inset 0 0 0 0.5px rgba(255, 255, 255, 0.7);
+  transform: translateY(-2px);
+}
+.dark .card-zen {
+  background: rgba(15, 23, 42, 0.55);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  box-shadow:
+    0 8px 32px -8px rgba(0, 0, 0, 0.35),
+    inset 0 0 0 0.5px rgba(255, 255, 255, 0.04);
+}
+.dark .card-zen:hover {
+  box-shadow:
+    0 16px 48px -12px rgba(0, 0, 0, 0.5),
+    inset 0 0 0 0.5px rgba(255, 255, 255, 0.08);
+}
+
+/* Section label with decorative leaf divider */
+.section-label {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding-bottom: 0.25rem;
+}
+.section-label::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, rgba(16, 185, 129, 0.25), transparent 80%);
+}
+.dark .section-label::after {
+  background: linear-gradient(90deg, rgba(16, 185, 129, 0.15), transparent 80%);
+}
+
+/* Slow ambient gradient drift for main content */
+@keyframes ambientDrift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+.ambient-bg {
+  background-image:
+    radial-gradient(at 20% 30%, rgba(16, 185, 129, 0.06) 0%, transparent 45%),
+    radial-gradient(at 80% 70%, rgba(251, 191, 36, 0.05) 0%, transparent 45%),
+    radial-gradient(at 50% 50%, rgba(59, 130, 246, 0.03) 0%, transparent 50%);
+  background-size: 200% 200%;
+  animation: ambientDrift 25s ease-in-out infinite;
+}
+.dark .ambient-bg {
+  background-image:
+    radial-gradient(at 20% 30%, rgba(16, 185, 129, 0.08) 0%, transparent 45%),
+    radial-gradient(at 80% 70%, rgba(251, 191, 36, 0.04) 0%, transparent 45%),
+    radial-gradient(at 50% 50%, rgba(59, 130, 246, 0.03) 0%, transparent 50%);
+}
+
+/* Colored left accent for stat cards */
+.accent-left-emerald { border-left: 3px solid rgba(16, 185, 129, 0.6); }
+.accent-left-blue { border-left: 3px solid rgba(59, 130, 246, 0.6); }
+.accent-left-purple { border-left: 3px solid rgba(139, 92, 246, 0.6); }
+.accent-left-orange { border-left: 3px solid rgba(249, 115, 22, 0.6); }
+
 /* Authentic Hanko Seal Badge */
 .hanko-seal {
   width: 42px;

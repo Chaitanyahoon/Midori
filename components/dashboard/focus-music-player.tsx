@@ -815,7 +815,7 @@ export function FocusMusicPlayer({
 
   // --- DEFAULT RENDER ---
   return (
-    <Card className={`relative bg-white/60 dark:bg-slate-900/60 backdrop-blur-xl border border-white/40 dark:border-slate-700/50 shadow-xl shadow-emerald-500/5 rounded-2xl overflow-hidden ${className}`}>
+    <Card className={`card-zen overflow-hidden ${className}`}>
       {/* Ambient glow when playing */}
       {isPlaying && (
         <div

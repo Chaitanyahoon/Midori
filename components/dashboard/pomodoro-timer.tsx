@@ -24,7 +24,7 @@ export function PomodoroTimer() {
   } = usePomodoro()
 
   return (
-    <Card className="relative overflow-hidden bg-white/60 dark:bg-slate-900/60 backdrop-blur-xl border border-white/40 dark:border-slate-700/50 shadow-xl shadow-emerald-500/5 rounded-2xl card-glow-orange">
+    <Card className="card-zen relative overflow-hidden card-glow-orange">
       {/* Ambient radial glow when active */}
       {isActive && (
         <div

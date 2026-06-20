@@ -101,7 +101,7 @@ export function TaskCalendar() {
   }
 
   return (
-    <Card className="bg-white/60 dark:bg-slate-900/60 backdrop-blur-xl border border-white/40 dark:border-slate-700/50 shadow-xl shadow-emerald-500/5 rounded-2xl group overflow-hidden relative">
+    <Card className="card-zen group overflow-hidden relative">
       <div className="absolute top-0 right-0 w-64 h-64 bg-teal-400/10 dark:bg-teal-500/10 rounded-full blur-3xl -z-10 pointer-events-none group-hover:bg-teal-400/20 transition-colors duration-1000" />
 
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4 px-4 sm:px-6 pt-4 sm:pt-6 relative z-10 border-b border-white/20 dark:border-slate-700/50">

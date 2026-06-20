@@ -318,30 +318,30 @@ export default function PomodoroPage() {
   }, [pomodoros, tasks])
 
   return (
-    <div className="space-y-4 sm:space-y-6 px-4 sm:px-6 lg:px-8 py-4 sm:py-6">
+    <div className="w-full min-h-full ambient-bg px-4 sm:px-6 lg:px-8 py-6 sm:py-10 space-y-6 sm:space-y-10">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
         <div>
-          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold bg-gradient-to-r from-emerald-600 via-teal-600 to-blue-600 dark:from-emerald-400 dark:via-teal-400 dark:to-blue-400 bg-clip-text text-transparent">
+          <h1 className="text-2xl sm:text-4xl lg:text-5xl font-bold bg-gradient-to-r from-emerald-800 to-teal-600 dark:from-emerald-200 dark:to-teal-200 bg-clip-text text-transparent leading-tight">
             Focus Grove
           </h1>
-          <p className="text-gray-600 dark:text-gray-400 mt-2 text-sm sm:text-base">Deep work sessions with guided focus and study music</p>
+          <p className="text-gray-500 dark:text-gray-400 mt-2 text-sm sm:text-base font-medium">Deep work sessions with guided focus and study music</p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
           <Button
             onClick={toggleZenMode}
             variant="outline"
             size="sm"
-            className="hidden sm:flex items-center gap-2 border-emerald-200 dark:border-emerald-700 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-50 dark:hover:bg-emerald-900/50"
+            className="hidden sm:flex items-center gap-2 border-emerald-200 dark:border-emerald-700 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-50 dark:hover:bg-emerald-900/50 rounded-xl"
           >
             <Icons.layout className="w-4 h-4" />
             Zen Mode
           </Button>
-          <Badge className="bg-gradient-to-r from-emerald-100 to-teal-100 dark:from-emerald-900/30 dark:to-teal-900/30 text-emerald-700 dark:text-emerald-300 px-4 py-1.5 text-sm font-semibold border border-emerald-200 dark:border-emerald-700">
+          <Badge className="bg-gradient-to-r from-emerald-100 to-teal-100 dark:from-emerald-900/30 dark:to-teal-900/30 text-emerald-700 dark:text-emerald-300 px-4 py-1.5 text-sm font-semibold border border-emerald-200 dark:border-emerald-700 rounded-xl">
             <Icons.target className="w-3.5 h-3.5 mr-1.5" />
             {completedSessionsToday} Sessions Today
           </Badge>
           {focusGoal > 0 && (
-            <Badge className="bg-gradient-to-r from-blue-100 to-indigo-100 dark:from-blue-900/30 dark:to-indigo-900/30 text-blue-700 dark:text-blue-300 px-4 py-1.5 text-sm font-semibold border border-blue-200 dark:border-blue-700">
+            <Badge className="bg-gradient-to-r from-blue-100 to-indigo-100 dark:from-blue-900/30 dark:to-indigo-900/30 text-blue-700 dark:text-blue-300 px-4 py-1.5 text-sm font-semibold border border-blue-200 dark:border-blue-700 rounded-xl">
               <Icons.target className="w-3.5 h-3.5 mr-1.5" />
               Goal: {completedSessionsToday}/{focusGoal}
             </Badge>
@@ -349,10 +349,10 @@ export default function PomodoroPage() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Main Timer */}
         <div className="lg:col-span-2">
-          <Card className={`bg-white/40 dark:bg-slate-900/40 backdrop-blur-xl border border-white/60 dark:border-slate-700/50 shadow-xl rounded-3xl overflow-hidden relative group transition-all duration-500 ${isBreak ? 'card-glow-emerald' : 'card-glow-orange'}`}>
+          <Card className={`card-zen overflow-hidden relative group transition-all duration-500 ${isBreak ? 'card-glow-emerald' : 'card-glow-orange'}`}>
             {/* Header with status indicator */}
             <div className={`h-2 ${isBreak ? "bg-gradient-to-r from-green-400 to-emerald-500" : "bg-gradient-to-r from-blue-500 to-indigo-600"}`}></div>
 
@@ -515,7 +515,7 @@ export default function PomodoroPage() {
           <FocusMusicPlayer isActive={isActive} isBreak={isBreak} />
 
           {/* Today's Stats */}
-          <Card className="bg-white/40 dark:bg-slate-900/40 backdrop-blur-xl border border-white/60 dark:border-slate-700/50 shadow-xl rounded-2xl card-glow-emerald">
+          <Card className="card-zen card-glow-emerald">
             <CardHeader className="pb-2">
               <CardTitle className="text-lg font-semibold flex items-center gap-2 text-gray-900 dark:text-gray-100">
                 <Icons.trendingUp className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
@@ -613,7 +613,7 @@ export default function PomodoroPage() {
           </Card>
 
           {/* Task Analytics */}
-          <Card className="bg-white/40 dark:bg-slate-900/40 backdrop-blur-xl border border-white/60 dark:border-slate-700/50 shadow-xl rounded-2xl card-glow-blue">
+          <Card className="card-zen card-glow-blue">
             <CardHeader className="pb-2">
               <CardTitle className="text-lg font-semibold flex items-center gap-2 text-gray-900 dark:text-gray-100">
                 <Icons.insights className="w-5 h-5 text-blue-600 dark:text-blue-400" />
@@ -645,7 +645,7 @@ export default function PomodoroPage() {
           </Card>
 
           {/* Settings */}
-          <Card className="bg-white/40 dark:bg-slate-900/40 backdrop-blur-xl border border-white/60 dark:border-slate-700/50 shadow-xl rounded-2xl card-glow-purple">
+          <Card className="card-zen card-glow-purple">
             <CardHeader className="pb-2">
               <CardTitle className="text-lg font-semibold flex items-center gap-2 text-gray-900 dark:text-gray-100">
                 <Icons.settings className="w-5 h-5 text-purple-600 dark:text-purple-400" />
@@ -816,7 +816,7 @@ export default function PomodoroPage() {
       </div>
 
       {/* Focus Tips & Motivation */}
-      <Card className="bg-white/40 dark:bg-slate-900/40 backdrop-blur-xl border border-white/60 dark:border-slate-700/50 shadow-xl rounded-2xl card-glow-blue">
+      <Card className="card-zen card-glow-blue">
         <CardHeader className="pb-3">
           <CardTitle className="text-xl font-semibold flex items-center gap-2 text-gray-900 dark:text-gray-100">
             <div className="p-2 bg-indigo-100 dark:bg-indigo-900/30 rounded-xl">
@@ -854,7 +854,7 @@ export default function PomodoroPage() {
       </Card>
 
       {/* Session History */}
-      <Card className="bg-white/40 dark:bg-slate-900/40 backdrop-blur-xl border border-white/60 dark:border-slate-700/50 shadow-xl rounded-2xl card-glow-emerald">
+      <Card className="card-zen card-glow-emerald">
         <CardHeader>
           <CardTitle className="text-xl font-semibold text-gray-900 dark:text-gray-100">Recent Sessions</CardTitle>
         </CardHeader>

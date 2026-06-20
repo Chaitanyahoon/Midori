@@ -78,13 +78,16 @@ export function Sidebar({ onClose }: SidebarProps) {
                 className={cn(
                   "group flex items-center space-x-3 px-4 py-3 rounded-xl transition-all duration-300 relative overflow-hidden",
                   isActive
-                    ? "bg-gradient-to-r from-emerald-100 to-teal-50 dark:from-emerald-900/30 dark:to-teal-900/10 text-emerald-800 dark:text-emerald-200 font-semibold shadow-sm"
-                    : "text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50 hover:text-emerald-700 dark:hover:text-emerald-300"
+                    ? "bg-gradient-to-r from-emerald-100/80 to-teal-50/60 dark:from-emerald-900/40 dark:to-teal-900/20 text-emerald-800 dark:text-emerald-200 font-semibold shadow-sm shadow-emerald-500/5"
+                    : "text-slate-600 dark:text-slate-400 hover:bg-slate-50/80 dark:hover:bg-slate-800/50 hover:text-emerald-700 dark:hover:text-emerald-300 hover:translate-x-1"
                 )}
               >
-                {/* Active Indicator Line */}
+                {/* Active Indicator Pill with glow */}
                 {isActive && (
-                  <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-emerald-500 rounded-r-full" />
+                  <>
+                    <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-emerald-500 rounded-r-full shadow-lg shadow-emerald-500/40" />
+                    <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-emerald-400 rounded-r-full blur-sm opacity-60" />
+                  </>
                 )}
 
                 <item.icon className={cn(

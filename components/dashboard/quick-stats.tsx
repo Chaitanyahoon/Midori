@@ -1,7 +1,5 @@
 "use client"
 
-import { Card, CardContent } from "@/components/ui/card"
-import { Progress } from "@/components/ui/progress"
 import { Icons } from "@/components/icons"
 import { useData } from "@/components/local-data-provider"
 
@@ -33,7 +31,7 @@ export function QuickStats() {
       value: todayTasks.toString(),
       total: `${stats.completedTasks} total`,
       icon: Icons.flower,
-      color: "emerald",
+      accent: "emerald",
       progress: Math.min((todayTasks / 5) * 100, 100),
     },
     {
@@ -41,7 +39,7 @@ export function QuickStats() {
       value: todayPomodoros.toString(),
       total: `${stats.totalPomodoros} total`,
       icon: Icons.tree,
-      color: "blue",
+      accent: "blue",
       progress: Math.min((todayPomodoros / 8) * 100, 100),
     },
     {
@@ -49,7 +47,7 @@ export function QuickStats() {
       value: `${todayFocusTime.toFixed(1)}h`,
       total: `${(stats.totalFocusTime / 60).toFixed(1)}h total`,
       icon: Icons.sun,
-      color: "purple",
+      accent: "purple",
       progress: Math.min((todayFocusTime / 4) * 100, 100),
     },
     {
@@ -57,75 +55,77 @@ export function QuickStats() {
       value: `${completionRate}%`,
       total: `${stats.streak} day streak`,
       icon: Icons.sprout,
-      color: "orange",
+      accent: "orange",
       progress: completionRate,
     },
   ]
 
-  const colorClasses = {
+  const accentStyles = {
     emerald: {
-      bg: "bg-emerald-50 dark:bg-emerald-900/10",
-      border: "border-emerald-200 dark:border-emerald-800",
-      icon: "bg-emerald-500",
-      text: "text-emerald-700 dark:text-emerald-400",
-      progress: "bg-emerald-500",
+      iconBg: "bg-gradient-to-br from-emerald-400 to-emerald-600",
+      iconShadow: "shadow-emerald-500/25",
+      valueText: "text-emerald-700 dark:text-emerald-400",
+      progressBar: "bg-gradient-to-r from-emerald-400 to-emerald-500",
+      border: "accent-left-emerald",
     },
     blue: {
-      bg: "bg-blue-50 dark:bg-blue-900/10",
-      border: "border-blue-200 dark:border-blue-800",
-      icon: "bg-blue-500",
-      text: "text-blue-700 dark:text-blue-400",
-      progress: "bg-blue-500",
+      iconBg: "bg-gradient-to-br from-blue-400 to-blue-600",
+      iconShadow: "shadow-blue-500/25",
+      valueText: "text-blue-700 dark:text-blue-400",
+      progressBar: "bg-gradient-to-r from-blue-400 to-blue-500",
+      border: "accent-left-blue",
     },
     purple: {
-      bg: "bg-purple-50 dark:bg-purple-900/10",
-      border: "border-purple-200 dark:border-purple-800",
-      icon: "bg-purple-500",
-      text: "text-purple-700 dark:text-purple-400",
-      progress: "bg-purple-500",
+      iconBg: "bg-gradient-to-br from-violet-400 to-purple-600",
+      iconShadow: "shadow-purple-500/25",
+      valueText: "text-purple-700 dark:text-purple-400",
+      progressBar: "bg-gradient-to-r from-violet-400 to-purple-500",
+      border: "accent-left-purple",
     },
     orange: {
-      bg: "bg-orange-50 dark:bg-orange-900/10",
-      border: "border-orange-200 dark:border-orange-800",
-      icon: "bg-orange-500",
-      text: "text-orange-700 dark:text-orange-400",
-      progress: "bg-orange-500",
+      iconBg: "bg-gradient-to-br from-amber-400 to-orange-500",
+      iconShadow: "shadow-orange-500/25",
+      valueText: "text-orange-700 dark:text-orange-400",
+      progressBar: "bg-gradient-to-r from-amber-400 to-orange-500",
+      border: "accent-left-orange",
     },
   }
 
   return (
-    <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 animate-bloom">
+    <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-5">
       {statsData.map((stat, index) => {
-        const colors = colorClasses[stat.color as keyof typeof colorClasses]
+        const styles = accentStyles[stat.accent as keyof typeof accentStyles]
         return (
-          <Card
+          <div
             key={index}
-            className={`${colors.bg} border ${colors.border} shadow-sm rounded-2xl hover:scale-[1.03] hover:shadow-md transition-all duration-300 card-glow-${stat.color} group`}
+            className={`card-zen ${styles.border} group p-4 sm:p-5`}
           >
-            <CardContent className="p-3 sm:p-5">
-              <div className="flex items-start justify-between mb-3 sm:mb-4">
-                <div className="flex-1 min-w-0">
-                  <p className="text-[10px] sm:text-xs font-bold text-slate-500 dark:text-slate-400 mb-1 tracking-wide uppercase">
-                    {stat.title}
-                  </p>
-                  <p className={`text-2xl sm:text-3xl font-extrabold ${colors.text} mb-1 tracking-tight`}>
-                    {stat.value}
-                  </p>
-                  <p className="text-[10px] sm:text-xs text-slate-400 dark:text-slate-500 font-medium truncate">
-                    {stat.total}
-                  </p>
-                </div>
-                <div className={`w-9 h-9 sm:w-12 sm:h-12 ml-2 flex-shrink-0 ${colors.icon} rounded-xl shadow-md flex items-center justify-center group-hover:scale-110 group-hover:rotate-6 transition-all duration-500`}>
-                  <stat.icon className="w-4 h-4 sm:w-6 sm:h-6 text-white" />
-                </div>
+            <div className="flex items-start justify-between mb-3 sm:mb-4">
+              <div className="flex-1 min-w-0">
+                <p className="text-[10px] sm:text-xs font-semibold text-slate-400 dark:text-slate-500 mb-1.5 tracking-wide uppercase">
+                  {stat.title}
+                </p>
+                <p className={`text-2xl sm:text-3xl font-black ${styles.valueText} tracking-tight leading-none`}>
+                  {stat.value}
+                </p>
+                <p className="text-[10px] sm:text-xs text-slate-400 dark:text-slate-500 font-medium mt-1.5 truncate">
+                  {stat.total}
+                </p>
               </div>
-              <div className={`h-1.5 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden`}>
-                <div className={`h-full ${colors.progress} rounded-full transition-all duration-500 group-hover:animate-pulse`} style={{ width: `${stat.progress}%` }} />
+              <div className={`w-10 h-10 sm:w-12 sm:h-12 ml-2 flex-shrink-0 ${styles.iconBg} rounded-xl shadow-lg ${styles.iconShadow} flex items-center justify-center group-hover:scale-110 group-hover:rotate-3 transition-all duration-500`}>
+                <stat.icon className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
               </div>
-            </CardContent>
-          </Card>
+            </div>
+            <div className="h-1.5 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+              <div
+                className={`h-full ${styles.progressBar} rounded-full transition-all duration-700 ease-out`}
+                style={{ width: `${stat.progress}%` }}
+              />
+            </div>
+          </div>
         )
       })}
     </div>
   )
 }
+

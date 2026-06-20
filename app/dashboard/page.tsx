@@ -10,10 +10,8 @@ import { PomodoroTimer } from "@/components/dashboard/pomodoro-timer"
 import { QuickStats } from "@/components/dashboard/quick-stats"
 import { RecentActivity } from "@/components/dashboard/recent-activity"
 import { MotivationalQuote } from "@/components/dashboard/motivational-quote"
-import { Icons } from "@/components/icons"
 import { useData } from "@/components/local-data-provider"
 import { useAuth } from "@/components/auth-provider"
-import { Badge } from "@/components/ui/badge"
 
 const VisualGarden = dynamic(() => import('@/components/garden/visual-garden').then(mod => mod.VisualGarden), {
   ssr: false,
@@ -62,96 +60,83 @@ export default function DashboardPage() {
   }).length
 
   return (
-    <div className="w-full h-full">
+    <div className="w-full h-full ambient-bg">
       {/* Welcome Header Section */}
-      <div className="p-4 sm:p-8 pb-4">
-        <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
-          {/* Welcome Section */}
-          <div className="flex-1 w-full animate-bloom">
-            <div className="mb-4">
-              <h1 className="text-2xl sm:text-4xl lg:text-5xl font-bold bg-gradient-to-r from-emerald-800 to-teal-600 dark:from-emerald-200 dark:to-teal-200 bg-clip-text text-transparent leading-tight flex flex-wrap items-baseline gap-x-2">
-                <span>Good {new Date().getHours() < 12 ? 'Morning' : new Date().getHours() < 17 ? 'Afternoon' : 'Evening'},</span>
-                {userName && (
-                  <span className="text-emerald-600 dark:text-emerald-400 font-extrabold">{userName}</span>
-                )}
-              </h1>
-              <p className="mt-2 text-base text-slate-600 dark:text-slate-300 max-w-xl font-medium">
-                Ready to nurture your ideas today? 🌿
-              </p>
-            </div>
-
-            {/* Quick Stats Badges */}
-            <div className="flex flex-wrap items-center gap-3 mt-4">
-              <Badge className="badge-organic bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border border-emerald-500/30 backdrop-blur-md px-3 py-1.5 shadow-sm shadow-emerald-500/5 transition-all w-fit">
-                <Icons.seedling className="w-4 h-4 mr-2" />
-                <span className="font-semibold">{todayTasks} Tasks Today</span>
-              </Badge>
-              <Badge className="badge-organic bg-amber-500/10 hover:bg-amber-500/20 text-amber-700 dark:text-amber-300 border border-amber-500/30 backdrop-blur-md px-3 py-1.5 shadow-sm shadow-amber-500/5 transition-all w-fit">
-                <Icons.timer className="w-4 h-4 mr-2" />
-                <span className="font-semibold">{todayPomodoros} Sessions</span>
-              </Badge>
-              {stats.streak > 0 && (
-                <Badge className="badge-organic bg-orange-500/10 hover:bg-orange-500/20 text-orange-700 dark:text-orange-300 border border-orange-500/30 backdrop-blur-md px-3 py-1.5 shadow-sm shadow-orange-500/5 transition-all w-fit pulse-subtle">
-                  <span className="font-semibold">🔥 {stats.streak} Day Streak</span>
-                </Badge>
+      <div className="px-4 sm:px-8 pt-6 sm:pt-8 pb-2">
+        <div className="animate-bloom">
+          <div className="flex items-baseline gap-3 flex-wrap">
+            <h1 className="text-2xl sm:text-4xl lg:text-5xl font-bold bg-gradient-to-r from-emerald-800 to-teal-600 dark:from-emerald-200 dark:to-teal-200 bg-clip-text text-transparent leading-tight">
+              Good {new Date().getHours() < 12 ? 'Morning' : new Date().getHours() < 17 ? 'Afternoon' : 'Evening'}
+              {userName && (
+                <span className="text-emerald-600 dark:text-emerald-400">, {userName}</span>
               )}
-            </div>
+            </h1>
           </div>
-
-          {/* Time Widget (Glass) */}
-          <div className="glass-light bg-white/40 dark:bg-slate-900/40 backdrop-blur-xl px-6 py-4 rounded-3xl shadow-xl shadow-slate-200/50 dark:shadow-slate-900/50 border border-white/60 dark:border-slate-700/50 w-full lg:w-auto hover:scale-105 transition-transform duration-300 group">
-            <div className="flex items-center space-x-4">
-              <div className="w-12 h-12 bg-gradient-to-br from-amber-300 to-orange-400 rounded-2xl flex items-center justify-center shadow-lg shadow-amber-500/30 group-hover:shadow-amber-500/50 transition-shadow animate-pulse-slow rotate-3 group-hover:rotate-6">
-                <Icons.sun className="w-6 h-6 text-white" />
-              </div>
-              <div className="min-w-0">
-                <p className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-0.5">
-                  {currentDate.toLocaleDateString("en-US", { weekday: "long", month: "short", day: "numeric" })}
-                </p>
-                <p className="text-2xl font-black text-slate-800 dark:text-slate-100 tracking-tight">
-                  {currentDate.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })}
-                </p>
-              </div>
-            </div>
+          <div className="mt-2 flex items-center gap-3 flex-wrap">
+            <p className="text-sm sm:text-base text-slate-500 dark:text-slate-400 font-medium">
+              Ready to nurture your ideas today? 🌿
+            </p>
+            <span className="text-xs text-slate-400 dark:text-slate-500 font-medium tracking-wide">
+              {currentDate.toLocaleDateString("en-US", { weekday: "long", month: "short", day: "numeric" })}
+              {" · "}
+              {currentDate.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })}
+            </span>
           </div>
         </div>
       </div>
 
       {/* Main Content */}
-      <div className="px-4 sm:px-6 lg:px-8 py-4 sm:py-6 space-y-4 sm:space-y-6">
+      <div className="px-4 sm:px-6 lg:px-8 py-4 sm:py-6 space-y-6 sm:space-y-10">
         {/* Motivational Quote */}
         <div className="animate-stagger-1">
           <MotivationalQuote />
         </div>
 
-        {/* Quick Stats */}
-        <div className="animate-stagger-2">
+        {/* Section: Your Progress */}
+        <div className="space-y-4 animate-stagger-2">
+          <div className="section-label">
+            <h2 className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-[0.15em]">
+              📊 Your Progress
+            </h2>
+          </div>
           <QuickStats />
         </div>
 
-        {/* Main Content Grid */}
-        <div className="grid grid-cols-1 xl:grid-cols-3 gap-4 sm:gap-6">
-          {/* Top Row: Visual Garden (New) */}
-          <div className="xl:col-span-3 min-w-0 animate-stagger-3">
-            <VisualGarden onAddPlant={() => router.push("/dashboard/tasks")} />
+        {/* Section: Your Garden */}
+        <div className="space-y-4 animate-stagger-3">
+          <div className="section-label">
+            <h2 className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-[0.15em]">
+              🌳 Your Garden
+            </h2>
           </div>
+          <VisualGarden onAddPlant={() => router.push("/dashboard/tasks")} />
+        </div>
 
-          {/* Left Column */}
-          <div className="xl:col-span-2 space-y-4 sm:space-y-6 min-w-0 animate-stagger-4">
-            <TaskCalendar />
-            <RecentActivity />
+        {/* Section: Today's Plan */}
+        <div className="space-y-4 animate-stagger-4">
+          <div className="section-label">
+            <h2 className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-[0.15em]">
+              📋 Today&apos;s Plan
+            </h2>
           </div>
+          <div className="grid grid-cols-1 xl:grid-cols-3 gap-4 sm:gap-6">
+            {/* Left Column */}
+            <div className="xl:col-span-2 space-y-4 sm:space-y-6 min-w-0">
+              <TaskCalendar />
+              <RecentActivity />
+            </div>
 
-          {/* Right Column */}
-          <div className="space-y-4 sm:space-y-6 min-w-0 animate-stagger-4">
-            <PomodoroTimer />
-            <TaskList />
+            {/* Right Column */}
+            <div className="space-y-4 sm:space-y-6 min-w-0">
+              <PomodoroTimer />
+              <TaskList />
+            </div>
           </div>
         </div>
       </div>
 
       {/* Quick Action Menu (raised on mobile to clear bottom nav) */}
-      <div className="fixed bottom-20 right-4 lg:bottom-6 lg:right-6 z-50 quick-actions-menu">
+      <div className="fixed bottom-20 right-4 lg:bottom-6 lg:right-6 z-50 quick-actions-menu group">
         <div className="relative">
           {/* Main Toggle Button */}
           <button

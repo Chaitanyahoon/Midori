@@ -109,7 +109,7 @@ export function TopNav() {
         addNotification(notif)
       }
     })
-  }, [tasks.length, todayPomodoros, userName, userTone])
+  }, [tasks, todayPomodoros, userName, userTone])
 
   const unreadCount = notifications.filter(n => !n.isRead).length
 

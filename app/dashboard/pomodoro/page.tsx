@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Icons } from "@/components/icons"
 import { useData } from "@/components/local-data-provider"
 import { FocusMusicPlayer } from "@/components/dashboard/focus-music-player"
-import { SakuraParticles } from "@/components/dashboard/sakura-particles"
+import { EnvironmentalParticles } from "@/components/dashboard/environmental-particles"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
@@ -619,7 +619,7 @@ export default function PomodoroPage() {
       {isZenMode && (
         <div className="fixed inset-0 z-50 bg-gradient-to-b from-slate-950 via-emerald-950 to-slate-950 flex flex-col items-center justify-center p-4 animate-in fade-in duration-500">
           <div className="absolute inset-0 washi-overlay pointer-events-none opacity-20" />
-          <SakuraParticles count={15} opacity={0.25} className="absolute inset-0 pointer-events-none" />
+          <EnvironmentalParticles count={15} opacity={0.25} className="absolute inset-0 pointer-events-none" />
 
           {/* Animated Background Elements */}
           <div className="absolute inset-0 overflow-hidden pointer-events-none">

@@ -36,19 +36,15 @@ export function SmartScheduleButton() {
         setIsLoading(true)
         setSuggestions([])
         setAiAnalysis("")
-
         try {
-            // Collect context
             const pendingTasks = tasks.filter(t => !t.completed)
             const overdueTasks = tasks.filter(t => !t.completed && t.dueDate && t.dueDate < new Date().toISOString().split('T')[0])
-
             const context = {
                 today: new Date().toISOString().split("T")[0],
-                pendingTasks: pendingTasks.map(t => ({ title: t.title, priority: t.priority, id: t.id })),
+                pendingTasks: pendingTasks.map(t => ({ title: t.title, priority: t.priority, id: t.id, category: t.category })),
                 overdueTasks: overdueTasks.length,
                 stats: stats
             }
-
             const response = await fetch("/api/growth-ai", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
@@ -116,10 +112,11 @@ export function SmartScheduleButton() {
                 <Button
                     variant="outline"
                     size="sm"
-                    className="hidden sm:flex items-center gap-2 bg-gradient-to-r from-violet-500/10 to-fuchsia-500/10 border-violet-200 dark:border-violet-800 hover:bg-violet-50 dark:hover:bg-violet-900/20 text-violet-700 dark:text-violet-300"
+                    className="flex items-center gap-1.5 sm:gap-2 bg-gradient-to-r from-violet-500/10 to-fuchsia-500/10 border-violet-200 dark:border-violet-800 hover:bg-violet-50 dark:hover:bg-violet-900/20 text-violet-700 dark:text-violet-300 rounded-xl px-2.5 sm:px-3"
+                    title="Smart Schedule"
                 >
                     <Icons.stars className="w-4 h-4 text-violet-500" />
-                    Smart Schedule
+                    <span className="hidden sm:inline text-xs font-semibold">Smart Schedule</span>
                 </Button>
             </DialogTrigger>
             <DialogContent className="sm:max-w-[600px] max-h-[85vh] overflow-y-auto">

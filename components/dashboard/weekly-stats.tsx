@@ -67,13 +67,28 @@ export function WeeklyStats() {
     return weekData
   }
 
-  const weeklyData = getWeeklyData()
+  const isDemoData = tasks.length === 0 && pomodoros.length === 0
+
+  const DEMO_WEEKLY_DATA = [
+    { day: "Mon", date: "", tasks: 2, pomodoros: 3, focusTime: 1.5 },
+    { day: "Tue", date: "", tasks: 4, pomodoros: 5, focusTime: 2.5 },
+    { day: "Wed", date: "", tasks: 1, pomodoros: 2, focusTime: 1.0 },
+    { day: "Thu", date: "", tasks: 5, pomodoros: 6, focusTime: 3.2 },
+    { day: "Fri", date: "", tasks: 3, pomodoros: 4, focusTime: 2.0 },
+    { day: "Sat", date: "", tasks: 6, pomodoros: 8, focusTime: 4.5 },
+    { day: "Sun", date: "", tasks: 2, pomodoros: 3, focusTime: 1.8 },
+  ]
+
+  const weeklyData = isDemoData ? DEMO_WEEKLY_DATA : getWeeklyData()
   const totalPomodoros = weeklyData.reduce((sum, day) => sum + day.pomodoros, 0)
   const totalTasks = weeklyData.reduce((sum, day) => sum + day.tasks, 0)
   const totalHours = weeklyData.reduce((sum, day) => sum + day.focusTime, 0)
 
   // Calculate real percentage changes from previous week
   const getPreviousWeekData = () => {
+    if (isDemoData) {
+      return { prevWeekTasks: 10, prevWeekPomodoros: 15, prevWeekHours: 7.0 }
+    }
     const today = new Date()
     let prevWeekTasks = 0
     let prevWeekPomodoros = 0
@@ -117,12 +132,14 @@ export function WeeklyStats() {
   }
 
   // Calculate streak (consecutive days with at least 1 completed task)
-  let streak = 0
-  for (let i = weeklyData.length - 1; i >= 0; i--) {
-    if (weeklyData[i].tasks > 0) {
-      streak++
-    } else {
-      break
+  let streak = isDemoData ? 5 : 0
+  if (!isDemoData) {
+    for (let i = weeklyData.length - 1; i >= 0; i--) {
+      if (weeklyData[i].tasks > 0) {
+        streak++
+      } else {
+        break
+      }
     }
   }
 

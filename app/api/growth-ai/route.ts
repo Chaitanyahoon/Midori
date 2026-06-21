@@ -82,7 +82,7 @@ export async function POST(request: Request) {
 
     if (intent === "schedule") {
       const pendingTasks = context.pendingTasks || [];
-      const tasksStr = pendingTasks.map((t: any) => `- ${t.title} (Priority: ${t.priority}, Category: ${t.category})`).join('\n');
+      const tasksStr = pendingTasks.map((t: any) => `- ${t.title} (ID: ${t.id}, Priority: ${t.priority}, Category: ${t.category})`).join('\n');
 
       const userName = context.userName || "the user";
       const userTone = context.userTone || "balanced";

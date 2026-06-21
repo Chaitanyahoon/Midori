@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Icons } from "@/components/icons"
 import { useData } from "@/components/local-data-provider"
-import { FocusMusicPlayer } from "@/components/dashboard/focus-music-player"
+import { FocusMusicPlayer, MUSIC_OPTIONS } from "@/components/dashboard/focus-music-player"
 import { EnvironmentalParticles } from "@/components/dashboard/environmental-particles"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -17,6 +17,10 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Textarea } from "@/components/ui/textarea"
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
 import { usePomodoro } from "@/lib/hooks/usePomodoro"
+import { useMusicStore, MusicTrack } from "@/lib/store"
+import { Slider } from "@/components/ui/slider"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+
 
 export default function PomodoroPage() {
   const {
@@ -49,10 +53,72 @@ export default function PomodoroPage() {
     formatTime,
   } = usePomodoro()
 
-  const { tasks, pomodoros } = useData()
+  const { tasks, pomodoros, updateTask } = useData()
 
   const [isZenMode, setIsZenMode] = useState(false)
   const [isHistoryOpen, setIsHistoryOpen] = useState(false)
+
+  // Zen Mode panels & features
+  const [isZenTasksOpen, setIsZenTasksOpen] = useState(false)
+  const [isZenMusicOpen, setIsZenMusicOpen] = useState(false)
+  const [isBreathingPacerActive, setIsBreathingPacerActive] = useState(false)
+  
+  const [breathingPhase, setBreathingPhase] = useState<"inhale" | "hold1" | "exhale" | "hold2">("inhale")
+  const [breathingSecondsLeft, setBreathingSecondsLeft] = useState(4)
+
+  useEffect(() => {
+    if (!isZenMode || !isBreathingPacerActive) return
+
+    const interval = setInterval(() => {
+      setBreathingSecondsLeft((prev) => {
+        if (prev <= 1) {
+          setBreathingPhase((phase) => {
+            if (phase === "inhale") return "hold1"
+            if (phase === "hold1") return "exhale"
+            if (phase === "exhale") return "hold2"
+            return "inhale"
+          })
+          return 4
+        }
+        return prev - 1
+      })
+    }, 1000)
+
+    return () => clearInterval(interval)
+  }, [isZenMode, isBreathingPacerActive])
+
+  const currentTaskObj = useMemo(() => {
+    return tasks.find(t => t.id === selectedTask)
+  }, [tasks, selectedTask])
+
+  const [newSubtaskTitle, setNewSubtaskTitle] = useState("")
+
+  const handleToggleSubtask = async (subtaskId: string) => {
+    if (!currentTaskObj) return
+    const nextSubtasks = currentTaskObj.subtasks?.map(s => 
+      s.id === subtaskId ? { ...s, completed: !s.completed } : s
+    ) || []
+    await updateTask(currentTaskObj.id, { subtasks: nextSubtasks })
+  }
+
+  const handleAddSubtask = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!currentTaskObj || !newSubtaskTitle.trim()) return
+    const newSub = {
+      id: Math.random().toString(36).substring(7),
+      title: newSubtaskTitle.trim(),
+      completed: false
+    }
+    const nextSubtasks = [...(currentTaskObj.subtasks || []), newSub]
+    await updateTask(currentTaskObj.id, { subtasks: nextSubtasks })
+    setNewSubtaskTitle("")
+  }
+
+  const handleDeleteSubtask = async (subtaskId: string) => {
+    if (!currentTaskObj) return
+    const nextSubtasks = currentTaskObj.subtasks?.filter(s => s.id !== subtaskId) || []
+    await updateTask(currentTaskObj.id, { subtasks: nextSubtasks })
+  }
 
   // Toggle Zen Mode on/off
   const toggleZenMode = () => {
@@ -617,7 +683,7 @@ export default function PomodoroPage() {
       </div>
       {/* Zen Mode Overlay */}
       {isZenMode && (
-        <div className="fixed inset-0 z-50 bg-gradient-to-b from-slate-950 via-emerald-950 to-slate-950 flex flex-col items-center justify-center p-4 animate-in fade-in duration-500">
+        <div className="fixed inset-0 z-50 bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 flex flex-col justify-between p-6 overflow-hidden animate-in fade-in duration-500">
           <div className="absolute inset-0 washi-overlay pointer-events-none opacity-20" />
           <EnvironmentalParticles count={15} opacity={0.25} className="absolute inset-0 pointer-events-none" />
 
@@ -627,73 +693,510 @@ export default function PomodoroPage() {
             <div className="absolute bottom-[20%] right-[20%] w-[600px] h-[600px] bg-teal-500/5 dark:bg-teal-400/5 rounded-full blur-[150px] animate-pulse-slow delay-1000" />
           </div>
 
-          <Button
-            onClick={toggleZenMode}
-            variant="ghost"
-            className="absolute top-6 right-6 text-white/40 hover:text-white hover:bg-white/5 transition-colors"
-          >
-            <Icons.close className="w-6 h-6 mr-2" />
-            Exit Zen Mode
-          </Button>
+          {/* Persistent FocusMusicPlayer target rendered offscreen inside Zen Mode */}
+          <FocusMusicPlayer isActive={isActive} isBreak={isBreak} isZenMode={true} />
 
-          <div className="relative z-10 flex flex-col items-center gap-16 max-w-4xl w-full">
+          {/* 1. TOP DOCK (Floating row) */}
+          <div className="relative z-20 flex items-center justify-between w-full px-4 py-2 bg-white/5 dark:bg-slate-900/30 backdrop-blur-md rounded-2xl border border-white/5 shadow-lg">
+            <div className="flex items-center gap-2">
+              <Button
+                onClick={() => setIsZenTasksOpen(!isZenTasksOpen)}
+                variant="ghost"
+                className={`text-sm rounded-xl px-4 py-2 gap-2 transition-all ${isZenTasksOpen ? "bg-white/10 text-emerald-400" : "text-white/60 hover:text-white"}`}
+              >
+                <Icons.list className="w-4 h-4" />
+                <span>Checklist</span>
+              </Button>
 
-            {/* Main Timer Display */}
-            <div className="relative group cursor-default">
-              {/* Breathing Glow */}
-              <div className={`absolute inset-0 rounded-full blur-[100px] transition-all duration-1000 ${isActive ? "bg-emerald-500/20 scale-125 opacity-100" : "bg-blue-500/10 scale-100 opacity-50"
-                }`} />
+              <Button
+                onClick={() => setIsZenMusicOpen(!isZenMusicOpen)}
+                variant="ghost"
+                className={`text-sm rounded-xl px-4 py-2 gap-2 transition-all ${isZenMusicOpen ? "bg-white/10 text-emerald-400" : "text-white/60 hover:text-white"}`}
+              >
+                <Icons.music className="w-4 h-4" />
+                <span>Audio Mixer</span>
+              </Button>
 
-              <div className="relative flex flex-col items-center justify-center">
-                <span className={`text-7xl sm:text-8xl md:text-[8rem] lg:text-[10rem] xl:text-[12rem] font-thin text-white/95 tabular-nums tracking-tighter leading-none transition-all duration-500 ${isActive ? (isBreak ? "drop-shadow-[0_0_40px_rgba(16,185,129,0.3)] scale-105" : "drop-shadow-[0_0_40px_rgba(245,158,11,0.3)] scale-105") : "drop-shadow-[0_0_15px_rgba(255,255,255,0.15)] scale-100"}`}>
-                  {formatTime(timeLeft)}
-                </span>
-                <p className="text-sm sm:text-lg md:text-xl text-emerald-400/60 font-medium tracking-[0.2em] uppercase mt-4 animate-pulse">
-                  {isBreak ? "Rest Phase" : isActive ? "Focusing..." : "Ready"}
-                </p>
-              </div>
+              <Button
+                onClick={() => setIsBreathingPacerActive(!isBreathingPacerActive)}
+                variant="ghost"
+                className={`text-sm rounded-xl px-4 py-2 gap-2 transition-all ${isBreathingPacerActive ? "bg-white/10 text-emerald-400" : "text-white/60 hover:text-white"}`}
+              >
+                <Icons.activity className="w-4 h-4" />
+                <span>Breathe Guide</span>
+              </Button>
             </div>
 
-            {/* Minimal Timer Controls */}
-            <div className="flex items-center gap-8 z-10">
-              {!isActive ? (
-                <Button
-                  onClick={handleStart}
-                  variant="ghost"
-                  className="text-white/80 hover:text-white hover:bg-emerald-500/10 hover:text-emerald-400 rounded-full w-20 h-20 p-0 flex items-center justify-center border border-white/10 hover:border-emerald-500/40 hover:scale-105 active:scale-95 transition-all duration-300 shadow-md hover:shadow-emerald-500/10"
-                >
-                  <Icons.play className="w-8 h-8 ml-1 text-emerald-400" />
-                </Button>
-              ) : (
-                <Button
-                  onClick={handlePause}
-                  variant="ghost"
-                  className="text-white/80 hover:text-white hover:bg-amber-500/10 hover:text-amber-400 rounded-full w-20 h-20 p-0 flex items-center justify-center border border-white/10 hover:border-amber-500/40 hover:scale-105 active:scale-95 transition-all duration-300 shadow-md hover:shadow-amber-500/10"
-                >
-                  <Icons.pause className="w-8 h-8 text-amber-400" />
-                </Button>
+            <div className="flex items-center gap-4">
+              {/* Active Task Name */}
+              {selectedTask !== "general" && currentTaskObj && (
+                <div className="hidden md:flex items-center gap-2 bg-emerald-500/10 px-3.5 py-1.5 rounded-xl border border-emerald-500/20 text-emerald-400 text-xs font-semibold uppercase tracking-wider">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping" />
+                  Focusing on: {currentTaskObj.title}
+                </div>
               )}
 
               <Button
-                onClick={handleReset}
+                onClick={toggleZenMode}
                 variant="ghost"
-                className="text-white/40 hover:text-rose-400 hover:bg-rose-500/10 rounded-full w-14 h-14 p-0 border border-transparent hover:border-rose-500/20 hover:scale-105 active:scale-95 transition-all duration-300"
-                title="Reset Session"
+                className="text-white/50 hover:text-rose-400 hover:bg-rose-500/10 rounded-xl transition-all gap-2"
               >
-                <Icons.reset className="w-5 h-5" />
+                <Icons.close className="w-5 h-5" />
+                Exit Zen
               </Button>
+            </div>
+          </div>
 
-              <Button
-                onClick={handleSkip}
-                variant="ghost"
-                className="text-white/40 hover:text-emerald-400 hover:bg-emerald-500/10 rounded-full w-14 h-14 p-0 border border-transparent hover:border-emerald-500/20 hover:scale-105 active:scale-95 transition-all duration-300"
-                title="Skip Session"
-              >
-                <Icons.skip className="w-5 h-5" />
-              </Button>
+          {/* 2. MAIN LAYOUT (Checklist | Center Timer | Audio Control) */}
+          <div className="flex-1 w-full flex items-center justify-between relative mt-4 mb-4 gap-6">
+            
+            {/* LEFT DRAWER (Tasks & Checklists) */}
+            <div className={`relative z-20 h-full w-80 bg-slate-950/70 border border-white/5 backdrop-blur-2xl rounded-3xl p-5 flex flex-col justify-between transition-all duration-500 transform ${isZenTasksOpen ? "translate-x-0 opacity-100" : "-translate-x-[110%] opacity-0 pointer-events-none absolute"}`}>
+              <div className="flex flex-col min-h-0 flex-1">
+                <div className="flex items-center justify-between pb-3 border-b border-white/5 mb-4">
+                  <h3 className="text-sm font-bold text-white uppercase tracking-wider flex items-center gap-2">
+                    <Icons.list className="text-emerald-400 w-4 h-4" />
+                    Task Workspace
+                  </h3>
+                  <Badge variant="outline" className="text-white/40 border-white/10">Checklist</Badge>
+                </div>
+
+                <div className="mb-4">
+                  <label className="text-[10px] font-bold uppercase tracking-wider text-white/40 block mb-2">Active Focus Task</label>
+                  <Select value={selectedTask} onValueChange={setSelectedTask}>
+                    <SelectTrigger className="w-full bg-white/5 border-white/10 h-10 text-white focus:ring-emerald-500 focus:border-emerald-500 rounded-xl">
+                      <SelectValue placeholder="Select a task or focus generally" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="general">General Focus Session</SelectItem>
+                      {pendingTasks.map((task) => (
+                        <SelectItem key={task.id} value={task.id}>
+                          {task.title}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {selectedTask !== "general" && currentTaskObj ? (
+                  <div className="flex-1 flex flex-col min-h-0">
+                    <div className="mb-3.5">
+                      <div className="flex justify-between items-center text-xs text-white/70 mb-1.5">
+                        <span className="font-semibold truncate max-w-[150px]">{currentTaskObj.title}</span>
+                        <span className="font-mono text-emerald-400">
+                          {Math.round(((currentTaskObj.subtasks?.filter(s => s.completed).length || 0) / (currentTaskObj.subtasks?.length || 1)) * 100)}%
+                        </span>
+                      </div>
+                      <Progress
+                        value={((currentTaskObj.subtasks?.filter(s => s.completed).length || 0) / (currentTaskObj.subtasks?.length || 1)) * 100}
+                        className="h-2 bg-white/5"
+                      />
+                    </div>
+
+                    <label className="text-[10px] font-bold uppercase tracking-wider text-white/40 block mb-2">Sub-task Checklist</label>
+                    <div className="flex-1 overflow-y-auto scrollbar-hide space-y-2 pr-1 min-h-[150px]">
+                      {(!currentTaskObj.subtasks || currentTaskObj.subtasks.length === 0) ? (
+                        <div className="text-center py-8 text-xs text-white/30 italic">No sub-tasks yet. Add one below!</div>
+                      ) : (
+                        currentTaskObj.subtasks.map((sub) => (
+                          <div
+                            key={sub.id}
+                            className="group flex items-center justify-between p-2.5 bg-white/5 hover:bg-white/10 rounded-xl border border-white/5 transition-all"
+                          >
+                            <button
+                              onClick={() => handleToggleSubtask(sub.id)}
+                              className="flex items-center gap-2.5 flex-1 min-w-0 text-left"
+                            >
+                              <div className={`w-4 h-4 rounded border flex items-center justify-center transition-all ${sub.completed ? "bg-emerald-500 border-emerald-500 text-white" : "border-white/20 bg-transparent"}`}>
+                                {sub.completed && <span className="text-[10px] font-bold">✓</span>}
+                              </div>
+                              <span className={`text-xs font-semibold truncate ${sub.completed ? "line-through text-white/30" : "text-white/80"}`}>
+                                {sub.title}
+                              </span>
+                            </button>
+                            <button
+                              onClick={() => handleDeleteSubtask(sub.id)}
+                              className="text-white/30 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity p-0.5"
+                            >
+                              <Icons.trash className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        ))
+                      )}
+                    </div>
+
+                    <form onSubmit={handleAddSubtask} className="mt-4 pt-3 border-t border-white/5">
+                      <div className="flex gap-2">
+                        <Input
+                          placeholder="Quick add sub-task..."
+                          value={newSubtaskTitle}
+                          onChange={(e) => setNewSubtaskTitle(e.target.value)}
+                          className="h-9 bg-white/5 border-white/10 text-xs text-white placeholder-white/20 focus-visible:ring-emerald-500 rounded-xl"
+                        />
+                        <Button type="submit" size="sm" className="bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl h-9 px-3">
+                          <Icons.plus className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    </form>
+                  </div>
+                ) : (
+                  <div className="flex-1 flex items-center justify-center text-center p-6 border border-dashed border-white/10 rounded-2xl text-white/30 text-xs italic">
+                    Select a task above to manage sub-tasks inside Zen Mode.
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* CENTER PANEL (Timer, Breathing guide) */}
+            <div className="flex-1 flex flex-col items-center justify-center relative h-full">
+              
+              {/* Dynamic Breathing Circle behind/under the timer */}
+              {isBreathingPacerActive ? (
+                <div className="relative flex flex-col items-center justify-center w-80 h-80 sm:w-96 sm:h-96">
+                  {/* Expanding and contracting breathing ring */}
+                  <div
+                    className={`absolute inset-0 rounded-full border border-emerald-500/20 bg-emerald-500/5 transition-all duration-1000 ease-in-out transform ${
+                      breathingPhase === "inhale" || breathingPhase === "hold1" ? "scale-110 blur-sm bg-emerald-500/10 shadow-[0_0_50px_rgba(16,185,129,0.25)]" : "scale-90 blur-none bg-emerald-500/5"
+                    }`}
+                  />
+                  <div
+                    className={`absolute inset-16 sm:inset-20 rounded-full bg-slate-900 border border-white/5 flex flex-col items-center justify-center shadow-2xl transition-all duration-1000 ease-in-out transform ${
+                      breathingPhase === "inhale" || breathingPhase === "hold1" ? "scale-105" : "scale-95"
+                    }`}
+                  >
+                    <span className="text-[10px] font-bold uppercase tracking-widest text-emerald-400/60 mb-1">Breathing Guide</span>
+                    <span className="text-xl sm:text-2xl font-black text-white tracking-wide uppercase transition-all duration-300">
+                      {breathingPhase === "inhale" && "Breathe In"}
+                      {breathingPhase === "hold1" && "Hold"}
+                      {breathingPhase === "exhale" && "Breathe Out"}
+                      {breathingPhase === "hold2" && "Hold"}
+                    </span>
+                    <span className="text-3xl font-bold font-mono text-emerald-400 mt-2">{breathingSecondsLeft}s</span>
+                  </div>
+                </div>
+              ) : (
+                /* Standard circular progress timer display */
+                <div className="relative w-80 h-80 sm:w-96 sm:h-96 flex items-center justify-center">
+                  <div className={`absolute inset-0 rounded-full blur-3xl opacity-20 transition-all duration-1000 ${isActive ? (isBreak ? "bg-emerald-400" : "bg-blue-500") : "bg-white/10"}`} />
+                  
+                  <div className="absolute inset-8 sm:inset-10 bg-slate-950/80 backdrop-blur-xl border border-white/10 rounded-full flex flex-col items-center justify-center shadow-2xl">
+                    <span className="text-[10px] font-bold tracking-[0.2em] text-white/40 uppercase mb-2">
+                      {isBreak ? "Rest Phase" : isActive ? "Concentrating" : "Timer Paused"}
+                    </span>
+                    <span className="text-5xl sm:text-7xl font-thin text-white tracking-tighter tabular-nums leading-none">
+                      {formatTime(timeLeft)}
+                    </span>
+                    <span className="text-xs text-white/30 font-medium mt-3">{Math.round(progress)}% complete</span>
+                  </div>
+
+                  <svg className="absolute inset-0 w-full h-full transform -rotate-90" viewBox="0 0 100 100">
+                    <circle cx="50" cy="50" r="46" stroke="rgba(255,255,255,0.03)" strokeWidth="2.5" fill="none" />
+                    <circle
+                      cx="50"
+                      cy="50"
+                      r="46"
+                      stroke="currentColor"
+                      strokeWidth="2.5"
+                      fill="none"
+                      strokeDasharray={`${2 * Math.PI * 46}`}
+                      strokeDashoffset={`${2 * Math.PI * 46 * (1 - progress / 100)}`}
+                      className={`transition-all duration-500 ${isBreak ? "text-emerald-500" : "text-blue-500"}`}
+                      strokeLinecap="round"
+                    />
+                  </svg>
+                </div>
+              )}
+
+              {/* Central Timer controls */}
+              <div className="flex items-center gap-6 mt-8 relative z-20">
+                {!isActive ? (
+                  <Button
+                    onClick={handleStart}
+                    variant="ghost"
+                    className="text-white hover:text-emerald-400 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/20 rounded-full w-14 h-14 p-0 flex items-center justify-center hover:scale-105 active:scale-95 transition-all shadow-lg"
+                    title="Start Timer"
+                  >
+                    <Icons.play className="w-6 h-6 ml-0.5 text-emerald-400" />
+                  </Button>
+                ) : (
+                  <Button
+                    onClick={handlePause}
+                    variant="ghost"
+                    className="text-white hover:text-amber-400 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/20 rounded-full w-14 h-14 p-0 flex items-center justify-center hover:scale-105 active:scale-95 transition-all shadow-lg"
+                    title="Pause Timer"
+                  >
+                    <Icons.pause className="w-6 h-6 text-amber-400" />
+                  </Button>
+                )}
+
+                <Button
+                  onClick={handleReset}
+                  variant="ghost"
+                  className="text-white/50 hover:text-white hover:bg-white/5 border border-white/10 rounded-full w-12 h-12 p-0 flex items-center justify-center hover:scale-105 active:scale-95 transition-all"
+                  title="Reset Timer"
+                >
+                  <Icons.reset className="w-4 h-4" />
+                </Button>
+
+                <Button
+                  onClick={handleSkip}
+                  variant="ghost"
+                  className="text-white/50 hover:text-emerald-400 hover:bg-emerald-500/10 border border-white/10 rounded-full w-12 h-12 p-0 flex items-center justify-center hover:scale-105 active:scale-95 transition-all"
+                  title="Skip Phase"
+                >
+                  <Icons.skip className="w-4 h-4" />
+                </Button>
+              </div>
+            </div>
+
+            {/* RIGHT DRAWER (Music and Ambient control panel) */}
+            <div className={`relative z-20 h-full w-96 bg-slate-950/70 border border-white/5 backdrop-blur-2xl rounded-3xl p-5 flex flex-col justify-between transition-all duration-500 transform ${isZenMusicOpen ? "translate-x-0 opacity-100" : "translate-x-[110%] opacity-0 pointer-events-none absolute"}`}>
+              {(() => {
+                const {
+                  isPlaying: musicPlaying,
+                  setIsPlaying: setMusicPlaying,
+                  currentTrack: activeMusic,
+                  setCurrentTrack: setActiveMusic,
+                  volume: musicVol,
+                  setVolume: setMusicVol,
+                  activeCategory: musicCat,
+                  setActiveCategory: setMusicCat,
+                  recentlyPlayed: recents,
+                  ambientTrack: activeAmbient,
+                  setAmbientTrack: setActiveAmbient,
+                  isAmbientPlaying: ambientPlaying,
+                  setIsAmbientPlaying: setAmbientPlaying,
+                  ambientVolume: ambientVol,
+                  setAmbientVolume: setAmbientVol,
+                } = useMusicStore()
+
+                const handleToggleMusicPlay = () => {
+                  if (activeMusic) {
+                    // Trigger the playback change using document events or direct store setting
+                    // But wait, the actual Audio or YouTube player element resides inside FocusMusicPlayer
+                    // and listens to store states! So just toggling the state 'isPlaying' in the store
+                    // will automatically trigger the useEffect inside FocusMusicPlayer to play or pause!
+                    // This is a direct benefit of the unified Zustand store state sync!
+                    setMusicPlaying(!musicPlaying)
+                  } else {
+                    // Default to first track
+                    const track = MUSIC_OPTIONS.find(t => t.category === "focus")
+                    if (track) {
+                      setActiveMusic(track)
+                      setMusicPlaying(true)
+                    }
+                  }
+                }
+
+                const handleToggleAmbient = (track: MusicTrack) => {
+                  if (activeAmbient?.name === track.name && ambientPlaying) {
+                    setAmbientPlaying(false)
+                    setActiveAmbient(null)
+                  } else {
+                    setActiveAmbient(track)
+                    setAmbientPlaying(true)
+                  }
+                }
+
+                const handleSelectFocusTrack = (track: MusicTrack) => {
+                  setActiveMusic(track)
+                  setMusicPlaying(true)
+                }
+
+                const handleStopFocusMusic = () => {
+                  setMusicPlaying(false)
+                  setActiveMusic(null)
+                }
+
+                return (
+                  <div className="flex flex-col min-h-0 flex-1">
+                    <div className="flex items-center justify-between pb-3 border-b border-white/5 mb-4">
+                      <h3 className="text-sm font-bold text-white uppercase tracking-wider flex items-center gap-2">
+                        <Icons.music className="text-emerald-400 w-4 h-4" />
+                        Audio Sanctuary
+                      </h3>
+                      <Badge variant="outline" className="text-white/40 border-white/10">Mixer</Badge>
+                    </div>
+
+                    <Tabs defaultValue="tracks" className="flex-1 flex flex-col min-h-0">
+                      <TabsList className="grid grid-cols-2 bg-white/5 border border-white/5 rounded-xl p-1 mb-4 h-9">
+                        <TabsTrigger value="tracks" className="text-xs text-white/50 data-[state=active]:bg-white/10 data-[state=active]:text-white rounded-lg h-7 font-semibold">🎵 Focus Music</TabsTrigger>
+                        <TabsTrigger value="ambient" className="text-xs text-white/50 data-[state=active]:bg-white/10 data-[state=active]:text-white rounded-lg h-7 font-semibold">🍃 Soundscapes</TabsTrigger>
+                      </TabsList>
+
+                      <TabsContent value="tracks" className="flex-1 flex flex-col min-h-0 focus-visible:outline-none">
+                        {/* Music Category filter */}
+                        <div className="flex gap-1.5 overflow-x-auto scrollbar-hide pb-2 mb-3 border-b border-white/5">
+                          {(["focus", "zen", "relax", "energy", "instrumental"] as const).map((cat) => {
+                            const active = musicCat === cat
+                            return (
+                              <button
+                                key={cat}
+                                onClick={() => setMusicCat(cat)}
+                                className={`text-[10px] font-bold uppercase tracking-wider px-2.5 py-1.5 rounded-lg border transition-all ${
+                                  active ? "bg-emerald-500/20 text-emerald-400 border-emerald-500/30" : "bg-transparent text-white/40 border-white/5 hover:text-white"
+                                }`}
+                              >
+                                {cat}
+                              </button>
+                            )
+                          })}
+                        </div>
+
+                        {/* Tracks list */}
+                        <div className="flex-1 overflow-y-auto scrollbar-hide space-y-2 pr-1 min-h-[140px]">
+                          {MUSIC_OPTIONS.filter(m => m.category === musicCat).map((track) => {
+                            const active = activeMusic?.name === track.name && musicPlaying
+                            return (
+                              <button
+                                key={track.name}
+                                onClick={() => handleSelectFocusTrack(track)}
+                                className={`w-full flex items-center gap-3 p-2.5 rounded-xl border transition-all text-left group ${
+                                  active
+                                    ? "bg-emerald-500/20 border-emerald-500/30 text-emerald-400"
+                                    : "bg-white/5 border-white/5 text-white hover:bg-white/10"
+                                }`}
+                              >
+                                <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-lg transition-colors ${active ? "bg-emerald-500/25" : "bg-white/5"}`}>
+                                  {track.icon || "🎵"}
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <div className="text-xs font-semibold truncate">{track.name}</div>
+                                  <div className="text-[10px] text-white/30 truncate mt-0.5">{track.description}</div>
+                                </div>
+                              </button>
+                            )
+                          })}
+                        </div>
+
+                        {/* Audio Controls */}
+                        <div className="mt-4 pt-3.5 border-t border-white/5 bg-slate-900/40 p-3.5 rounded-2xl border border-white/5">
+                          {activeMusic ? (
+                            <div className="space-y-3">
+                              <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-2.5 min-w-0">
+                                  <span className="text-lg animate-pulse">{activeMusic.icon || "🎧"}</span>
+                                  <div className="min-w-0">
+                                    <div className="text-xs font-bold text-white truncate max-w-[120px]">{activeMusic.name}</div>
+                                    <div className="text-[9px] text-white/40 uppercase tracking-widest mt-0.5">{activeMusic.category}</div>
+                                  </div>
+                                </div>
+
+                                <div className="flex items-center gap-2">
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    onClick={handleToggleMusicPlay}
+                                    className="w-8 h-8 rounded-full bg-white/5 text-white hover:bg-white/10"
+                                  >
+                                    {musicPlaying ? <Icons.pause className="w-4 h-4" /> : <Icons.play className="w-4 h-4 ml-0.5" />}
+                                  </Button>
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    onClick={handleStopFocusMusic}
+                                    className="w-8 h-8 rounded-full bg-white/5 text-red-400 hover:text-red-300 hover:bg-red-500/10"
+                                  >
+                                    <Icons.stop className="w-4 h-4" />
+                                  </Button>
+                                </div>
+                              </div>
+
+                              <div className="flex items-center gap-2">
+                                <Icons.volume className="w-3.5 h-3.5 text-white/40" />
+                                <Slider
+                                  value={musicVol}
+                                  onValueChange={setMusicVol}
+                                  max={100}
+                                  className="flex-1"
+                                />
+                                <span className="text-[10px] font-mono text-white/40 w-6 text-right">{musicVol[0]}%</span>
+                              </div>
+                            </div>
+                          ) : (
+                            <div className="text-center py-4 text-xs text-white/30 italic">No focus music playing. Select a track above!</div>
+                          )}
+                        </div>
+                      </TabsContent>
+
+                      <TabsContent value="ambient" className="flex-1 flex flex-col min-h-0 focus-visible:outline-none justify-between">
+                        {/* Soundscapes grid */}
+                        <div className="grid grid-cols-2 gap-2 max-h-[220px] overflow-y-auto pr-1">
+                          {[
+                            { name: "Rain Sounds", icon: <Icons.cloudRain className="w-4 h-4" />, label: "Rain" },
+                            { name: "Forest Sounds", icon: <Icons.tree className="w-4 h-4" />, label: "Forest" },
+                            { name: "Ocean Waves", icon: <Icons.droplets className="w-4 h-4" />, label: "Ocean" },
+                            { name: "Fireplace Sounds", icon: <Icons.sun className="w-4 h-4" />, label: "Fire" },
+                            { name: "Zen Temple Ambient", icon: <Icons.sprout className="w-4 h-4" />, label: "Zen Drone" }
+                          ].map((scape) => {
+                            const track = MUSIC_OPTIONS.find(t => t.name === scape.name)
+                            const active = activeAmbient?.name === scape.name && ambientPlaying
+                            if (!track) return null
+
+                            return (
+                              <button
+                                key={scape.name}
+                                onClick={() => handleToggleAmbient(track)}
+                                className={`flex flex-col items-center justify-center p-3 rounded-2xl border transition-all text-center min-h-[64px] ${
+                                  active
+                                    ? "bg-emerald-500/20 border-emerald-500/40 text-emerald-400 shadow-lg"
+                                    : "bg-white/5 border-white/5 text-white hover:bg-white/10"
+                                }`}
+                              >
+                                {scape.icon}
+                                <span className="text-[10px] mt-1.5 font-bold tracking-wide">{scape.label}</span>
+                              </button>
+                            )
+                          })}
+                        </div>
+
+                        {/* Ambient volume controls */}
+                        {ambientPlaying && activeAmbient && (
+                          <div className="mt-4 pt-3.5 border-t border-white/5 bg-slate-900/40 p-3.5 rounded-2xl border border-white/5 space-y-2">
+                            <div className="flex justify-between items-center text-xs">
+                              <span className="font-semibold text-emerald-400">Ambient: {activeAmbient.name}</span>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => { setAmbientPlaying(false); setActiveAmbient(null) }}
+                                className="h-6 text-[10px] hover:bg-red-500/10 text-red-400 hover:text-red-300 rounded-lg px-2"
+                              >
+                                Mute
+                              </Button>
+                            </div>
+
+                            <div className="flex items-center gap-2">
+                              <Icons.volume className="w-3.5 h-3.5 text-white/40" />
+                              <Slider
+                                value={ambientVol}
+                                onValueChange={setAmbientVol}
+                                max={100}
+                                className="flex-1"
+                              />
+                              <span className="text-[10px] font-mono text-white/40 w-6 text-right">{ambientVol[0]}%</span>
+                            </div>
+                          </div>
+                        )}
+                      </TabsContent>
+                    </Tabs>
+                  </div>
+                )
+              })()}
             </div>
 
           </div>
+
+          {/* 3. BOTTOM PANEL (Focus Goal Status Indicator) */}
+          <div className="relative z-20 flex justify-center w-full pb-2">
+            <div className="flex items-center gap-6 px-6 py-2.5 bg-white/5 dark:bg-slate-900/30 backdrop-blur-md rounded-2xl border border-white/5 shadow-md text-xs font-semibold text-white/60">
+              <span className="flex items-center gap-1.5"><Icons.target className="w-4 h-4 text-emerald-400" /> Goal: {completedSessionsToday}/{focusGoal || "—"}</span>
+              <span className="w-1.5 h-1.5 rounded-full bg-white/20" />
+              <span>Phase: {isBreak ? "Break Time" : "Focus Groove"}</span>
+              <span className="w-1.5 h-1.5 rounded-full bg-white/20" />
+              <span>Streak: {completedSessionsToday > 0 ? "Active 🔥" : "None"}</span>
+            </div>
+          </div>
+
         </div>
       )}
     </div>

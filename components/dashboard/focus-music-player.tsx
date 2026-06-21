@@ -11,6 +11,7 @@ import { Icons } from "@/components/icons"
 import { useData } from "@/components/local-data-provider"
 import { useToast } from "@/hooks/use-toast"
 import { useMusicStore, type MusicTrack } from "@/lib/store"
+import { ambientGenerator } from "@/lib/ambient-generator"
 
 // Extract video ID from YouTube URL
 const extractVideoId = (url: string): string | null => {
@@ -19,14 +20,15 @@ const extractVideoId = (url: string): string | null => {
 }
 
 
-// Verified working YouTube live streams - all unique links, no duplicates
-const MUSIC_OPTIONS: MusicTrack[] = [
+// Verified working YouTube tracks - all unique links, no duplicates
+export const MUSIC_OPTIONS: MusicTrack[] = [
   // Focus Category - Deep concentration music
   {
     name: "Lo-Fi Hip Hop Radio",
-    url: "https://www.youtube.com/embed/jfKfPfyJRdk",
+    url: "https://www.youtube.com/embed/5qap5aO4i9A",
     category: "focus",
-    description: "24/7 lo-fi beats - perfect for studying",
+    type: "youtube",
+    description: "Stable lo-fi beats - perfect for studying",
     icon: "🎧",
   },
   {
@@ -41,6 +43,7 @@ const MUSIC_OPTIONS: MusicTrack[] = [
     name: "Coding Music",
     url: "https://www.youtube.com/embed/Dx5qFachd3A",
     category: "focus",
+    type: "youtube",
     description: "Jazz beats perfect for coding sessions",
     icon: "💻",
   },
@@ -48,6 +51,7 @@ const MUSIC_OPTIONS: MusicTrack[] = [
     name: "Study With Me",
     url: "https://www.youtube.com/embed/4VR-6AS0-l4",
     category: "focus",
+    type: "youtube",
     description: "Binaural beats for enhanced concentration",
     icon: "📚",
   },
@@ -55,6 +59,7 @@ const MUSIC_OPTIONS: MusicTrack[] = [
     name: "Jazz & Bossa Nova",
     url: "https://www.youtube.com/embed/W9k3jBjBxgo",
     category: "focus",
+    type: "youtube",
     description: "Lo-fi jazz beats for productive coding",
     icon: "🎷",
   },
@@ -62,6 +67,7 @@ const MUSIC_OPTIONS: MusicTrack[] = [
     name: "Classical for Studying",
     url: "https://www.youtube.com/embed/9Auq9mYxFEE",
     category: "focus",
+    type: "youtube",
     description: "Mozart and Bach for better focus",
     icon: "🎼",
   },
@@ -69,6 +75,7 @@ const MUSIC_OPTIONS: MusicTrack[] = [
     name: "Electronic Focus",
     url: "https://www.youtube.com/embed/4xDzrJKXOOY",
     category: "focus",
+    type: "youtube",
     description: "Synthwave and electronic for coding",
     icon: "⚡",
   },
@@ -76,6 +83,7 @@ const MUSIC_OPTIONS: MusicTrack[] = [
     name: "Alpha Waves Focus",
     url: "https://www.youtube.com/embed/7Mrv2PHvbjM",
     category: "focus",
+    type: "youtube",
     description: "Binaural beats for deep concentration",
     icon: "🧘",
   },
@@ -83,6 +91,7 @@ const MUSIC_OPTIONS: MusicTrack[] = [
     name: "Brown Noise Focus",
     url: "https://www.youtube.com/embed/wzjWIxXBs_s",
     category: "focus",
+    type: "youtube",
     description: "Deep brown noise for intense focus",
     icon: "🔊",
   },
@@ -92,6 +101,7 @@ const MUSIC_OPTIONS: MusicTrack[] = [
     name: "Peaceful Piano",
     url: "https://www.youtube.com/embed/4Tr0otuiQuU",
     category: "relax",
+    type: "youtube",
     description: "Gentle piano to unwind",
     icon: "🎹",
   },
@@ -99,35 +109,40 @@ const MUSIC_OPTIONS: MusicTrack[] = [
     name: "Meditation Music",
     url: "https://www.youtube.com/embed/1ZYbU82GVz4",
     category: "relax",
+    type: "youtube",
     description: "Zen sounds for mindfulness",
     icon: "🧘",
   },
   {
     name: "Rain Sounds",
-    url: "https://www.youtube.com/embed/mPZkdNFkNps",
+    url: "synthesized://rain",
     category: "relax",
-    description: "Cozy rain for relaxation",
+    type: "synthesized",
+    description: "Infinite synthesized warm rain patter",
     icon: "🌧️",
   },
   {
     name: "Ocean Waves",
-    url: "https://www.youtube.com/embed/a3iy5RQNL_s",
+    url: "synthesized://ocean",
     category: "relax",
-    description: "Soothing waves on the beach",
+    type: "synthesized",
+    description: "Infinite synthesized ocean wave cycles",
     icon: "🌊",
   },
   {
     name: "Chill Beats",
     url: "https://www.youtube.com/embed/DWcJFNfaw9c",
     category: "relax",
+    type: "youtube",
     description: "Relaxing electronic vibes",
     icon: "🎵",
   },
   {
     name: "Fireplace Sounds",
-    url: "https://www.youtube.com/embed/L_LUpnjgPso",
+    url: "synthesized://fireplace",
     category: "relax",
-    description: "Cozy fireplace ambience",
+    type: "synthesized",
+    description: "Synthesized warm wood embers & crackles",
     icon: "🔥",
   },
 
@@ -136,6 +151,7 @@ const MUSIC_OPTIONS: MusicTrack[] = [
     name: "Upbeat Electronic",
     url: "https://www.youtube.com/embed/VQTK6PzLMgA",
     category: "energy",
+    type: "youtube",
     description: "Energetic beats to boost mood",
     icon: "⚡",
   },
@@ -143,6 +159,7 @@ const MUSIC_OPTIONS: MusicTrack[] = [
     name: "Workout Motivation",
     url: "https://www.youtube.com/embed/5yx6BWlEVcY",
     category: "energy",
+    type: "youtube",
     description: "High-energy pump-up music",
     icon: "💪",
   },
@@ -150,6 +167,7 @@ const MUSIC_OPTIONS: MusicTrack[] = [
     name: "Synthwave Radio",
     url: "https://www.youtube.com/embed/1H-vSHVOxoU",
     category: "energy",
+    type: "youtube",
     description: "Retro 80s synthwave vibes",
     icon: "🌃",
   },
@@ -157,6 +175,7 @@ const MUSIC_OPTIONS: MusicTrack[] = [
     name: "Productivity Boost",
     url: "https://www.youtube.com/embed/aQzGxazf0l4",
     category: "energy",
+    type: "youtube",
     description: "Motivational beats for action",
     icon: "🚀",
   },
@@ -164,15 +183,17 @@ const MUSIC_OPTIONS: MusicTrack[] = [
   // Nature Category - Natural sounds
   {
     name: "Forest Sounds",
-    url: "https://www.youtube.com/embed/4oSt4AbW4hI",
+    url: "synthesized://forest",
     category: "nature",
-    description: "Peaceful forest ambience",
+    type: "synthesized",
+    description: "Synthesized rustling leaves & morning birds",
     icon: "🌲",
   },
   {
     name: "Mountain Stream",
     url: "https://www.youtube.com/embed/7maJOI3QMu0",
     category: "nature",
+    type: "youtube",
     description: "Flowing water in nature",
     icon: "🏔️",
   },
@@ -180,6 +201,7 @@ const MUSIC_OPTIONS: MusicTrack[] = [
     name: "Birds & Nature",
     url: "https://www.youtube.com/embed/nBGeZQhBmRY",
     category: "nature",
+    type: "youtube",
     description: "Morning birds chirping in forest",
     icon: "🐦",
   },
@@ -187,6 +209,7 @@ const MUSIC_OPTIONS: MusicTrack[] = [
     name: "Thunderstorm",
     url: "https://www.youtube.com/embed/k7x0j-BvWXg",
     category: "nature",
+    type: "youtube",
     description: "Cozy thunderstorm sounds",
     icon: "⛈️",
   },
@@ -194,6 +217,7 @@ const MUSIC_OPTIONS: MusicTrack[] = [
     name: "Cafe Ambience",
     url: "https://www.youtube.com/embed/2Vv-BfVoq4g",
     category: "nature",
+    type: "youtube",
     description: "Coffee shop background noise",
     icon: "☕",
   },
@@ -211,6 +235,7 @@ const MUSIC_OPTIONS: MusicTrack[] = [
     name: "Acoustic Guitar",
     url: "https://www.youtube.com/embed/C1GzKRPM3Sw",
     category: "instrumental",
+    type: "youtube",
     description: "Beautiful guitar melodies",
     icon: "🎸",
   },
@@ -218,6 +243,7 @@ const MUSIC_OPTIONS: MusicTrack[] = [
     name: "Piano & Strings",
     url: "https://www.youtube.com/embed/BFpLr0LfDUA",
     category: "instrumental",
+    type: "youtube",
     description: "Classical instrumental pieces",
     icon: "🎻",
   },
@@ -225,6 +251,7 @@ const MUSIC_OPTIONS: MusicTrack[] = [
     name: "Jazz Instrumental",
     url: "https://www.youtube.com/embed/lTRiuFIWV5Y",
     category: "instrumental",
+    type: "youtube",
     description: "Lo-fi jazz without vocals",
     icon: "🎺",
   },
@@ -232,6 +259,7 @@ const MUSIC_OPTIONS: MusicTrack[] = [
     name: "Ambient Instrumental",
     url: "https://www.youtube.com/embed/5qap5aO4i9A",
     category: "instrumental",
+    type: "youtube",
     description: "Atmospheric instrumental music",
     icon: "🎹",
   },
@@ -239,6 +267,7 @@ const MUSIC_OPTIONS: MusicTrack[] = [
     name: "Classical Piano",
     url: "https://www.youtube.com/embed/hHW1oY26kxQ",
     category: "instrumental",
+    type: "youtube",
     description: "Peaceful piano compositions",
     icon: "🎹",
   },
@@ -248,6 +277,7 @@ const MUSIC_OPTIONS: MusicTrack[] = [
     name: "Deep Focus Koto",
     url: "https://www.youtube.com/embed/S2pEToi-1Vw",
     category: "zen",
+    type: "youtube",
     description: "Traditional string melodies for deep study",
     icon: "🗾",
   },
@@ -255,6 +285,7 @@ const MUSIC_OPTIONS: MusicTrack[] = [
     name: "Shakuhachi Meditation",
     url: "https://www.youtube.com/embed/zH0Fp1jrvIs",
     category: "zen",
+    type: "youtube",
     description: "Zen bamboo flute for mental clarity",
     icon: "🎍",
   },
@@ -262,20 +293,23 @@ const MUSIC_OPTIONS: MusicTrack[] = [
     name: "Japanese Zen Lofi",
     url: "https://www.youtube.com/embed/rUxyKA_-grg",
     category: "zen",
+    type: "youtube",
     description: "Atmospheric beats with Japanese accents",
     icon: "🗼",
   },
   {
     name: "Zen Temple Ambient",
-    url: "https://www.youtube.com/embed/n6lS1z4UOM0",
+    url: "synthesized://meditation",
     category: "zen",
-    description: "Serene monastic soundscapes",
+    type: "synthesized",
+    description: "Synthesized monastery bell & meditation drone",
     icon: "⛩️",
   },
   {
     name: "Shinrin-yoku Melody",
     url: "https://www.youtube.com/embed/xR7oiEJ8x4Q",
     category: "zen",
+    type: "youtube",
     description: "Forest bathing melodic environment",
     icon: "🌲",
   },
@@ -283,6 +317,7 @@ const MUSIC_OPTIONS: MusicTrack[] = [
     name: "Midnight Kyoto",
     url: "https://www.youtube.com/embed/eIho9S2qcfI",
     category: "zen",
+    type: "youtube",
     description: "Slow jazz-infused Japanese beats",
     icon: "🌙",
   },
@@ -326,12 +361,11 @@ export function FocusMusicPlayer({
     setAmbientVolume,
   } = useMusicStore()
 
-  const iframeRef = useRef<HTMLIFrameElement>(null)
   const playerRef = useRef<any>(null)
   const apiReadyRef = useRef(false)
   const audioRef = useRef<HTMLAudioElement | null>(null)
   const ambientPlayerRef = useRef<any>(null)
-
+  const [showVideo, setShowVideo] = useState(true)
 
   // Custom Tracks State
   const { customTracks, addCustomTrack, removeCustomTrack } = useData()
@@ -342,7 +376,6 @@ export function FocusMusicPlayer({
   const handleAddCustomTrack = () => {
     if (!newTrackName || !newTrackUrl) return
 
-    // Basic validation
     if (!extractVideoId(newTrackUrl)) {
       toast({
         title: "Invalid URL",
@@ -355,7 +388,7 @@ export function FocusMusicPlayer({
     addCustomTrack({
       name: newTrackName,
       url: newTrackUrl,
-      category: "focus", // Default category for custom tracks
+      category: "focus",
     })
 
     setNewTrackName("")
@@ -367,12 +400,11 @@ export function FocusMusicPlayer({
   }
 
   const handlePlayCustomTrack = (track: any) => {
-    // Convert to MusicTrack structure if needed, or just play
-    // CustomTrack has same structure mostly
     handlePlayMusic({
       name: track.name,
       url: track.url,
       category: "focus",
+      type: "youtube",
       icon: "🎧",
       description: "Custom Track"
     })
@@ -381,19 +413,16 @@ export function FocusMusicPlayer({
   // Auto-play music based on timer state
   useEffect(() => {
     if (isActive && !isBreak && !isPlaying) {
-      // Auto-play focus music when timer starts
       const focusMusic = MUSIC_OPTIONS.find((m) => m.category === "focus")
       if (focusMusic) {
         handlePlayMusic(focusMusic)
       }
     } else if (isBreak && isPlaying && currentTrack?.category === "focus") {
-      // Switch to relax music during breaks
       const relaxMusic = MUSIC_OPTIONS.find((m) => m.category === "relax")
       if (relaxMusic) {
         handlePlayMusic(relaxMusic)
       }
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isActive, isBreak])
 
   // Load YouTube IFrame API
@@ -412,94 +441,182 @@ export function FocusMusicPlayer({
     }
   }, [])
 
-  // Initialize YouTube player when track changes
-  // NOTE: we intentionally do NOT include `volume` in deps — recreating the player
-  // on every volume change causes flicker and can prevent setVolume from applying.
+  // Sync Ambient Track Playback (Synthesized soundscapes)
   useEffect(() => {
-    if (!currentTrack || !isPlaying || currentTrack.type === "audio") return
+    if (!isAmbientPlaying || !ambientTrack) {
+      ambientGenerator.stopAll()
+      return
+    }
+
+    if (ambientTrack.type === "synthesized") {
+      const vol = Array.isArray(ambientVolume) ? ambientVolume[0] : ambientVolume || 30
+      ambientGenerator.start(ambientTrack.name, vol)
+    } else {
+      ambientGenerator.stopAll()
+    }
+
+    return () => {
+      if (ambientTrack && ambientTrack.type === "synthesized") {
+        ambientGenerator.stop(ambientTrack.name)
+      }
+    }
+  }, [ambientTrack, isAmbientPlaying])
+
+  // Sync Ambient Volume Changes
+  useEffect(() => {
+    if (isAmbientPlaying && ambientTrack && ambientTrack.type === "synthesized") {
+      const vol = Array.isArray(ambientVolume) ? ambientVolume[0] : ambientVolume || 30
+      ambientGenerator.setVolume(ambientTrack.name, vol)
+    }
+  }, [ambientVolume, ambientTrack, isAmbientPlaying])
+
+  // Main YouTube Player Manager
+  useEffect(() => {
+    if (typeof window === "undefined") return
+    if (!currentTrack || currentTrack.type !== "youtube" || !isPlaying) {
+      if (playerRef.current) {
+        try { playerRef.current.pauseVideo() } catch (e) {}
+      }
+      return
+    }
 
     const videoId = extractVideoId(currentTrack.url)
     if (!videoId) return
 
-    // Clean up previous player
-    if (playerRef.current) {
-      try {
-        playerRef.current.destroy()
-      } catch (e) {
-        // Player might already be destroyed
-      }
-      playerRef.current = null
-    }
-
-    // Wait for API to be ready and DOM element to exist
-    const initPlayer = () => {
-      const playerElement = document.getElementById(`youtube-player-${videoId}`)
-      if (!playerElement) {
-        setTimeout(initPlayer, 100)
+    const runPlayerAction = () => {
+      const playerElement = document.getElementById("youtube-player-main-target")
+      if (!playerElement || !window.YT || !window.YT.Player) {
+        setTimeout(runPlayerAction, 100)
         return
       }
 
-      if (!window.YT || !window.YT.Player) {
-        setTimeout(initPlayer, 100)
-        return
-      }
-
-      try {
-        // Create player and set ref on ready. Use a safe clamped volume when applying.
-        const player = new window.YT.Player(`youtube-player-${videoId}`, {
-          videoId: videoId,
-          playerVars: {
-            autoplay: 1,
-            controls: 1,
-            rel: 0,
-            modestbranding: 1,
-            enablejsapi: 1,
-            origin: window.location.origin,
-          },
-          events: {
-            onReady: (event: any) => {
-              try {
-                const raw = Array.isArray(volume) ? volume[0] : (volume as any) || 0
-                const vol = Math.max(0, Math.min(100, Number(raw)))
-                event.target.setVolume(vol)
-              } catch (e) {
-                // ignore
-              }
-              playerRef.current = event.target
-            },
-            onError: (event?: any) => {
-              console.error("YouTube Player Error:", event?.data ?? event)
-              toast({
-                title: "Playback Error ⚠️",
-                description: `Failed to load YouTube track (Error code: ${event?.data ?? "unknown"}). Autoplay might be blocked or video is unavailable.`,
-                variant: "destructive"
-              })
-            },
-          },
-        })
-      } catch (e) {
-        // Failed to initialize YouTube player
-      }
-    }
-
-    // Small delay to ensure DOM is ready
-    const timeoutId = setTimeout(initPlayer, 100)
-
-    return () => {
-      clearTimeout(timeoutId)
-      if (playerRef.current) {
+      if (!playerRef.current) {
         try {
-          playerRef.current.destroy()
+          new window.YT.Player("youtube-player-main-target", {
+            videoId: videoId,
+            playerVars: {
+              autoplay: isPlaying ? 1 : 0,
+              controls: 1,
+              rel: 0,
+              modestbranding: 1,
+              enablejsapi: 1,
+              origin: window.location.origin,
+            },
+            events: {
+              onReady: (event: any) => {
+                playerRef.current = event.target
+                const raw = Array.isArray(volume) ? volume[0] : volume || 50
+                event.target.setVolume(Math.max(0, Math.min(100, Number(raw))))
+                if (isPlaying) event.target.playVideo()
+              },
+              onError: (event: any) => {
+                console.error("YouTube Main Player Error:", event?.data)
+              }
+            } as any
+          })
         } catch (e) {
-          // Ignore errors
+          console.error("Error creating YouTube player:", e)
         }
-        playerRef.current = null
+      } else {
+        try {
+          const raw = Array.isArray(volume) ? volume[0] : volume || 50
+          playerRef.current.setVolume(Math.max(0, Math.min(100, Number(raw))))
+          
+          const currentUrl = playerRef.current.getVideoUrl()
+          if (!currentUrl || !currentUrl.includes(videoId)) {
+            if (isPlaying) {
+              playerRef.current.loadVideoById(videoId)
+            } else {
+              playerRef.current.cueVideoById(videoId)
+            }
+          } else {
+            if (isPlaying) {
+              playerRef.current.playVideo()
+            } else {
+              playerRef.current.pauseVideo()
+            }
+          }
+        } catch (e) {
+          playerRef.current = null
+          setTimeout(runPlayerAction, 50)
+        }
       }
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+
+    runPlayerAction()
   }, [currentTrack, isPlaying])
 
-  // Update volume when it changes
+  // Ambient YouTube Player Manager
+  useEffect(() => {
+    if (typeof window === "undefined") return
+    if (!ambientTrack || ambientTrack.type !== "youtube" || !isAmbientPlaying) {
+      if (ambientPlayerRef.current) {
+        try { ambientPlayerRef.current.pauseVideo() } catch (e) {}
+      }
+      return
+    }
+
+    const videoId = extractVideoId(ambientTrack.url)
+    if (!videoId) return
+
+    const runAmbientAction = () => {
+      const playerElement = document.getElementById("youtube-player-ambient-target")
+      if (!playerElement || !window.YT || !window.YT.Player) {
+        setTimeout(runAmbientAction, 100)
+        return
+      }
+
+      if (!ambientPlayerRef.current) {
+        try {
+          new window.YT.Player("youtube-player-ambient-target", {
+            videoId: videoId,
+            playerVars: {
+              autoplay: 1,
+              controls: 0,
+              rel: 0,
+              modestbranding: 1,
+              enablejsapi: 1,
+              origin: window.location.origin,
+              loop: 1,
+              playlist: videoId,
+            } as any,
+            events: {
+              onReady: (event: any) => {
+                ambientPlayerRef.current = event.target
+                const raw = Array.isArray(ambientVolume) ? ambientVolume[0] : ambientVolume || 30
+                event.target.setVolume(Math.max(0, Math.min(100, Number(raw))))
+                event.target.playVideo()
+              },
+              onError: (event: any) => {
+                console.error("YouTube Ambient Error:", event?.data)
+              }
+            } as any
+          })
+        } catch (e) {
+          console.error("Error creating YouTube ambient player:", e)
+        }
+      } else {
+        try {
+          const raw = Array.isArray(ambientVolume) ? ambientVolume[0] : ambientVolume || 30
+          ambientPlayerRef.current.setVolume(Math.max(0, Math.min(100, Number(raw))))
+          
+          const currentUrl = ambientPlayerRef.current.getVideoUrl()
+          if (!currentUrl || !currentUrl.includes(videoId)) {
+            ambientPlayerRef.current.loadVideoById(videoId)
+          } else {
+            ambientPlayerRef.current.playVideo()
+          }
+        } catch (e) {
+          ambientPlayerRef.current = null
+          setTimeout(runAmbientAction, 50)
+        }
+      }
+    }
+
+    runAmbientAction()
+  }, [ambientTrack, isAmbientPlaying])
+
+  // Sync main volume changes
   useEffect(() => {
     if (audioRef.current && isPlaying) {
       const raw = Array.isArray(volume) ? volume[0] : (volume as any) || 0
@@ -515,94 +632,14 @@ export function FocusMusicPlayer({
         }
       } catch (e) {}
     }
-  }, [volume, isPlaying])
-
-  // --- AMBIENT PLAYER LOGIC ---
-
-  // Initialize Ambient YouTube player
-  useEffect(() => {
-    if (!ambientTrack || !isAmbientPlaying) return
-
-    const videoId = extractVideoId(ambientTrack.url)
-    if (!videoId) return
-
-    if (ambientPlayerRef.current) {
-      try {
-        ambientPlayerRef.current.destroy()
-      } catch (e) { }
-      ambientPlayerRef.current = null
+    if (currentTrack && currentTrack.type === "synthesized" && isPlaying) {
+      const raw = Array.isArray(volume) ? volume[0] : (volume as any) || 0
+      ambientGenerator.setVolume(currentTrack.name, Number(raw))
     }
-
-    const initAmbientPlayer = () => {
-      const playerElement = document.getElementById(`youtube-player-ambient-${videoId}`)
-      if (!playerElement || !window.YT || !window.YT.Player) {
-        setTimeout(initAmbientPlayer, 100)
-        return
-      }
-
-      try {
-        const player = new window.YT.Player(`youtube-player-ambient-${videoId}`, {
-          videoId: videoId,
-          playerVars: {
-            autoplay: 1,
-            controls: 0,
-            rel: 0,
-            modestbranding: 1,
-            enablejsapi: 1,
-            origin: window.location.origin,
-            // @ts-ignore
-            loop: 1,
-            playlist: videoId, // Loop requires playlist with videoId
-          },
-          events: {
-            onReady: (event: any) => {
-              try {
-                const raw = Array.isArray(ambientVolume) ? ambientVolume[0] : (ambientVolume as any) || 0
-                const vol = Math.max(0, Math.min(100, Number(raw)))
-                event.target.setVolume(vol)
-              } catch (e) { }
-              ambientPlayerRef.current = event.target
-            },
-            onError: (event?: any) => {
-              console.error("YouTube Ambient Player Error:", event?.data ?? event)
-            },
-          },
-        })
-      } catch (e) {
-        // Failed to initialize Ambient player
-      }
-    }
-
-    const timeoutId = setTimeout(initAmbientPlayer, 100)
-
-    return () => {
-      clearTimeout(timeoutId)
-      if (ambientPlayerRef.current) {
-        try {
-          ambientPlayerRef.current.destroy()
-        } catch (e) { }
-        ambientPlayerRef.current = null
-      }
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [ambientTrack, isAmbientPlaying])
-
-  // Update ambient volume
-  useEffect(() => {
-    if (ambientPlayerRef.current && isAmbientPlaying) {
-      try {
-        const raw = Array.isArray(ambientVolume) ? ambientVolume[0] : (ambientVolume as any) || 0
-        const vol = Math.max(0, Math.min(100, Number(raw)))
-        if (typeof ambientPlayerRef.current.setVolume === "function") {
-          ambientPlayerRef.current.setVolume(vol)
-        }
-      } catch (e) { }
-    }
-  }, [ambientVolume, isAmbientPlaying])
+  }, [volume, isPlaying, currentTrack])
 
   const handlePlayAmbient = (track: MusicTrack) => {
     if (ambientTrack?.name === track.name && isAmbientPlaying) {
-      // Toggle off if clicking same track
       setIsAmbientPlaying(false)
       setAmbientTrack(null)
     } else {
@@ -612,28 +649,30 @@ export function FocusMusicPlayer({
   }
 
   const handlePlayMusic = (track: MusicTrack) => {
-    // Stop any existing playback
     if (audioRef.current) {
       audioRef.current.pause()
       audioRef.current = null
     }
     if (playerRef.current) {
-      try { playerRef.current.stopVideo(); playerRef.current.destroy() } catch (e) {}
-      playerRef.current = null
+      try { playerRef.current.pauseVideo() } catch (e) {}
+    }
+    if (currentTrack && currentTrack.type === "synthesized") {
+      ambientGenerator.stop(currentTrack.name)
     }
 
     setCurrentTrack(track)
     setIsPlaying(true)
 
-    // If local audio file, create HTML5 Audio element
     if (track.type === "audio") {
       const audio = new Audio(track.url)
       audio.volume = (Array.isArray(volume) ? volume[0] : volume) / 100
       audio.loop = true
       audio.play().catch(() => {})
       audioRef.current = audio
+    } else if (track.type === "synthesized") {
+      const vol = Array.isArray(volume) ? volume[0] : volume || 50
+      ambientGenerator.start(track.name, vol)
     }
-    // For YouTube tracks, the useEffect will handle initialization
 
     setRecentlyPlayed((prev) => {
       const filtered = prev.filter((t) => t.name !== track.name)
@@ -646,9 +685,10 @@ export function FocusMusicPlayer({
       audioRef.current.pause()
     }
     if (playerRef.current) {
-      try {
-        playerRef.current.pauseVideo()
-      } catch (e) {}
+      try { playerRef.current.pauseVideo() } catch (e) {}
+    }
+    if (currentTrack && currentTrack.type === "synthesized") {
+      ambientGenerator.stop(currentTrack.name)
     }
     setIsPlaying(false)
   }
@@ -659,11 +699,10 @@ export function FocusMusicPlayer({
       audioRef.current = null
     }
     if (playerRef.current) {
-      try {
-        playerRef.current.stopVideo()
-        playerRef.current.destroy()
-      } catch (e) {}
-      playerRef.current = null
+      try { playerRef.current.stopVideo() } catch (e) {}
+    }
+    if (currentTrack && currentTrack.type === "synthesized") {
+      ambientGenerator.stop(currentTrack.name)
     }
     setIsPlaying(false)
     setCurrentTrack(null)
@@ -680,15 +719,6 @@ export function FocusMusicPlayer({
     instrumental: "🎵",
   }
 
-  const categoryColors: Record<MusicTrack["category"], string> = {
-    focus: "from-emerald-500 to-teal-500",
-    relax: "from-blue-500 to-cyan-500",
-    energy: "from-orange-500 to-red-500",
-    nature: "from-green-500 to-emerald-500",
-    zen: "from-emerald-700 to-teal-800",
-    instrumental: "from-purple-500 to-pink-500",
-  }
-
   const categoryLabels = {
     focus: "Deep Focus",
     relax: "Relax & Unwind",
@@ -698,383 +728,257 @@ export function FocusMusicPlayer({
     instrumental: "Pure Instrumental",
   }
 
-
-
-
-
-  // --- ZEN MODE RENDER ---
-  if (isZenMode) {
-    return (
-      <div className={`fixed bottom-12 left-1/2 -translate-x-1/2 z-[60] w-full max-w-md px-4 animate-in slide-in-from-bottom-8 duration-700 ${className}`}>
-        {/* Minimal Player Container */}
-        <div className="bg-slate-900/85 dark:bg-black/50 backdrop-blur-2xl rounded-3xl p-6 border border-white/10 text-white shadow-2xl">
-
-          {/* Now Playing Info (Centered) */}
-          <div className="text-center mb-6">
-            {currentTrack ? (
-              <div className="space-y-2 animate-in fade-in slide-in-from-bottom-2">
-                <div className="w-12 h-12 bg-white/10 rounded-full flex items-center justify-center mx-auto mb-3 text-2xl">
-                  {currentTrack.icon}
-                </div>
-                <h3 className="font-medium text-lg tracking-wide text-white">{currentTrack.name}</h3>
-                <p className="text-sm text-white/50">{currentTrack.description}</p>
-                
-                {/* Minimal Player controls */}
-                <div className="flex justify-center gap-4 mt-3">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="w-10 h-10 rounded-full text-white/80 hover:text-white hover:bg-white/10"
-                    onClick={isPlaying ? handlePause : () => handlePlayMusic(currentTrack)}
-                    title={isPlaying ? "Pause music" : "Resume music"}
-                  >
-                    {isPlaying ? <Icons.pause className="w-5 h-5" /> : <Icons.play className="w-5 h-5" />}
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="w-10 h-10 rounded-full text-red-400 hover:text-red-300 hover:bg-white/10"
-                    onClick={handleStop}
-                    title="Stop music"
-                  >
-                    <Icons.stop className="w-5 h-5" />
-                  </Button>
-                </div>
-              </div>
-            ) : (
-              <div className="text-white/40 text-sm py-4">Select some focus music in normal mode to begin</div>
-            )}
-          </div>
-
-          {/* Zen Soundscapes */}
-          <div className="mb-6">
-            <h4 className="text-xs font-semibold text-white/50 text-center uppercase tracking-widest mb-3">Soundscapes</h4>
-            <div className="flex items-center justify-center gap-3">
-              {[
-                { name: "Rain Sounds", icon: <Icons.cloudRain className="w-5 h-5" /> },
-                { name: "Forest Sounds", icon: <Icons.tree className="w-5 h-5" /> },
-                { name: "Ocean Waves", icon: <Icons.droplets className="w-5 h-5" /> },
-                { name: "Fireplace Sounds", icon: <Icons.sun className="w-5 h-5" /> },
-                { name: "Zen Temple Ambient", icon: <Icons.sprout className="w-5 h-5" /> }
-              ].map((scape) => {
-                const track = MUSIC_OPTIONS.find(t => t.name === scape.name)
-                const isActive = isAmbientPlaying && ambientTrack?.name === scape.name
-                if (!track) return null
-
-                return (
-                  <Button
-                    key={scape.name}
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => handlePlayAmbient(track)}
-                    className={`rounded-full w-12 h-12 transition-all min-h-[44px] min-w-[44px] ${isActive
-                        ? "bg-emerald-500/20 text-emerald-300 ring-1 ring-emerald-500/50"
-                        : "text-white/60 hover:text-white hover:bg-white/10"
-                      }`}
-                    title={`Toggle ${scape.name}`}
-                  >
-                    {scape.icon}
-                  </Button>
-                )
-              })}
-            </div>
-          </div>
-
-          {/* Volume Sliders */}
-          <div className="space-y-4 px-4">
-            {/* Main Volume */}
-            <div className="flex items-center gap-3 group">
-              <Icons.music className="w-4 h-4 text-white/40 group-hover:text-white/80 transition-colors" />
-              <Slider
-                value={volume}
-                onValueChange={setVolume}
-                max={100}
-                step={1}
-                className="flex-1 opacity-50 group-hover:opacity-100 transition-opacity"
-              />
-            </div>
-
-            {/* Ambient Volume (only if active) */}
-            {isAmbientPlaying && (
-              <div className="flex items-center gap-3 group animate-in slide-in-from-top-2">
-                <Icons.sprout className="w-4 h-4 text-emerald-400/60 group-hover:text-emerald-400 transition-colors" />
-                <Slider
-                  value={ambientVolume}
-                  onValueChange={setAmbientVolume}
-                  max={100}
-                  step={1}
-                  className="flex-1 opacity-50 group-hover:opacity-100 transition-opacity"
-                />
-              </div>
-            )}
-          </div>
-
-          {/* Stable Offscreen Players */}
-          {ambientTrack && (
-            <div className="fixed top-[-9999px] left-[-9999px] w-[1px] h-[1px] overflow-hidden opacity-0 pointer-events-none">
-              <div id={`youtube-player-ambient-${extractVideoId(ambientTrack.url) || "default"}`} />
-            </div>
-          )}
-          {currentTrack && (
-            <div className="fixed top-[-9999px] left-[-9999px] w-[1px] h-[1px] overflow-hidden opacity-0 pointer-events-none">
-              <div id={`youtube-player-${extractVideoId(currentTrack.url) || "default"}`} />
-            </div>
-          )}
-        </div>
-      </div>
-    )
-  }
-
-  // --- DEFAULT RENDER ---
+  // --- RENDER BLOCK ---
   return (
-    <Card className={`card-zen overflow-hidden ${className}`}>
-      {/* Ambient glow when playing */}
-      {isPlaying && (
-        <div
-          className="absolute inset-0 pointer-events-none"
-          style={{
-            background: "radial-gradient(ellipse at 50% 100%, rgba(16,185,129,0.07) 0%, transparent 65%)"
-          }}
-        />
-      )}
+    <div className={isZenMode ? "contents" : "block"}>
+      {/* Stable Offscreen Players - NEVER unmounted to keep YouTube iframe alive */}
+      <div className="fixed top-[-9999px] left-[-9999px] w-[1px] h-[1px] overflow-hidden opacity-0 pointer-events-none select-none z-[-1]">
+        <div id="youtube-player-main-target" />
+        <div id="youtube-player-ambient-target" />
+      </div>
 
-      {/* Header */}
-      <div className="px-5 pt-5 pb-4 border-b border-slate-100/60 dark:border-slate-800/60 relative z-10">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center shadow-md shadow-emerald-500/20">
-              <span className="text-xl">🎵</span>
-            </div>
-            <div>
-              <h3 className="text-base font-bold text-slate-800 dark:text-slate-100 tracking-tight">Focus Groove</h3>
-              <p className="text-[11px] text-slate-400 dark:text-slate-500 font-medium">
-                {isPlaying && currentTrack ? currentTrack.name : "Choose your sound"}
-              </p>
+      {!isZenMode && (
+        <Card className={`card-zen overflow-hidden relative ${className}`}>
+          {/* Ambient glow when playing */}
+          {isPlaying && (
+            <div
+              className="absolute inset-0 pointer-events-none z-0"
+              style={{
+                background: "radial-gradient(ellipse at 50% 100%, rgba(16,185,129,0.07) 0%, transparent 65%)"
+              }}
+            />
+          )}
+
+          {/* Header */}
+          <div className="px-5 pt-5 pb-4 border-b border-slate-100/60 dark:border-slate-800/60 relative z-10">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center shadow-md shadow-emerald-500/20">
+                  <span className="text-xl">🎵</span>
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-slate-800 dark:text-slate-100 tracking-tight">Focus Groove</h3>
+                  <p className="text-[11px] text-slate-400 dark:text-slate-500 font-medium">
+                    {isPlaying && currentTrack ? currentTrack.name : "Choose your sound"}
+                  </p>
+                </div>
+              </div>
+
+              {/* Equalizer bars when playing */}
+              {isPlaying && (
+                <div className="flex items-end gap-0.5 h-5 mr-1">
+                  {[3, 5, 4, 6, 3].map((h, i) => (
+                    <div
+                      key={i}
+                      className="w-1 bg-emerald-500 rounded-full"
+                      style={{
+                        height: `${h * 3}px`,
+                        animation: `equalizer ${0.6 + i * 0.1}s ease-in-out infinite alternate`,
+                      }}
+                    />
+                  ))}
+                  <style>{`
+                    @keyframes equalizer {
+                      from { transform: scaleY(0.4); }
+                      to   { transform: scaleY(1);   }
+                    }
+                  `}</style>
+                </div>
+              )}
             </div>
           </div>
 
-          {/* Equalizer bars when playing */}
-          {isPlaying && (
-            <div className="flex items-end gap-0.5 h-5 mr-1">
-              {[3, 5, 4, 6, 3].map((h, i) => (
-                <div
-                  key={i}
-                  className="w-1 bg-emerald-500 rounded-full"
-                  style={{
-                    height: `${h * 3}px`,
-                    animation: `equalizer ${0.6 + i * 0.1}s ease-in-out infinite alternate`,
-                  }}
-                />
+          <CardContent className="px-5 py-4 space-y-4 relative z-10">
+            {/* Category Tabs */}
+            <Tabs value={activeCategory} onValueChange={(v) => setActiveCategory(v as MusicTrack["category"] | "custom")}>
+              <div className="overflow-x-auto scrollbar-hide -mx-1 px-1 mb-3">
+                <TabsList className="flex items-center gap-1 h-auto p-1 bg-slate-100/60 dark:bg-slate-800/50 rounded-xl min-w-max">
+                  {(["focus", "zen", "relax", "energy", "instrumental"] as const).map((cat) => {
+                    const colors: Record<string, string> = {
+                      focus: "data-[state=active]:text-emerald-600 dark:data-[state=active]:text-emerald-400",
+                      zen: "data-[state=active]:text-teal-600 dark:data-[state=active]:text-teal-400",
+                      relax: "data-[state=active]:text-blue-600 dark:data-[state=active]:text-blue-400",
+                      energy: "data-[state=active]:text-orange-600 dark:data-[state=active]:text-orange-400",
+                      instrumental: "data-[state=active]:text-purple-600 dark:data-[state=active]:text-purple-400",
+                    }
+                    return (
+                      <TabsTrigger
+                        key={cat}
+                        value={cat}
+                        title={categoryLabels[cat]}
+                        className={`flex-1 min-w-[60px] text-[10px] py-1.5 flex flex-col items-center gap-0.5 rounded-lg transition-all
+                          data-[state=active]:bg-white dark:data-[state=active]:bg-slate-700 data-[state=active]:shadow-sm
+                          text-slate-400 ${colors[cat]} font-bold uppercase tracking-wider`}
+                      >
+                        <span className="text-base leading-none">{categoryIcons[cat]}</span>
+                        <span className="hidden sm:block">{cat}</span>
+                      </TabsTrigger>
+                    )
+                  })}
+                  <TabsTrigger
+                    value="custom"
+                    title="Custom Mix"
+                    className="flex-1 min-w-[60px] text-[10px] py-1.5 flex flex-col items-center gap-0.5 rounded-lg transition-all
+                      data-[state=active]:bg-white dark:data-[state=active]:bg-slate-700 data-[state=active]:shadow-sm
+                      text-slate-400 data-[state=active]:text-slate-700 dark:data-[state=active]:text-slate-200 font-bold uppercase tracking-wider"
+                  >
+                    <span className="text-base leading-none">🎧</span>
+                    <span className="hidden sm:block">Custom</span>
+                  </TabsTrigger>
+                </TabsList>
+              </div>
+
+              {(["focus", "zen", "relax", "energy", "instrumental"] as const).map((cat) => (
+                <TabsContent key={cat} value={cat} className="mt-3 focus-visible:outline-none">
+                  <div className="grid grid-cols-1 min-[375px]:grid-cols-2 sm:grid-cols-3 gap-2 max-h-[220px] overflow-y-auto pr-1">
+                    {filteredMusic.map((music) => {
+                      const playing = isPlaying && currentTrack?.name === music.name
+                      return (
+                        <button
+                          key={music.name}
+                          onClick={() => handlePlayMusic(music)}
+                          aria-label={`${playing ? "Now playing" : "Play"} ${music.name}`}
+                          className={`group relative flex items-center gap-2.5 p-2.5 text-left rounded-xl transition-all border ${playing
+                            ? "bg-emerald-500 text-white border-emerald-500 shadow-md shadow-emerald-500/20"
+                            : "bg-white/60 dark:bg-slate-800/40 border-slate-200/40 dark:border-slate-700/40 hover:bg-white dark:hover:bg-slate-800 hover:border-emerald-200 dark:hover:border-emerald-700 hover:shadow-sm"
+                            }`}
+                        >
+                          <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-lg flex-shrink-0 ${playing ? "bg-white/20" : "bg-slate-100 dark:bg-slate-700"
+                            }`}>
+                            {music.icon || "🎵"}
+                          </div>
+                          <span className={`text-xs font-semibold truncate ${playing ? "text-white" : "text-slate-700 dark:text-slate-300"}`}>
+                            {music.name}
+                          </span>
+                        </button>
+                      )
+                    })}
+                  </div>
+                </TabsContent>
               ))}
-              <style>{`
-                @keyframes equalizer {
-                  from { transform: scaleY(0.4); }
-                  to   { transform: scaleY(1);   }
-                }
-              `}</style>
-            </div>
-          )}
-        </div>
-      </div>
 
-      <CardContent className="px-5 py-4 space-y-4 relative z-10">
-        {/* Category Tabs */}
-        <Tabs value={activeCategory} onValueChange={(v) => setActiveCategory(v as MusicTrack["category"] | "custom")}>
-          <div className="overflow-x-auto scrollbar-hide -mx-1 px-1 mb-3">
-            <TabsList className="flex items-center gap-1 h-auto p-1 bg-slate-100/60 dark:bg-slate-800/50 rounded-xl min-w-max">
-            {(["focus", "zen", "relax", "energy", "instrumental"] as const).map((cat) => {
-              const colors: Record<string, string> = {
-                focus: "data-[state=active]:text-emerald-600 dark:data-[state=active]:text-emerald-400",
-                zen: "data-[state=active]:text-teal-600 dark:data-[state=active]:text-teal-400",
-                relax: "data-[state=active]:text-blue-600 dark:data-[state=active]:text-blue-400",
-                energy: "data-[state=active]:text-orange-600 dark:data-[state=active]:text-orange-400",
-                instrumental: "data-[state=active]:text-purple-600 dark:data-[state=active]:text-purple-400",
-              }
-              return (
-                <TabsTrigger
-                  key={cat}
-                  value={cat}
-                  title={categoryLabels[cat]}
-                  className={`flex-1 min-w-[60px] text-[10px] py-1.5 flex flex-col items-center gap-0.5 rounded-lg transition-all
-                    data-[state=active]:bg-white dark:data-[state=active]:bg-slate-700 data-[state=active]:shadow-sm
-                    text-slate-400 ${colors[cat]} font-bold uppercase tracking-wider`}
-                >
-                  <span className="text-base leading-none">{categoryIcons[cat]}</span>
-                  <span className="hidden sm:block">{cat}</span>
-                </TabsTrigger>
-              )
-            })}
-            <TabsTrigger
-              value="custom"
-              title="Custom Mix"
-              className="flex-1 min-w-[60px] text-[10px] py-1.5 flex flex-col items-center gap-0.5 rounded-lg transition-all
-                data-[state=active]:bg-white dark:data-[state=active]:bg-slate-700 data-[state=active]:shadow-sm
-                text-slate-400 data-[state=active]:text-slate-700 dark:data-[state=active]:text-slate-200 font-bold uppercase tracking-wider"
-            >
-              <span className="text-base leading-none">🎧</span>
-              <span className="hidden sm:block">Custom</span>
-            </TabsTrigger>
-          </TabsList>
-        </div>
+              <TabsContent value="custom" className="mt-3 focus-visible:outline-none">
+                <div className="space-y-3">
+                  <div className="p-3 bg-white/50 dark:bg-slate-800/50 rounded-xl border border-slate-200/60 dark:border-slate-700/60">
+                    <h4 className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-2">Add YouTube Track</h4>
+                    <div className="flex gap-2">
+                      <Input
+                        placeholder="Track name"
+                        value={newTrackName}
+                        onChange={(e) => setNewTrackName(e.target.value)}
+                        className="h-8 text-xs"
+                      />
+                      <Input
+                        placeholder="YouTube URL"
+                        value={newTrackUrl}
+                        onChange={(e) => setNewTrackUrl(e.target.value)}
+                        className="h-8 text-xs flex-[2]"
+                      />
+                      <Button size="sm" onClick={handleAddCustomTrack} className="h-8 px-3 bg-emerald-500 hover:bg-emerald-600 text-white" disabled={!newTrackName || !newTrackUrl}>
+                        <Icons.plus className="w-3 h-3" />
+                      </Button>
+                    </div>
+                  </div>
 
-          {(["focus", "zen", "relax", "energy", "instrumental"] as const).map((cat) => (
-            <TabsContent key={cat} value={cat} className="mt-3 focus-visible:outline-none">
-              <div className="grid grid-cols-1 min-[375px]:grid-cols-2 sm:grid-cols-3 gap-2 max-h-[220px] overflow-y-auto pr-1">
-                {filteredMusic.map((music) => {
-                  const playing = isPlaying && currentTrack?.name === music.name
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 max-h-[140px] overflow-y-auto pr-1">
+                    {customTracks.length === 0 ? (
+                      <div className="col-span-full text-center py-6 text-slate-400 text-xs italic">Add your favorite YouTube tracks above!</div>
+                    ) : (
+                      customTracks.map((track) => {
+                        const playing = isPlaying && currentTrack?.name === track.name
+                        return (
+                          <div
+                            key={track.id}
+                            className={`group flex items-center justify-between gap-2 p-2.5 rounded-xl border transition-all ${playing
+                              ? "bg-emerald-500 text-white border-emerald-500"
+                              : "bg-white/60 dark:bg-slate-800/40 border-slate-200/40 dark:border-slate-700/40 hover:bg-white dark:hover:bg-slate-800"
+                              }`}
+                          >
+                            <button onClick={() => handlePlayCustomTrack(track)} className="flex items-center gap-2 flex-1 min-w-0 text-left">
+                              <div className={`w-7 h-7 rounded-lg flex items-center justify-center text-base flex-shrink-0 ${playing ? "bg-white/20" : "bg-slate-100 dark:bg-slate-700"}`}>🎧</div>
+                              <span className={`text-xs font-semibold truncate ${playing ? "text-white" : "text-slate-700 dark:text-slate-300"}`}>{track.name}</span>
+                            </button>
+                            <button onClick={(e) => { e.stopPropagation(); removeCustomTrack(track.id) }} className="text-slate-400 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity p-1">
+                              <Icons.trash className="w-3 h-3" />
+                            </button>
+                          </div>
+                        )
+                      })
+                    )}
+                  </div>
+                </div>
+              </TabsContent>
+            </Tabs>
+
+            {/* Nature Mixer */}
+            <div className="bg-slate-50/70 dark:bg-slate-800/30 rounded-xl p-3 border border-slate-100/80 dark:border-slate-800/60">
+              <div className="flex items-center justify-between mb-2.5">
+                <h4 className="text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500 flex items-center gap-1.5">
+                  <Icons.leaf className="w-3 h-3" /> Nature Mixer
+                </h4>
+                {isAmbientPlaying && ambientTrack && (
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold">{ambientTrack.name}</span>
+                    <Slider value={ambientVolume} onValueChange={setAmbientVolume} max={100} step={1} className="w-16" />
+                  </div>
+                )}
+              </div>
+              <div className="flex gap-2">
+                {[
+                  { name: "Rain Sounds", icon: <Icons.cloudRain className="w-4 h-4" />, label: "Rain" },
+                  { name: "Forest Sounds", icon: <Icons.tree className="w-4 h-4" />, label: "Forest" },
+                  { name: "Ocean Waves", icon: <Icons.droplets className="w-4 h-4" />, label: "Ocean" },
+                  { name: "Fireplace Sounds", icon: <Icons.sun className="w-4 h-4" />, label: "Fire" }
+                ].map((scape) => {
+                  const track = MUSIC_OPTIONS.find(t => t.name === scape.name)
+                  const active = isAmbientPlaying && ambientTrack?.name === scape.name
+                  if (!track) return null
+
                   return (
                     <button
-                      key={music.name}
-                      onClick={() => handlePlayMusic(music)}
-                      aria-label={`${playing ? "Now playing" : "Play"} ${music.name}`}
-                      className={`group relative flex items-center gap-2.5 p-2.5 text-left rounded-xl transition-all border ${playing
-                        ? "bg-emerald-500 text-white border-emerald-500 shadow-md shadow-emerald-500/20"
-                        : "bg-white/60 dark:bg-slate-800/40 border-slate-200/40 dark:border-slate-700/40 hover:bg-white dark:hover:bg-slate-800 hover:border-emerald-200 dark:hover:border-emerald-700 hover:shadow-sm"
+                      key={scape.name}
+                      onClick={() => handlePlayAmbient(track)}
+                      title={scape.name}
+                      className={`flex-1 flex flex-col items-center justify-center py-2 rounded-xl transition-all min-h-[54px] border ${active
+                          ? "bg-emerald-100 dark:bg-emerald-900/50 border-emerald-400 text-emerald-600 dark:text-emerald-400 shadow-sm"
+                          : "bg-white/40 hover:bg-white dark:bg-slate-800/40 dark:hover:bg-slate-700 text-slate-400 hover:text-slate-600 border-slate-200/40 dark:border-slate-700/40"
                         }`}
                     >
-                      <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-lg flex-shrink-0 ${playing ? "bg-white/20" : "bg-slate-100 dark:bg-slate-700"
-                        }`}>
-                        {music.icon || "🎵"}
-                      </div>
-                      <span className={`text-xs font-semibold truncate ${playing ? "text-white" : "text-slate-700 dark:text-slate-300"}`}>
-                        {music.name}
-                      </span>
+                      {scape.icon}
+                      <span className="text-[9px] mt-1 font-semibold tracking-wide">{scape.label}</span>
                     </button>
                   )
                 })}
               </div>
-            </TabsContent>
-          ))}
+            </div>
 
-          <TabsContent value="custom" className="mt-3 focus-visible:outline-none">
-            <div className="space-y-3">
-              <div className="p-3 bg-white/50 dark:bg-slate-800/50 rounded-xl border border-slate-200/60 dark:border-slate-700/60">
-                <h4 className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-2">Add YouTube Track</h4>
-                <div className="flex gap-2">
-                  <Input
-                    placeholder="Track name"
-                    value={newTrackName}
-                    onChange={(e) => setNewTrackName(e.target.value)}
-                    className="h-8 text-xs"
-                  />
-                  <Input
-                    placeholder="YouTube URL"
-                    value={newTrackUrl}
-                    onChange={(e) => setNewTrackUrl(e.target.value)}
-                    className="h-8 text-xs flex-[2]"
-                  />
-                  <Button size="sm" onClick={handleAddCustomTrack} className="h-8 px-3 bg-emerald-500 hover:bg-emerald-600 text-white" disabled={!newTrackName || !newTrackUrl}>
-                    <Icons.plus className="w-3 h-3" />
-                  </Button>
+            {/* Now Playing floating bar  */}
+            {isPlaying && currentTrack && (
+              <div className="bg-slate-900 dark:bg-slate-950 rounded-xl overflow-hidden shadow-lg relative z-20">
+                <div className="flex items-center gap-3 px-3 py-2.5">
+                  <div className="w-8 h-8 rounded-lg bg-emerald-500/20 flex items-center justify-center text-lg flex-shrink-0">
+                    {currentTrack.icon}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="text-xs font-semibold text-white truncate">{currentTrack.name}</div>
+                    <div className="text-[10px] text-slate-400 capitalize">{activeCategory}</div>
+                  </div>
+                  <div className="flex items-center gap-2 flex-shrink-0">
+                    <Icons.volume className="w-3 h-3 text-slate-400" />
+                    <Slider value={volume} onValueChange={setVolume} max={100} className="w-16" />
+                    <Button size="icon" variant="ghost" onClick={handlePause} aria-label={isPlaying ? "Pause music" : "Resume music"} className="h-7 w-7 min-w-[36px] min-h-[36px] text-white hover:bg-white/10 rounded-full">
+                      <Icons.pause className="w-3.5 h-3.5" />
+                    </Button>
+                    <Button size="icon" variant="ghost" onClick={handleStop} aria-label="Stop music" className="h-7 w-7 min-w-[36px] min-h-[36px] text-red-400 hover:text-red-300 hover:bg-white/10 rounded-full">
+                      <Icons.stop className="w-3.5 h-3.5" />
+                    </Button>
+                  </div>
                 </div>
               </div>
-
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 max-h-[140px] overflow-y-auto pr-1">
-                {customTracks.length === 0 ? (
-                  <div className="col-span-full text-center py-6 text-slate-400 text-xs italic">Add your favorite YouTube tracks above!</div>
-                ) : (
-                  customTracks.map((track) => {
-                    const playing = isPlaying && currentTrack?.name === track.name
-                    return (
-                      <div
-                        key={track.id}
-                        className={`group flex items-center justify-between gap-2 p-2.5 rounded-xl border transition-all ${playing
-                          ? "bg-emerald-500 text-white border-emerald-500"
-                          : "bg-white/60 dark:bg-slate-800/40 border-slate-200/40 dark:border-slate-700/40 hover:bg-white dark:hover:bg-slate-800"
-                          }`}
-                      >
-                        <button onClick={() => handlePlayCustomTrack(track)} className="flex items-center gap-2 flex-1 min-w-0 text-left">
-                          <div className={`w-7 h-7 rounded-lg flex items-center justify-center text-base flex-shrink-0 ${playing ? "bg-white/20" : "bg-slate-100 dark:bg-slate-700"}`}>🎧</div>
-                          <span className={`text-xs font-semibold truncate ${playing ? "text-white" : "text-slate-700 dark:text-slate-300"}`}>{track.name}</span>
-                        </button>
-                        <button onClick={(e) => { e.stopPropagation(); removeCustomTrack(track.id) }} className="text-slate-400 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity p-1">
-                          <Icons.trash className="w-3 h-3" />
-                        </button>
-                      </div>
-                    )
-                  })
-                )}
-              </div>
-            </div>
-          </TabsContent>
-        </Tabs>
-
-        {/* Nature Mixer */}
-        <div className="bg-slate-50/70 dark:bg-slate-800/30 rounded-xl p-3 border border-slate-100/80 dark:border-slate-800/60">
-          <div className="flex items-center justify-between mb-2.5">
-            <h4 className="text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500 flex items-center gap-1.5">
-              <Icons.leaf className="w-3 h-3" /> Nature Mixer
-            </h4>
-            {isAmbientPlaying && ambientTrack && (
-              <div className="flex items-center gap-2">
-                <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold">{ambientTrack.name}</span>
-                <Slider value={ambientVolume} onValueChange={setAmbientVolume} max={100} step={1} className="w-16" />
-              </div>
             )}
-          </div>
-          <div className="flex gap-2">
-            {[
-              { name: "Rain Sounds", icon: <Icons.cloudRain className="w-4 h-4" />, label: "Rain" },
-              { name: "Forest Sounds", icon: <Icons.tree className="w-4 h-4" />, label: "Forest" },
-              { name: "Ocean Waves", icon: <Icons.droplets className="w-4 h-4" />, label: "Ocean" },
-              { name: "Fireplace Sounds", icon: <Icons.sun className="w-4 h-4" />, label: "Fire" }
-            ].map((scape) => {
-              const track = MUSIC_OPTIONS.find(t => t.name === scape.name)
-              const active = isAmbientPlaying && ambientTrack?.name === scape.name
-              if (!track) return null
-
-              return (
-                <button
-                  key={scape.name}
-                  onClick={() => handlePlayAmbient(track)}
-                  title={scape.name}
-                  className={`flex-1 flex flex-col items-center justify-center py-2 rounded-xl transition-all min-h-[54px] border ${active
-                      ? "bg-emerald-100 dark:bg-emerald-900/50 border-emerald-400 text-emerald-600 dark:text-emerald-400 shadow-sm"
-                      : "bg-white/40 hover:bg-white dark:bg-slate-800/40 dark:hover:bg-slate-700 text-slate-400 hover:text-slate-600 border-slate-200/40 dark:border-slate-700/40"
-                    }`}
-                >
-                  {scape.icon}
-                  <span className="text-[9px] mt-1 font-semibold tracking-wide">{scape.label}</span>
-                </button>
-              )
-            })}
-          </div>
-          {ambientTrack && (
-            <div className="fixed top-[-9999px] left-[-9999px] w-[1px] h-[1px] overflow-hidden opacity-0 pointer-events-none">
-              <div id={`youtube-player-ambient-${extractVideoId(ambientTrack.url) || "default"}`} />
-            </div>
-          )}
-        </div>
-
-        {/* Now Playing floating bar  */}
-        {isPlaying && currentTrack && (
-          <div className="bg-slate-900 dark:bg-slate-950 rounded-xl overflow-hidden shadow-lg">
-            {/* Hidden video player (offscreen but rendered so YouTube API functions) */}
-            <div className="fixed top-[-9999px] left-[-9999px] w-[1px] h-[1px] overflow-hidden opacity-0 pointer-events-none">
-              <div id={`youtube-player-${extractVideoId(currentTrack.url) || "default"}`} />
-            </div>
-            <div className="flex items-center gap-3 px-3 py-2.5">
-              <div className="w-8 h-8 rounded-lg bg-emerald-500/20 flex items-center justify-center text-lg flex-shrink-0">
-                {currentTrack.icon}
-              </div>
-              <div className="flex-1 min-w-0">
-                <div className="text-xs font-semibold text-white truncate">{currentTrack.name}</div>
-                <div className="text-[10px] text-slate-400 capitalize">{activeCategory}</div>
-              </div>
-              <div className="flex items-center gap-2 flex-shrink-0">
-                <Icons.volume className="w-3 h-3 text-slate-400" />
-                <Slider value={volume} onValueChange={setVolume} max={100} className="w-16" />
-                <Button size="icon" variant="ghost" onClick={handlePause} aria-label={isPlaying ? "Pause music" : "Resume music"} className="h-7 w-7 min-w-[36px] min-h-[36px] text-white hover:bg-white/10 rounded-full">
-                  <Icons.pause className="w-3.5 h-3.5" />
-                </Button>
-                <Button size="icon" variant="ghost" onClick={handleStop} aria-label="Stop music" className="h-7 w-7 min-w-[36px] min-h-[36px] text-red-400 hover:text-red-300 hover:bg-white/10 rounded-full">
-                  <Icons.stop className="w-3.5 h-3.5" />
-                </Button>
-              </div>
-            </div>
-          </div>
-        )}
-      </CardContent>
-    </Card>
+          </CardContent>
+        </Card>
+      )}
+    </div>
   )
 }

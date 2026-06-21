@@ -84,7 +84,7 @@ export interface MusicTrack {
   name: string
   url: string
   category: "focus" | "relax" | "energy" | "nature" | "instrumental" | "zen"
-  type?: "youtube" | "audio"
+  type?: "youtube" | "audio" | "synthesized"
   description?: string
   icon?: string
 }

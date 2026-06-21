@@ -45,6 +45,8 @@ import {
   FiSkipForward,
   FiChevronDown,
   FiChevronUp,
+  FiList,
+  FiActivity,
 } from "react-icons/fi"
 
 import {
@@ -114,4 +116,6 @@ export const Icons = {
   skip: FiSkipForward,
   chevronDown: FiChevronDown,
   chevronUp: FiChevronUp,
+  list: FiList,
+  activity: FiActivity,
 }

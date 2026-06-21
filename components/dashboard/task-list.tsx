@@ -82,13 +82,13 @@ export function TaskList() {
   const getPriorityColor = (priority: string) => {
     switch (priority) {
       case "high":
-        return "bg-red-100 text-red-700 border-red-200"
+        return "bg-red-500/10 text-red-700 border-red-200/50 dark:bg-red-950/20 dark:text-red-400 dark:border-red-900/30"
       case "medium":
-        return "bg-yellow-100 text-yellow-700 border-yellow-200"
+        return "bg-amber-500/10 text-amber-700 border-amber-250/50 dark:bg-amber-950/20 dark:text-amber-400 dark:border-amber-900/30"
       case "low":
-        return "bg-green-100 text-green-700 border-green-200"
+        return "bg-emerald-500/10 text-emerald-700 border-emerald-200/50 dark:bg-emerald-950/20 dark:text-emerald-400 dark:border-emerald-900/30"
       default:
-        return "bg-gray-100 text-gray-700 border-gray-200"
+        return "bg-slate-100/50 text-slate-700 border-slate-200/50 dark:bg-slate-800/20 dark:text-slate-400 dark:border-slate-800"
     }
   }
 
@@ -115,7 +115,7 @@ export function TaskList() {
         <Checkbox
           checked={task.completed}
           onCheckedChange={(checked) => toggleTask(task.id, checked as boolean)}
-          className="mt-1 rounded-md border-slate-300 dark:border-slate-600 data-[state=checked]:bg-emerald-500 data-[state=checked]:border-emerald-500"
+          className="mt-1 rounded-md border-slate-350 dark:border-slate-650 data-[state=checked]:bg-emerald-500 data-[state=checked]:border-emerald-500 transition-all duration-300 active:scale-90"
         />
         <div className="flex-1 min-w-0">
           <div className="flex items-start justify-between">

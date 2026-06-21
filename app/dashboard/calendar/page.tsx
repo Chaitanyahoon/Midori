@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -23,6 +23,22 @@ export default function CalendarPage() {
   const [selectedPriorityFilter, setSelectedPriorityFilter] = useState<"all" | "high" | "medium" | "low">("all")
   const { tasks, addTask, updateTask } = useData()
   const { toast } = useToast()
+
+  useEffect(() => {
+    const todayStr = new Date().toISOString().split("T")[0]
+    setSelectedDate(todayStr)
+  }, [])
+
+  const getFormattedDateString = (day: number) => {
+    const dObj = new Date(currentDate.getFullYear(), currentDate.getMonth(), day)
+    return (
+      dObj.getFullYear() +
+      "-" +
+      String(dObj.getMonth() + 1).padStart(2, "0") +
+      "-" +
+      String(dObj.getDate()).padStart(2, "0")
+    )
+  }
 
   const [newTask, setNewTask] = useState({
     title: "",
@@ -188,7 +204,10 @@ export default function CalendarPage() {
         <div className="flex items-center gap-2 mt-2 sm:mt-0">
           <Button
             className="flex-1 bg-gradient-to-r from-emerald-600 to-blue-600 hover:from-emerald-700 hover:to-blue-700 text-white shadow-lg hover:shadow-xl transition-all duration-200 disabled:opacity-50"
-            onClick={() => setIsAddDialogOpen(true)}
+            onClick={() => {
+              setNewTask(prev => ({ ...prev, dueDate: selectedDate || new Date().toISOString().split("T")[0] }))
+              setIsAddDialogOpen(true)
+            }}
           >
             <Icons.seedling className="w-4 h-4 mr-2" />
             Schedule Task
@@ -412,28 +431,45 @@ export default function CalendarPage() {
                 const hasHighPriority = dayTasks.some((task) => task.priority === "high")
                 const cellDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), day)
                 const isPast = cellDate < new Date(today.getFullYear(), today.getMonth(), today.getDate())
+                const cellDateStr = getFormattedDateString(day)
+                const isSelected = selectedDate === cellDateStr
+
                 return (
                   <div
                     key={index}
                     className={`
-                        min-h-[64px] sm:min-h-[88px] p-2 rounded-xl border transition-all duration-300 cursor-pointer
+                        min-h-[64px] sm:min-h-[88px] p-2 rounded-xl border transition-all duration-300 cursor-pointer relative group/cell
                         hover:bg-emerald-50/50 dark:hover:bg-emerald-950/20 hover:border-emerald-200 dark:hover:border-emerald-800/50
-                        ${isToday(day) ? "bg-gradient-to-br from-emerald-50 to-teal-50/30 dark:from-emerald-950/40 dark:to-teal-950/20 border-emerald-200 dark:border-emerald-800 shadow-md" : "bg-white dark:bg-slate-800/50 border-gray-100/80 dark:border-slate-700/60"}
+                        ${isSelected ? "ring-2 ring-emerald-500 border-transparent dark:ring-emerald-400" : isToday(day) ? "bg-gradient-to-br from-emerald-50 to-teal-50/30 dark:from-emerald-950/40 dark:to-teal-950/20 border-emerald-200 dark:border-emerald-800 shadow-md" : "bg-white dark:bg-slate-800/50 border-gray-100/80 dark:border-slate-700/60"}
                         ${hasHighPriority ? "ring-1 ring-rose-500/30 dark:ring-rose-500/40" : ""}
-                        ${isPast ? "opacity-60 pointer-events-none" : ""}
+                        ${isPast ? "opacity-75" : ""}
                       `}
-                    onClick={() => handleDateClick(day)}
+                    onClick={() => setSelectedDate(cellDateStr)}
                   >
                     <div className="h-full flex flex-col">
                       <div className="flex items-center justify-between mb-2">
-                        <span className={`text-sm font-medium ${isToday(day) ? "text-emerald-700 dark:text-emerald-400" : "text-gray-900 dark:text-gray-100"}`}>
+                        <span className={`text-sm font-semibold ${isToday(day) ? "text-emerald-700 dark:text-emerald-400" : "text-gray-900 dark:text-gray-100"}`}>
                            {day}
                         </span>
-                        {dayTasks.length > 0 && (
-                          <Badge variant="secondary" className="text-xs h-5 px-1.5">
-                            {dayTasks.length}
-                          </Badge>
-                        )}
+                        <div className="flex items-center gap-1">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              setSelectedDate(cellDateStr)
+                              setNewTask({ ...newTask, dueDate: cellDateStr })
+                              setIsAddDialogOpen(true)
+                            }}
+                            className="w-5 h-5 rounded-md hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 flex items-center justify-center opacity-0 group-hover/cell:opacity-100 transition-opacity"
+                            title="Schedule task"
+                          >
+                            <Icons.plus className="w-3.5 h-3.5" />
+                          </button>
+                          {dayTasks.length > 0 && (
+                            <Badge variant="secondary" className="text-[10px] h-4.5 px-1.5 font-bold">
+                              {dayTasks.length}
+                            </Badge>
+                          )}
+                        </div>
                       </div>
                       <div className="flex-1 space-y-1 hidden sm:block">
                         {dayTasks.slice(0, 3).map((task, i) => {
@@ -628,6 +664,90 @@ export default function CalendarPage() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Selected Day Checklist Preview */}
+      {selectedDate && (
+        <Card className="card-zen p-6 relative overflow-hidden group/checklist">
+          <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-400/5 dark:bg-emerald-500/5 rounded-full blur-3xl -z-10 pointer-events-none" />
+          <div className="flex items-center justify-between border-b border-slate-200/50 dark:border-slate-800/60 pb-4 mb-4">
+            <div className="flex items-center gap-2">
+              <div className="w-9 h-9 rounded-xl bg-emerald-100 dark:bg-emerald-950/40 flex items-center justify-center text-emerald-600 dark:text-emerald-400">
+                <Icons.tasks className="w-4.5 h-4.5" />
+              </div>
+              <div>
+                <h3 className="font-bold text-slate-800 dark:text-slate-100 text-sm">
+                  Tasks for {new Date(selectedDate + "T12:00:00").toLocaleDateString("en-US", { weekday: "long", month: "short", day: "numeric" })}
+                </h3>
+                <p className="text-xs text-slate-500">Manage and check off your logs for this day</p>
+              </div>
+            </div>
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={() => {
+                setNewTask(prev => ({ ...prev, dueDate: selectedDate }))
+                setIsAddDialogOpen(true)
+              }}
+              className="rounded-lg text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/20 text-xs font-semibold"
+            >
+              <Icons.plus className="w-3.5 h-3.5 mr-1" /> Add Task
+            </Button>
+          </div>
+
+          <div className="space-y-2 max-h-[300px] overflow-y-auto pr-1 custom-scrollbar">
+            {tasks.filter(t => t.dueDate === selectedDate).length === 0 ? (
+              <div className="text-center py-8 text-slate-400 dark:text-slate-500 italic text-xs">
+                No tasks scheduled for this day. Click the button above to add one!
+              </div>
+            ) : (
+              tasks.filter(t => t.dueDate === selectedDate).map(task => (
+                <div
+                  key={task.id}
+                  className={`p-3 rounded-xl border flex items-center gap-3 transition-all ${
+                    task.completed
+                      ? "bg-slate-50/50 dark:bg-slate-800/20 border-slate-100 dark:border-slate-850 opacity-60"
+                      : "bg-white/60 dark:bg-slate-900/40 border-slate-200/50 dark:border-slate-800/80 shadow-sm hover:border-emerald-200 hover:translate-x-0.5"
+                  }`}
+                >
+                  <Checkbox
+                    checked={task.completed}
+                    onCheckedChange={() => {
+                      updateTask(task.id, { completed: !task.completed })
+                      toast({
+                        title: !task.completed ? "Task completed! 🎉" : "Task reopened",
+                        description: !task.completed ? "Great job!" : "Task marked as pending.",
+                      })
+                    }}
+                    className="h-4 w-4 border-slate-350 dark:border-slate-650 data-[state=checked]:bg-emerald-500 data-[state=checked]:border-emerald-500"
+                  />
+                  <div className="flex-1 min-w-0">
+                    <p className={`text-xs sm:text-sm font-semibold truncate ${task.completed ? "text-slate-555 line-through" : "text-slate-800 dark:text-slate-200"}`}>
+                      {task.title}
+                    </p>
+                    {task.description && (
+                      <p className="text-[11px] text-slate-500 dark:text-slate-400 truncate">{task.description}</p>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Badge
+                      variant="outline"
+                      className={`text-[9px] font-bold px-1.5 py-0.5 rounded ${
+                        task.priority === "high"
+                          ? "bg-red-50/70 border-red-200 text-red-700 dark:bg-red-950/20 dark:border-red-900/30 dark:text-red-400"
+                          : task.priority === "medium"
+                            ? "bg-yellow-50/70 border-yellow-200 text-yellow-700 dark:bg-yellow-950/20 dark:border-yellow-900/30 dark:text-yellow-400"
+                            : "bg-green-50/70 border-green-200 text-green-700 dark:bg-green-950/20 dark:border-green-900/30 dark:text-green-400"
+                      }`}
+                    >
+                      {task.priority}
+                    </Badge>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        </Card>
+      )}
       </div>
     </div>
   )

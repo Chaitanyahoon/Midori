@@ -725,7 +725,7 @@ export default function CoopPage() {
                                 </p>
                             </div>
                         ) : (
-                            <div className="grid gap-4 grid-cols-1 sm:grid-cols-2">
+                            <div className="grid gap-4 grid-cols-1 xl:grid-cols-2">
                                 {(sharedGarden.plants || []).map((plant: any) => {
                                     const nurture = plant.nurtureLevel ?? 0
                                     const isMature = plant.status === "mature" || nurture >= 100

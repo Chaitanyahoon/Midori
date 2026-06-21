@@ -47,6 +47,19 @@ export function VisualGarden({ onAddPlant }: { onAddPlant?: () => void }) {
         }
     }, [settings?.activeSharedGardenId])
 
+    const envMenuRef = useRef<HTMLDivElement>(null)
+    const [showEnvMenu, setShowEnvMenu] = useState(false)
+
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (envMenuRef.current && !envMenuRef.current.contains(event.target as Node)) {
+                setShowEnvMenu(false)
+            }
+        }
+        document.addEventListener("mousedown", handleClickOutside)
+        return () => document.removeEventListener("mousedown", handleClickOutside)
+    }, [])
+
     const pRef = useRef<Plant[]>([])
     const parts = useRef<Particle[]>([])
     const stars = useRef<Star[]>([])
@@ -896,19 +909,57 @@ export function VisualGarden({ onAddPlant }: { onAddPlant?: () => void }) {
                     <button onClick={() => setShowStore(!showStore)} className="h-9 px-4 rounded-full flex items-center gap-2 bg-white/20 backdrop-blur-md border border-white/20 text-white hover:bg-white/30 shadow-sm transition-all active:scale-95" title="Open Nursery">
                         <Icons.flower className="w-4 h-4" /><span className="text-sm font-bold hidden sm:inline">Nursery</span>
                     </button>
-                    <div className="flex bg-white/80 dark:bg-slate-900/80 rounded-full p-1 border border-slate-200/50 dark:border-slate-700/50 shadow-md backdrop-blur-md">
-                        {(['auto', 'morning', 'afternoon', 'evening', 'night'] as const).map(t2 => (
-                            <button key={t2} onClick={() => setMTime(t2)} className={`w-9 h-9 rounded-full flex items-center justify-center text-lg transition-all ${mTime === t2 ? 'bg-white dark:bg-slate-700 shadow-sm scale-110' : 'opacity-60 hover:opacity-100 grayscale hover:grayscale-0'}`} title={t2 === 'auto' ? 'Auto' : t2}>
-                                {t2 === 'auto' && '🤖'}{t2 === 'morning' && '🌅'}{t2 === 'afternoon' && '☀️'}{t2 === 'evening' && '🌆'}{t2 === 'night' && '🌙'}
-                            </button>
-                        ))}
-                    </div>
-                    <div className="flex bg-white/80 dark:bg-slate-900/80 rounded-full p-1 border border-slate-200/50 dark:border-slate-700/50 shadow-md backdrop-blur-md">
-                        {(['spring', 'summer', 'autumn', 'winter'] as const).map(s2 => (
-                            <button key={s2} onClick={() => setMSeason(s2)} className={`w-9 h-9 rounded-full flex items-center justify-center text-lg transition-all ${mSeason === s2 ? 'bg-white dark:bg-slate-700 shadow-sm scale-110' : 'opacity-60 hover:opacity-100 grayscale hover:grayscale-0'}`} title={s2}>
-                                {s2 === 'spring' && '🌸'}{s2 === 'summer' && '🌻'}{s2 === 'autumn' && '🍂'}{s2 === 'winter' && '❄️'}
-                            </button>
-                        ))}
+                    <div ref={envMenuRef} className="relative pointer-events-auto">
+                        <button
+                            onClick={() => setShowEnvMenu(!showEnvMenu)}
+                            className={`h-9 px-4 rounded-full flex items-center gap-2 bg-white/20 hover:bg-white/30 backdrop-blur-md border border-white/20 text-white shadow-sm transition-all active:scale-95 ${showEnvMenu ? 'bg-white/30 border-white/40' : ''}`}
+                            title="Change Environment"
+                        >
+                            <span>🌤️</span>
+                            <span className="text-sm font-bold hidden md:inline">Sky Options</span>
+                            <Icons.chevronDown className={`w-3 h-3 transition-transform duration-300 ${showEnvMenu ? 'rotate-180' : ''}`} />
+                        </button>
+                        {showEnvMenu && (
+                            <div className="absolute right-0 top-11 mt-2.5 z-30 bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border border-slate-200 dark:border-slate-800 p-4 rounded-2xl shadow-xl space-y-4 animate-in fade-in slide-in-from-top-2 duration-200 w-64 pointer-events-auto">
+                                <div className="space-y-2">
+                                    <label className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider block">Time of Day</label>
+                                    <div className="flex bg-slate-100 dark:bg-slate-800/80 rounded-full p-1 border border-slate-200/50 dark:border-slate-700/50 shadow-inner justify-between">
+                                        {(['auto', 'morning', 'afternoon', 'evening', 'night'] as const).map(t2 => (
+                                            <button
+                                                key={t2}
+                                                onClick={() => setMTime(t2)}
+                                                className={`w-9 h-9 rounded-full flex items-center justify-center text-lg transition-all ${mTime === t2 ? 'bg-white dark:bg-slate-700 shadow-sm scale-110' : 'opacity-60 hover:opacity-100 grayscale hover:grayscale-0'}`}
+                                                title={t2 === 'auto' ? 'Auto' : t2}
+                                            >
+                                                {t2 === 'auto' && '🤖'}
+                                                {t2 === 'morning' && '🌅'}
+                                                {t2 === 'afternoon' && '☀️'}
+                                                {t2 === 'evening' && '🌆'}
+                                                {t2 === 'night' && '🌙'}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider block">Season</label>
+                                    <div className="flex bg-slate-100 dark:bg-slate-800/80 rounded-full p-1 border border-slate-200/50 dark:border-slate-700/50 shadow-inner justify-between">
+                                        {(['spring', 'summer', 'autumn', 'winter'] as const).map(s2 => (
+                                            <button
+                                                key={s2}
+                                                onClick={() => setMSeason(s2)}
+                                                className={`w-9 h-9 rounded-full flex items-center justify-center text-lg transition-all ${mSeason === s2 ? 'bg-white dark:bg-slate-700 shadow-sm scale-110' : 'opacity-60 hover:opacity-100 grayscale hover:grayscale-0'}`}
+                                                title={s2}
+                                            >
+                                                {s2 === 'spring' && '🌸'}
+                                                {s2 === 'summer' && '🌻'}
+                                                {s2 === 'autumn' && '🍂'}
+                                                {s2 === 'winter' && '❄️'}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+                            </div>
+                        )}
                     </div>
                 </div>
             </CardHeader>

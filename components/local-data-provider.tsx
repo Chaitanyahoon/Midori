@@ -250,7 +250,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
       const dateStr = d.toISOString().split("T")[0]
       const hasActivity =
         tasks.some(t => t.completedAt?.startsWith(dateStr)) ||
-        pomodoros.some(p => p.completed && p.startTime.startsWith(dateStr))
+        pomodoros.some(p => p.completed && p.startTime?.startsWith(dateStr))
       if (hasActivity) streak++
       else break
     }

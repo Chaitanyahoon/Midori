@@ -201,15 +201,28 @@ export function ProductivityTrends() {
         <CardContent className="p-6 relative z-10">
           <div className="space-y-8">
             {/* Current Level */}
-            <div className="text-center p-6 card-zen">
-              <div
-                className={`w-20 h-20 mx-auto mb-4 bg-gradient-to-br from-${insight.color}-500 to-${insight.color}-600 rounded-full flex items-center justify-center shadow-lg shadow-${insight.color}-500/30 animate-pulse-slow`}
-              >
-                <Icons.zap className="w-10 h-10 text-white" />
-              </div>
-              <h3 className="text-2xl font-black text-slate-800 dark:text-slate-100 mb-2 tracking-tight">{insight.level}</h3>
-              <p className="text-base font-medium text-slate-600 dark:text-slate-400 max-w-sm mx-auto">{insight.message}</p>
-            </div>
+            {(() => {
+              const colorMap: Record<string, { bg: string, shadow: string }> = {
+                green: { bg: "from-green-500 to-green-600", shadow: "shadow-green-500/30" },
+                blue: { bg: "from-blue-500 to-blue-600", shadow: "shadow-blue-500/30" },
+                emerald: { bg: "from-emerald-500 to-emerald-600", shadow: "shadow-emerald-500/30" },
+                yellow: { bg: "from-yellow-500 to-yellow-600", shadow: "shadow-yellow-500/30" },
+                gray: { bg: "from-gray-500 to-gray-600", shadow: "shadow-gray-500/30" },
+              }
+              const colorClasses = colorMap[insight.color] || colorMap.gray
+
+              return (
+                <div className="text-center p-6 card-zen">
+                  <div
+                    className={`w-20 h-20 mx-auto mb-4 bg-gradient-to-br ${colorClasses.bg} rounded-full flex items-center justify-center shadow-lg ${colorClasses.shadow} animate-pulse-slow`}
+                  >
+                    <Icons.zap className="w-10 h-10 text-white" />
+                  </div>
+                  <h3 className="text-2xl font-black text-slate-800 dark:text-slate-100 mb-2 tracking-tight">{insight.level}</h3>
+                  <p className="text-base font-medium text-slate-600 dark:text-slate-400 max-w-sm mx-auto">{insight.message}</p>
+                </div>
+              )
+            })()}
 
             {/* Key Metrics */}
             <div className="space-y-5 bg-white/40 dark:bg-slate-900/30 backdrop-blur-sm p-6 rounded-3xl border border-white/50 dark:border-slate-700/50 shadow-inner">

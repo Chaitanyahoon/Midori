@@ -20,6 +20,7 @@ import { usePomodoro } from "@/lib/hooks/usePomodoro"
 import { useMusicStore, MusicTrack } from "@/lib/store"
 import { Slider } from "@/components/ui/slider"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { toast } from "sonner"
 
 
 export default function PomodoroPage() {
@@ -53,7 +54,7 @@ export default function PomodoroPage() {
     formatTime,
   } = usePomodoro()
 
-  const { tasks, pomodoros, updateTask } = useData()
+  const { tasks, pomodoros, updateTask, addTask } = useData()
 
   const [isZenMode, setIsZenMode] = useState(false)
   const [isHistoryOpen, setIsHistoryOpen] = useState(false)
@@ -65,27 +66,117 @@ export default function PomodoroPage() {
   
   const [breathingPhase, setBreathingPhase] = useState<"inhale" | "hold1" | "exhale" | "hold2">("inhale")
   const [breathingSecondsLeft, setBreathingSecondsLeft] = useState(4)
+  const [breathingPattern, setBreathingPattern] = useState<"box" | "relax" | "coherence">("box")
 
+  // Brain Dump state
+  const [brainDumpText, setBrainDumpText] = useState("")
+  const [brainDumpNotes, setBrainDumpNotes] = useState<string[]>([])
+
+  // Harvest Modal & Reflection
+  const [showHarvestModal, setShowHarvestModal] = useState(false)
+  const [prevCompletedCount, setPrevCompletedCount] = useState<number | null>(null)
+  const [reflectionText, setReflectionText] = useState("")
+
+  // Load brain dump
+  useEffect(() => {
+    const saved = localStorage.getItem("midori_brain_dump")
+    if (saved) {
+      try { setBrainDumpNotes(JSON.parse(saved)) } catch (e) {}
+    }
+  }, [])
+
+  const saveBrainDump = (notes: string[]) => {
+    setBrainDumpNotes(notes)
+    localStorage.setItem("midori_brain_dump", JSON.stringify(notes))
+  }
+
+  const handleAddDumpNote = (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!brainDumpText.trim()) return
+    const nextNotes = [...brainDumpNotes, brainDumpText.trim()]
+    saveBrainDump(nextNotes)
+    setBrainDumpText("")
+    toast.success("Mind cleared! 🧠", { description: "Fleeting thought captured. Focus restored." })
+  }
+
+  const handleDeleteDumpNote = (index: number) => {
+    const nextNotes = brainDumpNotes.filter((_, i) => i !== index)
+    saveBrainDump(nextNotes)
+  }
+
+  const handleConvertDumpToTask = async (index: number, noteText: string) => {
+    await addTask({
+      title: noteText,
+      priority: "medium",
+      category: "personal",
+      completed: false
+    })
+    handleDeleteDumpNote(index)
+    toast.success("Task created! 🌱", { description: `"${noteText}" has been added to your Tasks Garden.` })
+  }
+
+  // Harvest Modal Trigger
+  useEffect(() => {
+    if (prevCompletedCount === null) {
+      setPrevCompletedCount(completedSessionsToday)
+      return
+    }
+    if (completedSessionsToday > prevCompletedCount) {
+      setPrevCompletedCount(completedSessionsToday)
+      setShowHarvestModal(true)
+    } else {
+      setPrevCompletedCount(completedSessionsToday)
+    }
+  }, [completedSessionsToday])
+
+  // Breathing pacer effect
   useEffect(() => {
     if (!isZenMode || !isBreathingPacerActive) return
+
+    const getPhaseDuration = (pattern: "box" | "relax" | "coherence", phase: "inhale" | "hold1" | "exhale" | "hold2"): number => {
+      if (pattern === "box") return 4
+      if (pattern === "relax") {
+        if (phase === "inhale") return 4
+        if (phase === "hold1") return 7
+        if (phase === "exhale") return 8
+        return 0
+      }
+      if (phase === "inhale") return 5
+      if (phase === "exhale") return 5
+      return 0
+    }
+
+    setBreathingPhase("inhale")
+    setBreathingSecondsLeft(getPhaseDuration(breathingPattern, "inhale"))
 
     const interval = setInterval(() => {
       setBreathingSecondsLeft((prev) => {
         if (prev <= 1) {
+          let nextPhase: "inhale" | "hold1" | "exhale" | "hold2" = "inhale"
           setBreathingPhase((phase) => {
-            if (phase === "inhale") return "hold1"
-            if (phase === "hold1") return "exhale"
-            if (phase === "exhale") return "hold2"
-            return "inhale"
+            if (breathingPattern === "box") {
+              if (phase === "inhale") nextPhase = "hold1"
+              else if (phase === "hold1") nextPhase = "exhale"
+              else if (phase === "exhale") nextPhase = "hold2"
+              else nextPhase = "inhale"
+            } else if (breathingPattern === "relax") {
+              if (phase === "inhale") nextPhase = "hold1"
+              else if (phase === "hold1") nextPhase = "exhale"
+              else nextPhase = "inhale"
+            } else {
+              if (phase === "inhale") nextPhase = "exhale"
+              else nextPhase = "inhale"
+            }
+            return nextPhase
           })
-          return 4
+          return getPhaseDuration(breathingPattern, nextPhase)
         }
         return prev - 1
       })
     }, 1000)
 
     return () => clearInterval(interval)
-  }, [isZenMode, isBreathingPacerActive])
+  }, [isZenMode, isBreathingPacerActive, breathingPattern])
 
   const currentTaskObj = useMemo(() => {
     return tasks.find(t => t.id === selectedTask)
@@ -750,100 +841,160 @@ export default function PomodoroPage() {
           {/* 2. MAIN LAYOUT (Checklist | Center Timer | Audio Control) */}
           <div className="flex-1 w-full flex items-center justify-between relative mt-4 mb-4 gap-6">
             
-            {/* LEFT DRAWER (Tasks & Checklists) */}
+            {/* LEFT DRAWER (Tasks & Checklists & Brain Dump) */}
             <div className={`relative z-20 h-full w-80 bg-slate-950/70 border border-white/5 backdrop-blur-2xl rounded-3xl p-5 flex flex-col justify-between transition-all duration-500 transform ${isZenTasksOpen ? "translate-x-0 opacity-100" : "-translate-x-[110%] opacity-0 pointer-events-none absolute"}`}>
               <div className="flex flex-col min-h-0 flex-1">
                 <div className="flex items-center justify-between pb-3 border-b border-white/5 mb-4">
                   <h3 className="text-sm font-bold text-white uppercase tracking-wider flex items-center gap-2">
                     <Icons.list className="text-emerald-400 w-4 h-4" />
-                    Task Workspace
+                    Focus Hub
                   </h3>
-                  <Badge variant="outline" className="text-white/40 border-white/10">Checklist</Badge>
+                  <Badge variant="outline" className="text-white/40 border-white/10">Zen workspace</Badge>
                 </div>
 
-                <div className="mb-4">
-                  <label className="text-[10px] font-bold uppercase tracking-wider text-white/40 block mb-2">Active Focus Task</label>
-                  <Select value={selectedTask} onValueChange={setSelectedTask}>
-                    <SelectTrigger className="w-full bg-white/5 border-white/10 h-10 text-white focus:ring-emerald-500 focus:border-emerald-500 rounded-xl">
-                      <SelectValue placeholder="Select a task or focus generally" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="general">General Focus Session</SelectItem>
-                      {pendingTasks.map((task) => (
-                        <SelectItem key={task.id} value={task.id}>
-                          {task.title}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
+                <Tabs defaultValue="tasks" className="flex-1 flex flex-col min-h-0">
+                  <TabsList className="grid grid-cols-2 bg-white/5 border border-white/5 rounded-xl p-1 mb-4 h-9">
+                    <TabsTrigger value="tasks" className="text-xs text-white/50 data-[state=active]:bg-white/10 data-[state=active]:text-white rounded-lg h-7 font-semibold">📋 Tasks</TabsTrigger>
+                    <TabsTrigger value="dump" className="text-xs text-white/50 data-[state=active]:bg-white/10 data-[state=active]:text-white rounded-lg h-7 font-semibold">🧠 Brain Dump</TabsTrigger>
+                  </TabsList>
 
-                {selectedTask !== "general" && currentTaskObj ? (
-                  <div className="flex-1 flex flex-col min-h-0">
-                    <div className="mb-3.5">
-                      <div className="flex justify-between items-center text-xs text-white/70 mb-1.5">
-                        <span className="font-semibold truncate max-w-[150px]">{currentTaskObj.title}</span>
-                        <span className="font-mono text-emerald-400">
-                          {Math.round(((currentTaskObj.subtasks?.filter(s => s.completed).length || 0) / (currentTaskObj.subtasks?.length || 1)) * 100)}%
-                        </span>
-                      </div>
-                      <Progress
-                        value={((currentTaskObj.subtasks?.filter(s => s.completed).length || 0) / (currentTaskObj.subtasks?.length || 1)) * 100}
-                        className="h-2 bg-white/5"
-                      />
+                  <TabsContent value="tasks" className="flex-1 flex flex-col min-h-0 focus-visible:outline-none">
+                    <div className="mb-4">
+                      <label className="text-[10px] font-bold uppercase tracking-wider text-white/40 block mb-2">Active Focus Task</label>
+                      <Select value={selectedTask} onValueChange={setSelectedTask}>
+                        <SelectTrigger className="w-full bg-white/5 border-white/10 h-10 text-white focus:ring-emerald-500 focus:border-emerald-500 rounded-xl">
+                          <SelectValue placeholder="Select a task or focus generally" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="general">General Focus Session</SelectItem>
+                          {pendingTasks.map((task) => (
+                            <SelectItem key={task.id} value={task.id}>
+                              {task.title}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                     </div>
 
-                    <label className="text-[10px] font-bold uppercase tracking-wider text-white/40 block mb-2">Sub-task Checklist</label>
-                    <div className="flex-1 overflow-y-auto scrollbar-hide space-y-2 pr-1 min-h-[150px]">
-                      {(!currentTaskObj.subtasks || currentTaskObj.subtasks.length === 0) ? (
-                        <div className="text-center py-8 text-xs text-white/30 italic">No sub-tasks yet. Add one below!</div>
-                      ) : (
-                        currentTaskObj.subtasks.map((sub) => (
-                          <div
-                            key={sub.id}
-                            className="group flex items-center justify-between p-2.5 bg-white/5 hover:bg-white/10 rounded-xl border border-white/5 transition-all"
-                          >
-                            <button
-                              onClick={() => handleToggleSubtask(sub.id)}
-                              className="flex items-center gap-2.5 flex-1 min-w-0 text-left"
-                            >
-                              <div className={`w-4 h-4 rounded border flex items-center justify-center transition-all ${sub.completed ? "bg-emerald-500 border-emerald-500 text-white" : "border-white/20 bg-transparent"}`}>
-                                {sub.completed && <span className="text-[10px] font-bold">✓</span>}
-                              </div>
-                              <span className={`text-xs font-semibold truncate ${sub.completed ? "line-through text-white/30" : "text-white/80"}`}>
-                                {sub.title}
-                              </span>
-                            </button>
-                            <button
-                              onClick={() => handleDeleteSubtask(sub.id)}
-                              className="text-white/30 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity p-0.5"
-                            >
-                              <Icons.trash className="w-3.5 h-3.5" />
-                            </button>
+                    {selectedTask !== "general" && currentTaskObj ? (
+                      <div className="flex-1 flex flex-col min-h-0">
+                        <div className="mb-3.5">
+                          <div className="flex justify-between items-center text-xs text-white/70 mb-1.5">
+                            <span className="font-semibold truncate max-w-[150px]">{currentTaskObj.title}</span>
+                            <span className="font-mono text-emerald-400">
+                              {Math.round(((currentTaskObj.subtasks?.filter(s => s.completed).length || 0) / (currentTaskObj.subtasks?.length || 1)) * 100)}%
+                            </span>
                           </div>
-                        ))
-                      )}
-                    </div>
+                          <Progress
+                            value={((currentTaskObj.subtasks?.filter(s => s.completed).length || 0) / (currentTaskObj.subtasks?.length || 1)) * 100}
+                            className="h-2 bg-white/5"
+                          />
+                        </div>
 
-                    <form onSubmit={handleAddSubtask} className="mt-4 pt-3 border-t border-white/5">
+                        <label className="text-[10px] font-bold uppercase tracking-wider text-white/40 block mb-2">Sub-task Checklist</label>
+                        <div className="flex-1 overflow-y-auto scrollbar-hide space-y-2 pr-1 min-h-[150px]">
+                          {(!currentTaskObj.subtasks || currentTaskObj.subtasks.length === 0) ? (
+                            <div className="text-center py-8 text-xs text-white/30 italic">No sub-tasks yet. Add one below!</div>
+                          ) : (
+                            currentTaskObj.subtasks.map((sub) => (
+                              <div
+                                key={sub.id}
+                                className="group flex items-center justify-between p-2.5 bg-white/5 hover:bg-white/10 rounded-xl border border-white/5 transition-all"
+                              >
+                                <button
+                                  onClick={() => handleToggleSubtask(sub.id)}
+                                  className="flex items-center gap-2.5 flex-1 min-w-0 text-left"
+                                >
+                                  <div className={`w-4 h-4 rounded border flex items-center justify-center transition-all ${sub.completed ? "bg-emerald-500 border-emerald-500 text-white" : "border-white/20 bg-transparent"}`}>
+                                    {sub.completed && <span className="text-[10px] font-bold">✓</span>}
+                                  </div>
+                                  <span className={`text-xs font-semibold truncate ${sub.completed ? "line-through text-white/30" : "text-white/80"}`}>
+                                    {sub.title}
+                                  </span>
+                                </button>
+                                <button
+                                  onClick={() => handleDeleteSubtask(sub.id)}
+                                  className="text-white/30 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity p-0.5"
+                                >
+                                  <Icons.trash className="w-3.5 h-3.5" />
+                                </button>
+                              </div>
+                            ))
+                          )}
+                        </div>
+
+                        <form onSubmit={handleAddSubtask} className="mt-4 pt-3 border-t border-white/5">
+                          <div className="flex gap-2">
+                            <Input
+                              placeholder="Quick add sub-task..."
+                              value={newSubtaskTitle}
+                              onChange={(e) => setNewSubtaskTitle(e.target.value)}
+                              className="h-9 bg-white/5 border-white/10 text-xs text-white placeholder-white/20 focus-visible:ring-emerald-500 rounded-xl"
+                            />
+                            <Button type="submit" size="sm" className="bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl h-9 px-3">
+                              <Icons.plus className="w-4 h-4" />
+                            </Button>
+                          </div>
+                        </form>
+                      </div>
+                    ) : (
+                      <div className="flex-1 flex items-center justify-center text-center p-6 border border-dashed border-white/10 rounded-2xl text-white/30 text-xs italic">
+                        Select a task above to manage sub-tasks inside Zen Mode.
+                      </div>
+                    )}
+                  </TabsContent>
+
+                  <TabsContent value="dump" className="flex-1 flex flex-col min-h-0 focus-visible:outline-none">
+                    <form onSubmit={handleAddDumpNote} className="mb-4">
                       <div className="flex gap-2">
                         <Input
-                          placeholder="Quick add sub-task..."
-                          value={newSubtaskTitle}
-                          onChange={(e) => setNewSubtaskTitle(e.target.value)}
+                          placeholder="Jot down a fleeting thought..."
+                          value={brainDumpText}
+                          onChange={(e) => setBrainDumpText(e.target.value)}
                           className="h-9 bg-white/5 border-white/10 text-xs text-white placeholder-white/20 focus-visible:ring-emerald-500 rounded-xl"
                         />
-                        <Button type="submit" size="sm" className="bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl h-9 px-3">
+                        <Button type="submit" size="sm" className="bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl h-9 px-3" title="Dump Note">
                           <Icons.plus className="w-4 h-4" />
                         </Button>
                       </div>
                     </form>
-                  </div>
-                ) : (
-                  <div className="flex-1 flex items-center justify-center text-center p-6 border border-dashed border-white/10 rounded-2xl text-white/30 text-xs italic">
-                    Select a task above to manage sub-tasks inside Zen Mode.
-                  </div>
-                )}
+
+                    <label className="text-[10px] font-bold uppercase tracking-wider text-white/40 block mb-2">Fleeting Thoughts ({brainDumpNotes.length})</label>
+                    <div className="flex-1 overflow-y-auto scrollbar-hide space-y-2 pr-1 min-h-[150px]">
+                      {brainDumpNotes.length === 0 ? (
+                        <div className="text-center py-12 text-xs text-white/30 italic px-4 leading-relaxed">
+                          "Empty your mind, be formless, shapeless, like water."<br/>
+                          <span className="text-[9px] opacity-60 mt-1 block">— Zen Quote</span>
+                        </div>
+                      ) : (
+                        brainDumpNotes.map((note, idx) => (
+                          <div
+                            key={idx}
+                            className="group flex flex-col gap-2 p-3 bg-white/5 rounded-xl border border-white/5 transition-all text-left"
+                          >
+                            <span className="text-xs text-white/80 font-medium leading-relaxed">{note}</span>
+                            <div className="flex justify-end gap-1.5 pt-1.5 border-t border-white/5 opacity-40 group-hover:opacity-100 transition-opacity">
+                              <button
+                                onClick={() => handleConvertDumpToTask(idx, note)}
+                                className="text-[10px] text-emerald-400 hover:text-emerald-350 font-bold uppercase tracking-wider flex items-center gap-1 px-1.5 py-0.5 rounded bg-emerald-500/10"
+                                title="Convert note to active task"
+                              >
+                                <Icons.sprout className="w-3 h-3" /> Task
+                              </button>
+                              <button
+                                onClick={() => handleDeleteDumpNote(idx)}
+                                className="text-white/30 hover:text-red-400 p-0.5"
+                                title="Delete note"
+                              >
+                                <Icons.trash className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  </TabsContent>
+                </Tabs>
               </div>
             </div>
 
@@ -854,25 +1005,39 @@ export default function PomodoroPage() {
               {isBreathingPacerActive ? (
                 <div className="relative flex flex-col items-center justify-center w-80 h-80 sm:w-96 sm:h-96">
                   {/* Expanding and contracting breathing ring */}
-                  <div
-                    className={`absolute inset-0 rounded-full border border-emerald-500/20 bg-emerald-500/5 transition-all duration-1000 ease-in-out transform ${
-                      breathingPhase === "inhale" || breathingPhase === "hold1" ? "scale-110 blur-sm bg-emerald-500/10 shadow-[0_0_50px_rgba(16,185,129,0.25)]" : "scale-90 blur-none bg-emerald-500/5"
-                    }`}
-                  />
-                  <div
-                    className={`absolute inset-16 sm:inset-20 rounded-full bg-slate-900 border border-white/5 flex flex-col items-center justify-center shadow-2xl transition-all duration-1000 ease-in-out transform ${
-                      breathingPhase === "inhale" || breathingPhase === "hold1" ? "scale-105" : "scale-95"
-                    }`}
-                  >
-                    <span className="text-[10px] font-bold uppercase tracking-widest text-emerald-400/60 mb-1">Breathing Guide</span>
-                    <span className="text-xl sm:text-2xl font-black text-white tracking-wide uppercase transition-all duration-300">
-                      {breathingPhase === "inhale" && "Breathe In"}
-                      {breathingPhase === "hold1" && "Hold"}
-                      {breathingPhase === "exhale" && "Breathe Out"}
-                      {breathingPhase === "hold2" && "Hold"}
-                    </span>
-                    <span className="text-3xl font-bold font-mono text-emerald-400 mt-2">{breathingSecondsLeft}s</span>
-                  </div>
+                  {(() => {
+                    const transitionMs = 
+                      breathingPhase === "inhale" 
+                        ? (breathingPattern === "coherence" ? 5000 : 4000) 
+                        : breathingPhase === "exhale" 
+                          ? (breathingPattern === "relax" ? 8000 : breathingPattern === "coherence" ? 5000 : 4000) 
+                          : 1000
+                    return (
+                      <>
+                        <div
+                          className={`absolute inset-0 rounded-full border border-emerald-500/20 bg-emerald-500/5 transition-all ease-in-out transform ${
+                            breathingPhase === "inhale" || breathingPhase === "hold1" ? "scale-110 blur-sm bg-emerald-500/10 shadow-[0_0_50px_rgba(16,185,129,0.25)]" : "scale-90 blur-none bg-emerald-500/5"
+                          }`}
+                          style={{ transitionDuration: `${transitionMs}ms` }}
+                        />
+                        <div
+                          className={`absolute inset-16 sm:inset-20 rounded-full bg-slate-900 border border-white/5 flex flex-col items-center justify-center shadow-2xl transition-all ease-in-out transform ${
+                            breathingPhase === "inhale" || breathingPhase === "hold1" ? "scale-105" : "scale-95"
+                          }`}
+                          style={{ transitionDuration: `${transitionMs}ms` }}
+                        >
+                          <span className="text-[10px] font-bold uppercase tracking-widest text-emerald-400/60 mb-1">Breathing Guide</span>
+                          <span className="text-xl sm:text-2xl font-black text-white tracking-wide uppercase transition-all duration-300">
+                            {breathingPhase === "inhale" && "Breathe In"}
+                            {breathingPhase === "hold1" && "Hold"}
+                            {breathingPhase === "exhale" && "Breathe Out"}
+                            {breathingPhase === "hold2" && "Hold"}
+                          </span>
+                          <span className="text-3xl font-bold font-mono text-emerald-400 mt-2">{breathingSecondsLeft}s</span>
+                        </div>
+                      </>
+                    )
+                  })()}
                 </div>
               ) : (
                 /* Standard circular progress timer display */
@@ -904,6 +1069,28 @@ export default function PomodoroPage() {
                       strokeLinecap="round"
                     />
                   </svg>
+                </div>
+              )}
+
+              {isBreathingPacerActive && (
+                <div className="mt-6 flex bg-white/5 border border-white/5 p-1 rounded-xl pointer-events-auto z-20">
+                  {[
+                    { id: "box", label: "Box (4s)" },
+                    { id: "relax", label: "Relax (4-7-8)" },
+                    { id: "coherence", label: "Coherent (5s)" }
+                  ].map(p => (
+                    <button
+                      key={p.id}
+                      onClick={() => setBreathingPattern(p.id as any)}
+                      className={`px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all ${
+                        breathingPattern === p.id 
+                          ? "bg-emerald-500 text-white shadow-md shadow-emerald-500/20" 
+                          : "text-white/40 hover:text-white"
+                      }`}
+                    >
+                      {p.label}
+                    </button>
+                  ))}
                 </div>
               )}
 
@@ -1199,6 +1386,85 @@ export default function PomodoroPage() {
 
         </div>
       )}
+
+      {/* Harvest Completion Modal */}
+      <Dialog open={showHarvestModal} onOpenChange={setShowHarvestModal}>
+        <DialogContent className="max-w-md bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border border-emerald-100 dark:border-slate-800 shadow-2xl rounded-3xl p-6 text-center">
+          <DialogHeader className="flex flex-col items-center">
+            <div className="w-16 h-16 bg-gradient-to-br from-amber-400 to-orange-500 rounded-2xl flex items-center justify-center shadow-lg transform rotate-6 mb-4 animate-bounce">
+              <Icons.sparkles className="w-8 h-8 text-white" />
+            </div>
+            <DialogTitle className="text-2xl font-black bg-gradient-to-r from-emerald-800 to-teal-600 dark:from-emerald-300 dark:to-teal-300 bg-clip-text text-transparent">
+              Harvest Complete! 🌟
+            </DialogTitle>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 uppercase tracking-widest font-bold">
+              Focus Garden Rewards
+            </p>
+          </DialogHeader>
+
+          <div className="py-6 space-y-6">
+            {/* Rewards */}
+            <div className="grid grid-cols-2 gap-4 max-w-xs mx-auto">
+              <div className="card-zen p-4 bg-amber-500/5 dark:bg-amber-500/10 border-amber-500/20 flex flex-col items-center">
+                <Icons.sun className="w-5 h-5 text-amber-500 mb-1" />
+                <span className="text-[10px] uppercase font-bold text-slate-400">Sunlight</span>
+                <span className="text-lg font-black text-amber-700 dark:text-amber-300">+0</span>
+              </div>
+              <div className="card-zen p-4 bg-blue-500/5 dark:bg-blue-500/10 border-blue-500/20 flex flex-col items-center">
+                <Icons.droplets className="w-5 h-5 text-blue-500 mb-1" />
+                <span className="text-[10px] uppercase font-bold text-slate-400">Water</span>
+                <span className="text-lg font-black text-blue-700 dark:text-blue-300">+1</span>
+              </div>
+            </div>
+
+            {/* Wisdom Quote */}
+            <div className="p-4 bg-slate-50/50 dark:bg-slate-800/40 rounded-2xl border border-slate-100 dark:border-slate-800 italic text-xs text-slate-600 dark:text-slate-350 leading-relaxed font-serif-luxury max-w-sm mx-auto">
+              "Patience and persistence turn the smallest seeds into the mightiest trees."
+            </div>
+
+            {/* Reflection Note */}
+            <div className="text-left space-y-2">
+              <Label htmlFor="reflectionNote" className="text-xs font-semibold text-slate-500 dark:text-slate-400">
+                Reflection Note (Optional)
+              </Label>
+              <Textarea
+                id="reflectionNote"
+                placeholder="How did this session go? Any insights or breakthroughs?"
+                value={reflectionText}
+                onChange={(e) => setReflectionText(e.target.value)}
+                className="bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-750 text-xs rounded-xl resize-none text-slate-850 dark:text-slate-200"
+                rows={2}
+              />
+            </div>
+          </div>
+
+          <div className="flex gap-3">
+            <Button
+              variant="outline"
+              onClick={() => {
+                setShowHarvestModal(false)
+                handleSkip()
+              }}
+              className="flex-1 rounded-xl text-xs font-bold"
+            >
+              Take a Break
+            </Button>
+            <Button
+              onClick={() => {
+                if (reflectionText.trim()) {
+                  toast.success("Reflection saved! 📝", { description: "Your thoughts have been logged with this session." })
+                }
+                setShowHarvestModal(false)
+                setReflectionText("")
+                handleStart()
+              }}
+              className="flex-1 btn-organic text-xs font-bold shadow-md"
+            >
+              Focus Again
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

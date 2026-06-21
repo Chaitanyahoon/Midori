@@ -1,5 +1,6 @@
 "use client"
 import { useState } from "react"
+import { useRouter } from "next/navigation"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -18,6 +19,7 @@ import { useToast } from "@/hooks/use-toast"
 import { SmartScheduleButton } from "@/components/dashboard/smart-schedule-button"
 
 export function TaskList() {
+  const router = useRouter()
   const { tasks, addTask, updateTask, settings } = useData()
   const { user } = useAuth()
   const userName = settings.userName || user?.displayName || user?.email?.split('@')[0] || ""
@@ -289,7 +291,12 @@ export function TaskList() {
             )}
             {todayTasks.length > 4 && (
               <div className="text-center pt-2">
-                <Button variant="ghost" size="sm" className="text-emerald-600 hover:text-emerald-700">
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className="text-emerald-600 hover:text-emerald-700 font-semibold"
+                  onClick={() => router.push("/dashboard/tasks")}
+                >
                   View {todayTasks.length - 4} more tasks
                 </Button>
               </div>
@@ -306,6 +313,18 @@ export function TaskList() {
             ) : (
               upcomingTasks.slice(0, 4).map((task) => <TaskItem key={task.id} task={task} showCategory />)
             )}
+            {upcomingTasks.length > 4 && (
+              <div className="text-center pt-2">
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className="text-emerald-600 hover:text-emerald-700 font-semibold"
+                  onClick={() => router.push("/dashboard/tasks")}
+                >
+                  View {upcomingTasks.length - 4} more tasks
+                </Button>
+              </div>
+            )}
           </TabsContent>
 
           <TabsContent value="completed" className="flex-1 overflow-y-auto px-6 py-2 pb-6 space-y-3 m-0 data-[state=inactive]:hidden focus-visible:outline-none">
@@ -317,6 +336,18 @@ export function TaskList() {
               </div>
             ) : (
               completedTasks.map((task) => <TaskItem key={task.id} task={task} showCategory />)
+            )}
+            {tasks.filter(t => t.completed).length > 5 && (
+              <div className="text-center pt-2">
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className="text-emerald-600 hover:text-emerald-700 font-semibold"
+                  onClick={() => router.push("/dashboard/tasks")}
+                >
+                  View task history
+                </Button>
+              </div>
             )}
           </TabsContent>
         </Tabs>

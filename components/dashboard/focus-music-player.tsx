@@ -425,12 +425,15 @@ export function FocusMusicPlayer({
     }
   }, [isActive, isBreak])
 
-  // Load YouTube IFrame API
+  // Load YouTube IFrame API on-demand when a YouTube track starts playing
   useEffect(() => {
+    const needsYoutube = (currentTrack?.type === "youtube" && isPlaying) || (ambientTrack?.type === "youtube" && isAmbientPlaying)
+    if (!needsYoutube) return
+
     if (typeof window !== "undefined" && !window.YT) {
       const tag = document.createElement("script")
       tag.src = "https://www.youtube.com/iframe_api"
-      const firstScriptTag = document.getElementsByTagName("script")[0]
+      const firstScriptTag = document.getElementsByTagName("script")[0] || document.body
       firstScriptTag.parentNode?.insertBefore(tag, firstScriptTag)
 
       window.onYouTubeIframeAPIReady = () => {
@@ -439,7 +442,8 @@ export function FocusMusicPlayer({
     } else if (window.YT) {
       apiReadyRef.current = true
     }
-  }, [])
+  }, [currentTrack, isPlaying, ambientTrack, isAmbientPlaying])
+
 
   // Sync Ambient Track Playback (Synthesized soundscapes)
   useEffect(() => {

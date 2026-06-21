@@ -7,6 +7,34 @@ import { useData } from "@/components/local-data-provider"
 import { Icons } from "@/components/icons"
 import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
+import Link from "next/link"
+
+interface ChartEmptyStateProps {
+  icon: React.ReactNode
+  title: string
+  description: string
+  actionLabel: string
+  actionHref: string
+}
+
+function ChartEmptyState({ icon, title, description, actionLabel, actionHref }: ChartEmptyStateProps) {
+  return (
+    <div className="flex flex-col items-center justify-center h-[300px] text-center p-6 bg-slate-50/40 dark:bg-slate-900/20 rounded-2xl border border-dashed border-slate-200 dark:border-slate-800 backdrop-blur-sm animate-fade-in w-full">
+      <div className="w-12 h-12 rounded-2xl bg-emerald-50 dark:bg-emerald-950/20 flex items-center justify-center text-emerald-600 dark:text-emerald-400 mb-3.5 shadow-inner">
+        {icon}
+      </div>
+      <h4 className="text-sm font-bold text-slate-800 dark:text-slate-200 mb-1">{title}</h4>
+      <p className="text-xs text-slate-500 dark:text-slate-400 max-w-[240px] leading-relaxed mb-4">{description}</p>
+      <Link
+        href={actionHref}
+        className="inline-flex items-center gap-1.5 px-4 py-2 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white text-xs font-semibold rounded-xl shadow-md shadow-emerald-500/20 hover:shadow-lg transition-all"
+      >
+        {actionLabel}
+      </Link>
+    </div>
+  )
+}
+
 
 const WeeklyFocusTooltip = ({ active, payload, label }: any) => {
   if (active && payload && payload[0]) {
@@ -272,6 +300,12 @@ export function ProductivityCharts() {
   const priorityDistribution = isDemoData ? DEMO_PRIORITY_DISTRIBUTION : getPriorityDistribution()
   const focusTimeByCategory = isDemoData ? DEMO_FOCUS_TIME_BY_CATEGORY : getFocusTimeByCategory()
 
+  const hasFocusFlow = weeklyData.some(d => d.hours > 0)
+  const hasSessions = weeklyData.some(d => d.pomodoros > 0)
+  const hasCategoryFocus = focusTimeByCategory.length > 0 && focusTimeByCategory[0]?.name !== "No focus time yet"
+  const hasPriorityData = priorityDistribution.length > 0 && priorityDistribution[0]?.name !== "No tasks yet"
+
+
   // Calculate insights
   const totalTasks = isDemoData ? 10 : tasks.length
   const completedTasks = isDemoData ? 7 : tasks.filter((t) => t.completed).length
@@ -398,31 +432,41 @@ export function ProductivityCharts() {
             </div>
           </CardHeader>
           <CardContent className="pt-6">
-            <div className="h-[300px]">
-              <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={weeklyData}>
-                  <defs>
-                    <linearGradient id="colorFocus" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#3B82F6" stopOpacity={0.3} />
-                      <stop offset="95%" stopColor="#3B82F6" stopOpacity={0} />
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" className="dark:stroke-slate-700" />
-                  <XAxis dataKey="day" stroke="#6B7280" className="dark:stroke-slate-400" />
-                  <YAxis stroke="#6B7280" className="dark:stroke-slate-400" />
-                  <ChartTooltip content={<WeeklyFocusTooltip />} />
-                  <Area
-                    type="monotone"
-                    dataKey="hours"
-                    stroke="#3B82F6"
-                    strokeWidth={3}
-                    fill="url(#colorFocus)"
-                    dot={{ fill: "#3B82F6", strokeWidth: 2, r: 5 }}
-                    activeDot={{ r: 7 }}
-                  />
-                </AreaChart>
-              </ResponsiveContainer>
-            </div>
+            {!hasFocusFlow ? (
+              <ChartEmptyState
+                icon={<Icons.clock className="w-5 h-5" />}
+                title="Focus Flow Empty"
+                description="Start a Pomodoro session or record focused work to map your flow."
+                actionLabel="Go to Timer"
+                actionHref="/dashboard/pomodoro"
+              />
+            ) : (
+              <div className="h-[300px]">
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart data={weeklyData}>
+                    <defs>
+                      <linearGradient id="colorFocus" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#3B82F6" stopOpacity={0.3} />
+                        <stop offset="95%" stopColor="#3B82F6" stopOpacity={0} />
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" className="dark:stroke-slate-700" />
+                    <XAxis dataKey="day" stroke="#6B7280" className="dark:stroke-slate-400" />
+                    <YAxis stroke="#6B7280" className="dark:stroke-slate-400" />
+                    <ChartTooltip content={<WeeklyFocusTooltip />} />
+                    <Area
+                      type="monotone"
+                      dataKey="hours"
+                      stroke="#3B82F6"
+                      strokeWidth={3}
+                      fill="url(#colorFocus)"
+                      dot={{ fill: "#3B82F6", strokeWidth: 2, r: 5 }}
+                      activeDot={{ r: 7 }}
+                    />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </div>
+            )}
           </CardContent>
         </Card>
 
@@ -446,29 +490,39 @@ export function ProductivityCharts() {
             </div>
           </CardHeader>
           <CardContent className="pt-6">
-            <div className="h-[300px]">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={weeklyData}>
-                  <defs>
-                    <linearGradient id="colorPomodoros" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#10B981" stopOpacity={0.8} />
-                      <stop offset="95%" stopColor="#10B981" stopOpacity={0.3} />
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" className="dark:stroke-slate-700" />
-                  <XAxis dataKey="day" stroke="#6B7280" className="dark:stroke-slate-400" />
-                  <YAxis stroke="#6B7280" className="dark:stroke-slate-400" />
-                  <ChartTooltip content={<DailySessionsTooltip />} />
-                  <Bar
-                    dataKey="pomodoros"
-                    fill="url(#colorPomodoros)"
-                    radius={[8, 8, 0, 0]}
-                    stroke="#10B981"
-                    strokeWidth={1}
-                  />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
+            {!hasSessions ? (
+              <ChartEmptyState
+                icon={<Icons.timer className="w-5 h-5" />}
+                title="No Focus Sessions"
+                description="Complete your daily focus intervals to graph your session stats."
+                actionLabel="Start Interval"
+                actionHref="/dashboard/pomodoro"
+              />
+            ) : (
+              <div className="h-[300px]">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={weeklyData}>
+                    <defs>
+                      <linearGradient id="colorPomodoros" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#10B981" stopOpacity={0.8} />
+                        <stop offset="95%" stopColor="#10B981" stopOpacity={0.3} />
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" className="dark:stroke-slate-700" />
+                    <XAxis dataKey="day" stroke="#6B7280" className="dark:stroke-slate-400" />
+                    <YAxis stroke="#6B7280" className="dark:stroke-slate-400" />
+                    <ChartTooltip content={<DailySessionsTooltip />} />
+                    <Bar
+                      dataKey="pomodoros"
+                      fill="url(#colorPomodoros)"
+                      radius={[8, 8, 0, 0]}
+                      stroke="#10B981"
+                      strokeWidth={1}
+                    />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            )}
           </CardContent>
         </Card>
 
@@ -487,47 +541,59 @@ export function ProductivityCharts() {
             </CardTitle>
           </CardHeader>
           <CardContent className="pt-6">
-            <div className="h-[300px]">
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={focusTimeByCategory}
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={70}
-                    outerRadius={110}
-                    paddingAngle={3}
-                    dataKey="value"
-                    animationBegin={0}
-                    animationDuration={800}
-                  >
-                    {focusTimeByCategory.map((entry, index) => (
-                      <Cell
-                        key={`cell-${index}`}
-                        fill={entry.color}
-                        stroke={entry.color}
-                        strokeWidth={2}
-                      />
-                    ))}
-                  </Pie>
-                  <ChartTooltip content={<CategoryFocusTooltip />} />
-                </PieChart>
-              </ResponsiveContainer>
-            </div>
-            <div className="mt-4 grid grid-cols-2 gap-3">
-              {focusTimeByCategory.map((item, index) => (
-                <div
-                  key={index}
-                  className="flex items-center justify-between p-2 bg-white/50 dark:bg-slate-700/50 rounded-lg border border-purple-100/50 dark:border-purple-800/50"
-                >
-                  <div className="flex items-center space-x-2">
-                    <div className="w-3 h-3 rounded-full" style={{ backgroundColor: item.color }} />
-                    <span className="text-sm text-gray-700 dark:text-gray-300 font-medium">{item.name}</span>
-                  </div>
-                  <span className="text-sm font-bold text-gray-900 dark:text-gray-100">{item.hours}h</span>
+            {!hasCategoryFocus ? (
+              <ChartEmptyState
+                icon={<Icons.target className="w-5 h-5" />}
+                title="No Category Breakdown"
+                description="Associate focus sessions with tasks to see category analytics."
+                actionLabel="Assign Tasks"
+                actionHref="/dashboard/tasks"
+              />
+            ) : (
+              <>
+                <div className="h-[300px]">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie
+                        data={focusTimeByCategory}
+                        cx="50%"
+                        cy="50%"
+                        innerRadius={70}
+                        outerRadius={110}
+                        paddingAngle={3}
+                        dataKey="value"
+                        animationBegin={0}
+                        animationDuration={800}
+                      >
+                        {focusTimeByCategory.map((entry, index) => (
+                          <Cell
+                            key={`cell-${index}`}
+                            fill={entry.color}
+                            stroke={entry.color}
+                            strokeWidth={2}
+                          />
+                        ))}
+                      </Pie>
+                      <ChartTooltip content={<CategoryFocusTooltip />} />
+                    </PieChart>
+                  </ResponsiveContainer>
                 </div>
-              ))}
-            </div>
+                <div className="mt-4 grid grid-cols-2 gap-3">
+                  {focusTimeByCategory.map((item, index) => (
+                    <div
+                      key={index}
+                      className="flex items-center justify-between p-2 bg-white/50 dark:bg-slate-700/50 rounded-lg border border-purple-100/50 dark:border-purple-800/50"
+                    >
+                      <div className="flex items-center space-x-2">
+                        <div className="w-3 h-3 rounded-full" style={{ backgroundColor: item.color }} />
+                        <span className="text-sm text-gray-700 dark:text-gray-300 font-medium">{item.name}</span>
+                      </div>
+                      <span className="text-sm font-bold text-gray-900 dark:text-gray-100">{item.hours}h</span>
+                    </div>
+                  ))}
+                </div>
+              </>
+            )}
           </CardContent>
         </Card>
 
@@ -546,48 +612,60 @@ export function ProductivityCharts() {
             </CardTitle>
           </CardHeader>
           <CardContent className="pt-6">
-            <div className="h-[300px]">
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={priorityDistribution}
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={70}
-                    outerRadius={110}
-                    paddingAngle={3}
-                    dataKey="value"
-                    animationBegin={0}
-                    animationDuration={800}
-                  >
-                    {priorityDistribution.map((entry, index) => (
-                      <Cell
-                        key={`cell-${index}`}
-                        fill={entry.color}
-                        stroke={entry.color}
-                        strokeWidth={2}
-                      />
-                    ))}
-                  </Pie>
-                  <ChartTooltip content={<PriorityTooltip />} />
-                </PieChart>
-              </ResponsiveContainer>
-            </div>
-            <div className="mt-4 grid grid-cols-3 gap-2">
-              {priorityDistribution.map((item, index) => (
-                <div
-                  key={index}
-                  className="flex flex-col items-center p-2 bg-white/50 dark:bg-slate-700/50 rounded-lg border border-orange-100/50 dark:border-orange-800/50"
-                >
-                  <div className="flex items-center space-x-1 mb-1">
-                    <div className="w-3 h-3 rounded-full" style={{ backgroundColor: item.color }} />
-                    <span className="text-xs text-gray-700 dark:text-gray-300 font-medium">{item.name}</span>
-                  </div>
-                  <span className="text-sm font-bold text-gray-900 dark:text-gray-100">{item.value}%</span>
-                  <span className="text-xs text-gray-500 dark:text-gray-500">{item.count} tasks</span>
+            {!hasPriorityData ? (
+              <ChartEmptyState
+                icon={<Icons.zap className="w-5 h-5" />}
+                title="No Priority Data"
+                description="Assign priority levels (High, Med, Low) to tasks to see trends."
+                actionLabel="Go to Tasks"
+                actionHref="/dashboard/tasks"
+              />
+            ) : (
+              <>
+                <div className="h-[300px]">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie
+                        data={priorityDistribution}
+                        cx="50%"
+                        cy="50%"
+                        innerRadius={70}
+                        outerRadius={110}
+                        paddingAngle={3}
+                        dataKey="value"
+                        animationBegin={0}
+                        animationDuration={800}
+                      >
+                        {priorityDistribution.map((entry, index) => (
+                          <Cell
+                            key={`cell-${index}`}
+                            fill={entry.color}
+                            stroke={entry.color}
+                            strokeWidth={2}
+                          />
+                        ))}
+                      </Pie>
+                      <ChartTooltip content={<PriorityTooltip />} />
+                    </PieChart>
+                  </ResponsiveContainer>
                 </div>
-              ))}
-            </div>
+                <div className="mt-4 grid grid-cols-3 gap-2">
+                  {priorityDistribution.map((item, index) => (
+                    <div
+                      key={index}
+                      className="flex flex-col items-center p-2 bg-white/50 dark:bg-slate-700/50 rounded-lg border border-orange-100/50 dark:border-orange-800/50"
+                    >
+                      <div className="flex items-center space-x-1 mb-1">
+                        <div className="w-3 h-3 rounded-full" style={{ backgroundColor: item.color }} />
+                        <span className="text-xs text-gray-700 dark:text-gray-300 font-medium">{item.name}</span>
+                      </div>
+                      <span className="text-sm font-bold text-gray-900 dark:text-gray-100">{item.value}%</span>
+                      <span className="text-xs text-gray-500 dark:text-gray-500">{item.count} tasks</span>
+                    </div>
+                  ))}
+                </div>
+              </>
+            )}
           </CardContent>
         </Card>
       </div>

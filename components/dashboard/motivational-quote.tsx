@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { Icons } from "@/components/icons"
+import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover"
 
 const motivationalQuotes = [
   {
@@ -86,6 +87,44 @@ export function MotivationalQuote() {
   const [isVisible, setIsVisible] = useState(false)
   const [isFading, setIsFading] = useState(false)
   const [spinRefresh, setSpinRefresh] = useState(false)
+  const [isLoadingMood, setIsLoadingMood] = useState(false)
+
+  const fetchMoodQuote = async (mood: string) => {
+    if (isFading || isLoadingMood) return
+    setIsFading(true)
+    setIsLoadingMood(true)
+    try {
+      const res = await fetch("/api/growth-ai", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          intent: "quote",
+          context: { mood }
+        })
+      })
+      if (!res.ok) throw new Error("Failed to fetch quote")
+      const data = await res.json()
+      if (data.text) {
+        setCurrentQuote({
+          text: data.text,
+          author: data.author || "Midori AI",
+          kanji: data.kanji || "禅"
+        })
+      }
+    } catch (e) {
+      console.error(e)
+      // Fallback: pick a random quote
+      let nextQuote = currentQuote
+      while (nextQuote.text === currentQuote.text) {
+        const randomIndex = Math.floor(Math.random() * motivationalQuotes.length)
+        nextQuote = motivationalQuotes[randomIndex]
+      }
+      setCurrentQuote(nextQuote)
+    } finally {
+      setIsFading(false)
+      setIsLoadingMood(false)
+    }
+  }
 
   useEffect(() => {
     const randomIndex = Math.floor(Math.random() * motivationalQuotes.length)
@@ -131,18 +170,73 @@ export function MotivationalQuote() {
         {currentQuote.kanji}
       </div>
 
-      {/* Refresh Button */}
-      <button
-        onClick={handleRefresh}
-        className="absolute top-4 right-4 z-20 p-2 text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 rounded-full hover:bg-slate-100/50 dark:hover:bg-slate-800/50 transition-all duration-300 focus:outline-none"
-        title="Refresh Quote"
-      >
-        <Icons.reset
-          className={`w-4 h-4 transition-transform duration-500 ${
-            spinRefresh ? "rotate-[360deg]" : ""
-          }`}
-        />
-      </button>
+      {/* Action Buttons */}
+      <div className="absolute top-4 right-4 z-20 flex items-center gap-1">
+        {/* Mood Selector Popover */}
+        <Popover>
+          <PopoverTrigger asChild>
+            <button
+              disabled={isLoadingMood}
+              className="p-2 text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 rounded-full hover:bg-slate-100/50 dark:hover:bg-slate-800/50 transition-all duration-300 focus:outline-none disabled:opacity-50"
+              title="How are you feeling?"
+            >
+              {isLoadingMood ? (
+                <Icons.spinner className="w-4 h-4 animate-spin text-emerald-500" />
+              ) : (
+                <Icons.smile className="w-4 h-4" />
+              )}
+            </button>
+          </PopoverTrigger>
+          <PopoverContent className="w-48 bg-white/95 dark:bg-slate-900/90 backdrop-blur-md border-emerald-500/20 rounded-2xl shadow-xl p-3">
+            <div className="space-y-2">
+              <h4 className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider text-center">My Mood Today</h4>
+              <div className="grid grid-cols-2 gap-1.5">
+                <button
+                  onClick={() => fetchMoodQuote("stressed")}
+                  className="flex flex-col items-center p-2 rounded-xl hover:bg-emerald-500/10 active:scale-95 transition-all text-xs font-medium text-slate-700 dark:text-slate-300"
+                >
+                  <span className="text-xl">😩</span>
+                  <span>Stressed</span>
+                </button>
+                <button
+                  onClick={() => fetchMoodQuote("tired")}
+                  className="flex flex-col items-center p-2 rounded-xl hover:bg-emerald-500/10 active:scale-95 transition-all text-xs font-medium text-slate-700 dark:text-slate-300"
+                >
+                  <span className="text-xl">😴</span>
+                  <span>Tired</span>
+                </button>
+                <button
+                  onClick={() => fetchMoodQuote("uninspired")}
+                  className="flex flex-col items-center p-2 rounded-xl hover:bg-emerald-500/10 active:scale-95 transition-all text-xs font-medium text-slate-700 dark:text-slate-300"
+                >
+                  <span className="text-xl">😶‍🌫️</span>
+                  <span>Uninspired</span>
+                </button>
+                <button
+                  onClick={() => fetchMoodQuote("restless")}
+                  className="flex flex-col items-center p-2 rounded-xl hover:bg-emerald-500/10 active:scale-95 transition-all text-xs font-medium text-slate-700 dark:text-slate-300"
+                >
+                  <span className="text-xl">🧘</span>
+                  <span>Restless</span>
+                </button>
+              </div>
+            </div>
+          </PopoverContent>
+        </Popover>
+
+        {/* Refresh Button */}
+        <button
+          onClick={handleRefresh}
+          className="p-2 text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 rounded-full hover:bg-slate-100/50 dark:hover:bg-slate-800/50 transition-all duration-300 focus:outline-none"
+          title="Refresh Quote"
+        >
+          <Icons.reset
+            className={`w-4 h-4 transition-transform duration-500 ${
+              spinRefresh ? "rotate-[360deg]" : ""
+            }`}
+          />
+        </button>
+      </div>
 
       {/* Content */}
       <div className="relative z-10 flex items-start gap-4 sm:gap-5 pr-8">

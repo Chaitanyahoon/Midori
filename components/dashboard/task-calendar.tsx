@@ -6,10 +6,60 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Icons } from "@/components/icons"
 import { useData } from "@/components/local-data-provider"
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Textarea } from "@/components/ui/textarea"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { toast } from "sonner"
 
 export function TaskCalendar() {
   const [currentDate, setCurrentDate] = useState(new Date())
-  const { tasks } = useData()
+  const { tasks, addTask } = useData()
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
+  const [newTask, setNewTask] = useState({
+    title: "",
+    description: "",
+    priority: "medium" as const,
+    category: "work" as const,
+    dueDate: "",
+  })
+
+  const handleCellClick = (day?: number | null) => {
+    if (!day) return
+    const selectedDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), day)
+    const dateString =
+      selectedDate.getFullYear() +
+      "-" +
+      String(selectedDate.getMonth() + 1).padStart(2, "0") +
+      "-" +
+      String(selectedDate.getDate()).padStart(2, "0")
+
+    setNewTask({
+      title: "",
+      description: "",
+      priority: "medium",
+      category: "work",
+      dueDate: dateString,
+    })
+    setIsAddDialogOpen(true)
+  }
+
+  const handleAddTask = () => {
+    if (!newTask.title.trim()) return
+
+    addTask({
+      title: newTask.title,
+      description: newTask.description,
+      priority: newTask.priority,
+      category: newTask.category,
+      completed: false,
+      dueDate: newTask.dueDate || undefined,
+    })
+
+    setIsAddDialogOpen(false)
+    toast.success("Task created! ✨")
+  }
 
   const getDaysInMonth = (date: Date) => {
     const year = date.getFullYear()
@@ -126,10 +176,11 @@ export function TaskCalendar() {
             return (
               <div
                 key={index}
-                className={`min-h-[48px] sm:aspect-square p-1 sm:p-2 rounded-xl sm:rounded-2xl transition-all duration-300 cursor-pointer border border-transparent
+                onClick={() => handleCellClick(day)}
+                className={`min-h-[48px] sm:aspect-square p-1 sm:p-2 rounded-xl sm:rounded-2xl transition-all duration-350 cursor-pointer border
                   ${todayCell
-                    ? "bg-emerald-500 shadow-md shadow-emerald-500/20"
-                    : "bg-slate-50/50 dark:bg-slate-800/30 hover:bg-white dark:hover:bg-slate-800 hover:shadow-sm hover:border-slate-200/60 dark:hover:border-slate-700"
+                    ? "bg-emerald-500 shadow-md shadow-emerald-500/20 border-emerald-400 ring-2 ring-emerald-400 dark:ring-emerald-350 ring-offset-2 dark:ring-offset-slate-900 animate-[pulse_2.5s_infinite]"
+                    : "bg-slate-50/50 dark:bg-slate-800/30 hover:bg-white dark:hover:bg-slate-800 hover:shadow-sm hover:border-slate-200/60 dark:hover:border-slate-700 border-transparent"
                   }`}
               >
                 <div className="h-full flex flex-col items-center justify-start pt-1">
@@ -165,6 +216,88 @@ export function TaskCalendar() {
           })}
         </div>
       </CardContent>
+
+      <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Create Task for {newTask.dueDate ? new Date(newTask.dueDate).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : ""}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="cal-title">Task Title</Label>
+              <Input
+                id="cal-title"
+                value={newTask.title}
+                onChange={(e) => setNewTask({ ...newTask, title: e.target.value })}
+                placeholder="Enter task title"
+                className="mt-1"
+              />
+            </div>
+            <div>
+              <Label htmlFor="cal-description">Description (Optional)</Label>
+              <Textarea
+                id="cal-description"
+                value={newTask.description}
+                onChange={(e) => setNewTask({ ...newTask, description: e.target.value })}
+                placeholder="Add task details..."
+                rows={3}
+                className="mt-1"
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label>Priority</Label>
+                <Select
+                  value={newTask.priority}
+                  onValueChange={(value: any) => setNewTask({ ...newTask, priority: value })}
+                >
+                  <SelectTrigger className="mt-1">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="low">Low</SelectItem>
+                    <SelectItem value="medium">Medium</SelectItem>
+                    <SelectItem value="high">High</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label>Category</Label>
+                <Select
+                  value={newTask.category}
+                  onValueChange={(value: any) => setNewTask({ ...newTask, category: value })}
+                >
+                  <SelectTrigger className="mt-1">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="work">Work</SelectItem>
+                    <SelectItem value="personal">Personal</SelectItem>
+                    <SelectItem value="learning">Learning</SelectItem>
+                    <SelectItem value="health">Health</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div>
+              <Label htmlFor="cal-dueDate">Due Date</Label>
+              <Input
+                id="cal-dueDate"
+                type="date"
+                value={newTask.dueDate}
+                onChange={(e) => setNewTask({ ...newTask, dueDate: e.target.value })}
+                className="mt-1"
+              />
+            </div>
+            <Button
+              onClick={handleAddTask}
+              className="w-full bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-semibold"
+            >
+              Create Task
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </Card>
   )
 }

@@ -6,6 +6,8 @@ import { Icons } from "@/components/icons"
 import { useTheme } from "next-themes"
 import { useWeather } from "@/hooks/use-weather"
 import { toast } from "sonner"
+import { playWatering, playPlanting, playUnlock } from "@/lib/sounds"
+
 
 interface Plant { id?: string; x: number; y: number; type: "flower" | "tree"; subtype: string; color: string; scale: number; growth: number; delay: number; swayOffset: number; swaySpeed: number; seed: number; targetGrowth?: number }
 interface Star { x: number; y: number; size: number; ts: number; to: number }
@@ -14,6 +16,12 @@ interface Firefly { x: number; y: number; vx: number; vy: number; phase: number;
 interface Bird { x: number; y: number; spd: number; flap: number; flapSpd: number; scale: number }
 interface Particle { x: number; y: number; vx: number; vy: number; rot: number; size: number; color: string; op: number; type: string; life: number }
 interface ShootingStar { x: number; y: number; vx: number; vy: number; life: number; maxLife: number; trail: number }
+
+const PLANT_NAMES: Record<string, string> = {
+    sakura: "Sakura", maple: "Maple", pine: "Pine", jacaranda: "Jacaranda",
+    sunflower: "Sunflower", tulip: "Tulip", orchid: "Orchid", marigold: "Marigold",
+    snowdrop: "Snowdrop", lily: "Lily", chrysanthemum: "Chrysanthemum", snowflower: "Snow Flower",
+}
 
 export function VisualGarden({ onAddPlant }: { onAddPlant?: () => void }) {
     const cvs = useRef<HTMLCanvasElement>(null)
@@ -34,11 +42,207 @@ export function VisualGarden({ onAddPlant }: { onAddPlant?: () => void }) {
     const [clickedPlant, setClickedPlant] = useState<{ plant: Plant; x: number; y: number } | null>(null)
     const sparkleRef = useRef<{ x: number; y: number; vx: number; vy: number; life: number; color: string; size: number }[]>([])
 
-    const PLANT_NAMES: Record<string, string> = {
-        sakura: "Sakura", maple: "Maple", pine: "Pine", jacaranda: "Jacaranda",
-        sunflower: "Sunflower", tulip: "Tulip", orchid: "Orchid", marigold: "Marigold",
-        snowdrop: "Snowdrop", lily: "Lily", chrysanthemum: "Chrysanthemum", snowflower: "Snow Flower",
+    const handleWaterPersonal = (plantId: string) => {
+        const waterCost = 10
+        const currentWater = settings?.waterdrops || 0
+        if (currentWater < waterCost) {
+            toast.error("Not enough water drops! Focus to earn more.")
+            return
+        }
+
+        const originalPlants = settings?.gardenPlants || []
+        let updatedNurture = 100
+        const updatedPlants = originalPlants.map((p: any) => {
+            if (p.id === plantId) {
+                const currentNurture = p.nurtureLevel !== undefined ? p.nurtureLevel : 100
+                updatedNurture = Math.min(currentNurture + 20, 100)
+                return { ...p, nurtureLevel: updatedNurture }
+            }
+            return p
+        })
+
+        updateSettings({
+            waterdrops: currentWater - waterCost,
+            gardenPlants: updatedPlants
+        })
+
+        toast.success("Splashed with water! Growth increased! 💧")
+        playWatering()
+
+        if (cvs.current && cont.current) {
+            const rect = cont.current.getBoundingClientRect()
+            const W = rect.width
+            const H = rect.height
+            const targetPlant = plants.find(p => p.id === plantId)
+            if (targetPlant) {
+                const px = targetPlant.x * W
+                const py = targetPlant.y * H
+                const size = targetPlant.type === 'tree' ? 180 : 85
+                const scale = targetPlant.scale * targetPlant.growth
+                const sz = size * scale
+
+                const colors = ['#38bdf8', '#0ea5e9', '#0284c7', '#7dd3fc', '#bae6fd']
+                for (let j = 0; j < 16; j++) {
+                    const angle = (Math.PI * 2 * j) / 16
+                    sparkleRef.current.push({
+                        x: px, y: py - sz / 2,
+                        vx: Math.cos(angle) * (1.2 + Math.random() * 2),
+                        vy: Math.sin(angle) * (1.2 + Math.random()) - 1.5,
+                        life: 1, color: colors[j % colors.length],
+                        size: 2.5 + Math.random() * 3.5,
+                    })
+                }
+
+                setClickedPlant(prev => {
+                    if (!prev) return null
+                    return {
+                        ...prev,
+                        plant: {
+                            ...prev.plant,
+                            targetGrowth: updatedNurture / 100
+                        }
+                    }
+                })
+            }
+        }
     }
+
+    const handleWaterShared = async (plantId: string) => {
+        if (!sharedGarden) return
+        const costSun = 20
+        const costWater = 20
+        
+        if (sharedGarden.sunlightPool < costSun || sharedGarden.waterPool < costWater) {
+            toast.error("Not enough communal resources! Need 20 Sun and 20 Water.")
+            return
+        }
+
+        let updatedNurture = 100
+        const updatedPlants = (sharedGarden.plants || []).map((p: any) => {
+            if (p.id === plantId) {
+                const currentNurture = p.nurtureLevel ?? 0
+                updatedNurture = Math.min(currentNurture + 20, 100)
+                return { ...p, nurtureLevel: updatedNurture }
+            }
+            return p
+        })
+
+        const targetPlantObj = (sharedGarden.plants || []).find((p: any) => p.id === plantId)
+        const plantSubtype = targetPlantObj?.subtype || ""
+        const plantName = PLANT_NAMES[plantSubtype] || plantSubtype || "Unknown Plant"
+        const userName = settings?.userName || "Anonymous"
+        const newLog = {
+            id: Math.random().toString(36).substring(7),
+            message: `watered the communal ${plantName} (+20% Nurture)`,
+            user: userName,
+            timestamp: new Date().toISOString()
+        }
+
+        try {
+            await updateSharedGarden({
+                sunlightPool: sharedGarden.sunlightPool - costSun,
+                waterPool: sharedGarden.waterPool - costWater,
+                plants: updatedPlants,
+                activityLog: [newLog, ...(sharedGarden.activityLog || [])].slice(0, 50)
+            })
+            toast.success("Communal plant watered! 💧☀️")
+            playWatering()
+
+            if (cvs.current && cont.current) {
+                const rect = cont.current.getBoundingClientRect()
+                const W = rect.width
+                const H = rect.height
+                const targetPlant = plants.find(p => p.id === plantId)
+                if (targetPlant) {
+                    const px = targetPlant.x * W
+                    const py = targetPlant.y * H
+                    const size = targetPlant.type === 'tree' ? 180 : 85
+                    const scale = targetPlant.scale * targetPlant.growth
+                    const sz = size * scale
+
+                    const colors = ['#38bdf8', '#f59e0b', '#0ea5e9', '#34d399', '#7dd3fc']
+                    for (let j = 0; j < 16; j++) {
+                        const angle = (Math.PI * 2 * j) / 16
+                        sparkleRef.current.push({
+                            x: px, y: py - sz / 2,
+                            vx: Math.cos(angle) * (1.2 + Math.random() * 2),
+                            vy: Math.sin(angle) * (1.2 + Math.random()) - 1.5,
+                            life: 1, color: colors[j % colors.length],
+                            size: 2.5 + Math.random() * 3.5,
+                        })
+                    }
+
+                    setClickedPlant(prev => {
+                        if (!prev) return null
+                        return {
+                            ...prev,
+                            plant: {
+                                ...prev.plant,
+                                targetGrowth: updatedNurture / 100
+                            }
+                        }
+                    })
+                }
+            }
+        } catch (e) {
+            console.error("Nurture error:", e)
+            toast.error("Failed to nurture communal plant")
+        }
+    }
+
+    const handleHarvestShared = async (plantId: string) => {
+        if (!sharedGarden) return
+        const targetPlantObj = (sharedGarden.plants || []).find((p: any) => p.id === plantId)
+        if (!targetPlantObj) return
+        const plantSubtype = targetPlantObj.subtype || ""
+        const plantName = PLANT_NAMES[plantSubtype] || plantSubtype || "Unknown Plant"
+        
+        const bonusSun = 100
+        const bonusWater = 50
+
+        const updatedPlants = (sharedGarden.plants || []).map((p: any) => {
+            if (p.id === plantId) {
+                return { ...p, status: "mature", nurtureLevel: 100 }
+            }
+            return p
+        })
+
+        const userName = settings?.userName || "Anonymous"
+        const newLog = {
+            id: Math.random().toString(36).substring(7),
+            message: `harvested a mature ${plantName} (+100 Sun, +50 Water rewards)`,
+            user: userName,
+            timestamp: new Date().toISOString()
+        }
+
+        try {
+            await updateSharedGarden({
+                sunlightPool: (sharedGarden.sunlightPool || 0) + bonusSun,
+                waterPool: (sharedGarden.waterPool || 0) + bonusWater,
+                plants: updatedPlants,
+                activityLog: [newLog, ...(sharedGarden.activityLog || [])].slice(0, 50)
+            })
+            toast.success(`🎉 Landmark complete! Earned +${bonusSun} Sun & +${bonusWater} Water pool rewards!`)
+            playUnlock()
+            
+            setClickedPlant(prev => {
+                if (!prev) return null
+                return {
+                    ...prev,
+                    plant: {
+                        ...prev.plant,
+                        growth: 1,
+                        targetGrowth: 1
+                    }
+                }
+            })
+        } catch (e) {
+            console.error("Harvest error:", e)
+            toast.error("Failed to harvest communal plant")
+        }
+    }
+
+
 
     // Force personal view if active shared garden ID is removed
     useEffect(() => {
@@ -675,14 +879,28 @@ export function VisualGarden({ onAddPlant }: { onAddPlant?: () => void }) {
                         type: plantToPlace.type,
                         subtype: plantToPlace.id,
                         x, y: constrainedY,
-                        scale: plantToPlace.type === 'tree' ? 0.75 : 0.5
+                        scale: plantToPlace.type === 'tree' ? 0.75 : 0.5,
+                        nurtureLevel: 20
+                    }
+                    const userName = settings?.userName || "Anonymous"
+                    const newLog = {
+                        id: Math.random().toString(36).substring(7),
+                        message: `planted a communal ${plantToPlace.name} seed`,
+                        user: userName,
+                        timestamp: new Date().toISOString()
                     }
                     const currentPlants = sharedGarden?.plants || []
-                    updateSharedGarden({ sunlightPool: newSun, waterPool: newWater, plants: [...currentPlants, newPlant] }).catch(() => {
+                    updateSharedGarden({
+                        sunlightPool: newSun,
+                        waterPool: newWater,
+                        plants: [...currentPlants, newPlant],
+                        activityLog: [newLog, ...(sharedGarden?.activityLog || [])].slice(0, 50)
+                    }).catch(() => {
                         toast.error("Failed to plant in Co-op Garden")
                     })
                     toast.success(`Planted ${plantToPlace.name} in Co-op Garden!`)
                     setPlantToPlace(null)
+                    playPlanting()
                 } else {
                     toast.error("Not enough Co-op resources!")
                     setPlantToPlace(null)
@@ -699,12 +917,14 @@ export function VisualGarden({ onAddPlant }: { onAddPlant?: () => void }) {
                         type: plantToPlace.type,
                         subtype: plantToPlace.id,
                         x, y: constrainedY,
-                        scale: plantToPlace.type === 'tree' ? 0.75 : 0.5
+                        scale: plantToPlace.type === 'tree' ? 0.75 : 0.5,
+                        nurtureLevel: 20
                     }
                     const currentPlants = settings?.gardenPlants || []
                     updateSettings({ sunlight: newSun, waterdrops: newWater, gardenPlants: [...currentPlants, newPlant] })
                     toast.success(`Planted ${plantToPlace.name}!`)
                     setPlantToPlace(null)
+                    playPlanting()
                 } else {
                     toast.error("Not enough resources!")
                     setPlantToPlace(null)
@@ -777,7 +997,6 @@ export function VisualGarden({ onAddPlant }: { onAddPlant?: () => void }) {
                             size: 2 + Math.random() * 3,
                         })
                     }
-                    setTimeout(() => setClickedPlant(null), 2200)
                     return
                 }
             }
@@ -1057,19 +1276,80 @@ export function VisualGarden({ onAddPlant }: { onAddPlant?: () => void }) {
 
                     {clickedPlant && (() => {
                         const name = PLANT_NAMES[clickedPlant.plant.subtype] || clickedPlant.plant.subtype
-                        const growthPct = Math.round(clickedPlant.plant.growth * 100)
+                        const originalPlant = (gardenView === "shared" ? sharedGarden?.plants : settings?.gardenPlants)?.find((p: any) => p.id === clickedPlant.plant.id)
+                        const nurtureLevel = originalPlant?.nurtureLevel !== undefined ? originalPlant.nurtureLevel : 100
+                        const isMature = nurtureLevel >= 100
+                        const isHarvested = originalPlant?.status === "mature"
+
                         return (
                             <div
-                                className="absolute z-20 pointer-events-none px-3 py-1.5 rounded-lg bg-white/90 dark:bg-slate-800/90 shadow-lg border border-slate-200 dark:border-slate-700 backdrop-blur-md text-sm font-medium text-slate-700 dark:text-slate-300 whitespace-nowrap animate-in fade-in zoom-in duration-200"
+                                className="absolute z-20 px-4 py-3 rounded-2xl bg-white/95 dark:bg-slate-900/95 shadow-xl border border-slate-200/50 dark:border-slate-800/50 backdrop-blur-md text-sm font-medium text-slate-700 dark:text-slate-300 whitespace-nowrap animate-in fade-in zoom-in duration-200 flex flex-col gap-2 min-w-[200px]"
                                 style={{
                                     left: clickedPlant.x,
-                                    top: clickedPlant.y - 12,
+                                    top: clickedPlant.y - 16,
                                     transform: 'translate(-50%, -100%)',
                                 }}
+                                onPointerDown={(e) => e.stopPropagation()}
                             >
-                                <span className="mr-1">{clickedPlant.plant.type === 'tree' ? '🌳' : '🌷'}</span>
-                                {name}
-                                <span className="ml-1.5 text-xs text-slate-400 dark:text-slate-500">{growthPct}%</span>
+                                <div className="flex items-center justify-between gap-4 border-b border-slate-500/10 pb-1.5">
+                                    <div className="flex items-center gap-1.5">
+                                        <span className="text-base">{clickedPlant.plant.type === 'tree' ? '🌳' : '🌷'}</span>
+                                        <span className="font-bold text-slate-800 dark:text-slate-200">{name}</span>
+                                    </div>
+                                    <button 
+                                        onClick={() => setClickedPlant(null)}
+                                        className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-0.5 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                                    >
+                                        <Icons.close className="w-3.5 h-3.5" />
+                                    </button>
+                                </div>
+                                
+                                <div className="flex flex-col gap-1 text-xs">
+                                    <div className="flex justify-between">
+                                        <span className="text-slate-400 font-normal">Status:</span>
+                                        <span className={`font-semibold ${isHarvested ? 'text-emerald-600 dark:text-emerald-400' : isMature ? 'text-emerald-500 dark:text-emerald-400' : 'text-amber-600 dark:text-amber-400'}`}>
+                                            {isHarvested ? 'Harvested Trophy 🏆' : isMature ? 'Fully Mature ✨' : 'Growing Seedling 🌱'}
+                                        </span>
+                                    </div>
+                                    <div className="flex justify-between items-center gap-6">
+                                        <span className="text-slate-400 font-normal">Nurture Level:</span>
+                                        <div className="flex items-center gap-2">
+                                            <div className="w-16 h-1.5 bg-slate-200 dark:bg-slate-800 rounded-full overflow-hidden">
+                                                <div 
+                                                    className="h-full bg-gradient-to-r from-emerald-400 to-teal-500 rounded-full transition-all duration-500" 
+                                                    style={{ width: `${nurtureLevel}%` }}
+                                                />
+                                            </div>
+                                            <span className="font-semibold text-slate-600 dark:text-slate-300">{nurtureLevel}%</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {!isMature && (
+                                    <button
+                                        onClick={() => {
+                                            if (gardenView === "shared") {
+                                                handleWaterShared(clickedPlant.plant.id!)
+                                            } else {
+                                                handleWaterPersonal(clickedPlant.plant.id!)
+                                            }
+                                        }}
+                                        className="w-full mt-1.5 py-1.5 rounded-xl bg-gradient-to-r from-sky-400/20 to-blue-400/20 hover:from-sky-400/30 hover:to-blue-400/30 border border-sky-400/30 dark:border-sky-500/30 text-sky-700 dark:text-sky-300 text-xs font-bold shadow-sm transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-1.5"
+                                    >
+                                        <span>💧</span>
+                                        <span>Water {gardenView === "shared" ? '(-20 Communal)' : '(-10 Drops)'}</span>
+                                    </button>
+                                )}
+
+                                {gardenView === "shared" && isMature && !isHarvested && (
+                                    <button
+                                        onClick={() => handleHarvestShared(clickedPlant.plant.id!)}
+                                        className="w-full mt-1.5 py-1.5 rounded-xl bg-gradient-to-r from-amber-400/20 to-orange-400/20 hover:from-amber-400/30 hover:to-orange-400/30 border border-amber-400/30 dark:border-orange-500/30 text-amber-700 dark:text-amber-300 text-xs font-bold shadow-sm transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-1.5"
+                                    >
+                                        <span>🏆</span>
+                                        <span>Harvest (+100 Sun)</span>
+                                    </button>
+                                )}
                             </div>
                         )
                     })()}

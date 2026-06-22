@@ -27,6 +27,7 @@ export default function TasksPage() {
   const [groupBy, setGroupBy] = useState<"none" | "priority" | "category" | "dueDate">("none")
   const [sortBy, setSortBy] = useState<"priority" | "dueDate" | "category" | "title">("priority")
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
+  const [viewMode, setViewMode] = useState<"list" | "board">("list")
   const [quickAddValue, setQuickAddValue] = useState("")
   const [expandedTasks, setExpandedTasks] = useState<Record<string, boolean>>({})
   const [newSubTaskTitles, setNewSubTaskTitles] = useState<Record<string, string>>({})
@@ -273,6 +274,68 @@ export default function TasksPage() {
             </DialogHeader>
             <div className="p-6 space-y-5">
               <div className="space-y-2">
+                <Label className="text-sm font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-2">
+                  <Icons.sparkles className="w-4 h-4 text-emerald-500" />
+                  Zen Task Templates
+                </Label>
+                <Select
+                  onValueChange={(val) => {
+                    const templates = {
+                      morning: {
+                        title: "Morning Reflection & Goal Setting",
+                        priority: "low",
+                        category: "personal",
+                        description: "Spend 10 minutes planning the day, practicing gratitude, and setting intentions."
+                      },
+                      focus: {
+                        title: "Deep Focus Session (90 Mins)",
+                        priority: "high",
+                        category: "work",
+                        description: "Silence notifications, open focus tools, and dedicate uninterrupted time to core work."
+                      },
+                      weekly: {
+                        title: "Weekly Review & Alignment",
+                        priority: "medium",
+                        category: "learning",
+                        description: "Reflect on accomplishments, organize tasks, clear the garden, and set goals for next week."
+                      },
+                      breather: {
+                        title: "Healthy Breather & Stretch",
+                        priority: "low",
+                        category: "health",
+                        description: "Do a 5-minute breathing exercise, hydrate, and stretch to restore physical and mental energy."
+                      }
+                    }
+                    const selected = templates[val as keyof typeof templates]
+                    if (selected) {
+                      setNewTask({
+                        title: selected.title,
+                        description: selected.description,
+                        priority: selected.priority as any,
+                        category: selected.category as any,
+                        dueDate: newTask.dueDate || "",
+                        recurrence: newTask.recurrence || { type: "none" }
+                      })
+                      toast({
+                        title: "Template Applied! ✨",
+                        description: `Pre-filled fields with ${selected.title}.`,
+                      })
+                    }
+                  }}
+                >
+                  <SelectTrigger className="bg-emerald-50/50 dark:bg-emerald-950/20 border-emerald-200 dark:border-emerald-900/60 focus:border-emerald-400 h-11 rounded-xl">
+                    <SelectValue placeholder="Select a Zen template..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="morning">🌅 Morning Reflection</SelectItem>
+                    <SelectItem value="focus">🎯 Deep Focus Block</SelectItem>
+                    <SelectItem value="weekly">📅 Weekly Review</SelectItem>
+                    <SelectItem value="breather">🧘‍♀️ Healthy Breather</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
                 <Label htmlFor="title" className="text-sm font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-2">
                   <Icons.type className="w-4 h-4 text-emerald-500" />
                   Task Name <span className="text-rose-500">*</span>
@@ -456,12 +519,134 @@ export default function TasksPage() {
               <SelectItem value="dueDate">By Harvest Date</SelectItem>
             </SelectContent>
           </Select>
+
+          <div className="h-6 w-px bg-slate-200 dark:bg-slate-700 mx-1 hidden md:block"></div>
+          <div className="flex bg-slate-100 dark:bg-slate-800 p-0.5 rounded-lg border border-slate-200/40 dark:border-slate-700/40 gap-0.5">
+            <button
+              onClick={() => setViewMode("list")}
+              className={`px-3 py-1.5 rounded-md text-[10px] font-bold tracking-wide uppercase transition-all ${
+                viewMode === "list"
+                  ? "bg-white dark:bg-slate-700 text-emerald-700 dark:text-emerald-300 shadow-sm"
+                  : "text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200"
+              }`}
+            >
+              List
+            </button>
+            <button
+              onClick={() => setViewMode("board")}
+              className={`px-3 py-1.5 rounded-md text-[10px] font-bold tracking-wide uppercase transition-all ${
+                viewMode === "board"
+                  ? "bg-white dark:bg-slate-700 text-emerald-700 dark:text-emerald-300 shadow-sm"
+                  : "text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200"
+              }`}
+            >
+              Board
+            </button>
+          </div>
         </div>
       </div>
 
       {/* Tasks List */}
       <div className="space-y-8 pb-10">
-        {Object.keys(groupedTasks).length === 0 || sortedTasks.length === 0 ? (
+        {viewMode === "board" ? (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {(["high", "medium", "low"] as const).map((colPriority) => {
+              const colTasks = sortedTasks.filter(t => t.priority === colPriority)
+              const borderColors = {
+                high: "border-t-rose-500/80 dark:border-t-rose-500/80",
+                medium: "border-t-amber-500/80 dark:border-t-amber-500/80",
+                low: "border-t-emerald-500/80 dark:border-t-emerald-500/80"
+              }
+              const textColors = {
+                high: "text-rose-600 dark:text-rose-400",
+                medium: "text-amber-600 dark:text-amber-400",
+                low: "text-emerald-600 dark:text-emerald-400"
+              }
+              const label = {
+                high: "🔥 High Priority",
+                medium: "🌿 Medium Priority",
+                low: "🌱 Low Priority"
+              }
+
+              return (
+                <div
+                  key={colPriority}
+                  onDragOver={(e) => e.preventDefault()}
+                  onDrop={(e) => {
+                    const taskId = e.dataTransfer.getData("text/plain")
+                    if (taskId) {
+                      updateTask(taskId, { priority: colPriority })
+                      toast({
+                        title: "Task Prioritized! 🎯",
+                        description: `Task moved to ${label[colPriority]}.`,
+                      })
+                    }
+                  }}
+                  className={`card-zen p-5 min-h-[450px] flex flex-col border-t-4 ${borderColors[colPriority]} bg-slate-50/5 dark:bg-slate-900/10`}
+                >
+                  <div className="flex items-center justify-between mb-4 pb-2 border-b border-slate-200/40 dark:border-slate-700/40">
+                    <h3 className={`font-bold text-sm uppercase tracking-wider ${textColors[colPriority]}`}>
+                      {label[colPriority]}
+                    </h3>
+                    <Badge className="bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-bold font-mono">
+                      {colTasks.length}
+                    </Badge>
+                  </div>
+
+                  <div className="flex-1 space-y-4 overflow-y-auto max-h-[600px] pr-1">
+                    {colTasks.length === 0 ? (
+                      <div className="h-32 border-2 border-dashed border-slate-200/60 dark:border-slate-800/60 rounded-2xl flex items-center justify-center text-xs text-slate-400 dark:text-slate-500 italic">
+                        Drag seeds here
+                      </div>
+                    ) : (
+                      colTasks.map((task) => (
+                        <div
+                          key={task.id}
+                          draggable
+                          onDragStart={(e) => {
+                            e.dataTransfer.setData("text/plain", task.id)
+                            e.dataTransfer.effectAllowed = "move"
+                          }}
+                          className={`card-zen p-4 border cursor-grab active:cursor-grabbing hover:scale-[1.02] transition-all bg-white/90 dark:bg-slate-850/85 border-slate-200/80 dark:border-slate-800/60 shadow-sm ${
+                            task.completed ? "opacity-60" : ""
+                          }`}
+                        >
+                          <div className="flex items-start gap-2.5">
+                            <Checkbox
+                              checked={task.completed}
+                              onCheckedChange={(checked) => handleToggleTask(task.id, checked as boolean)}
+                              className="w-4.5 h-4.5 rounded-full border-slate-350 data-[state=checked]:bg-emerald-500 data-[state=checked]:border-emerald-500"
+                            />
+                            <div className="flex-1 min-w-0">
+                              <h4 className={`text-sm font-bold truncate leading-tight ${task.completed ? "line-through text-slate-400" : "text-slate-800 dark:text-slate-100"}`}>
+                                {task.title}
+                              </h4>
+                              {task.description && (
+                                <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1 line-clamp-2 leading-relaxed">
+                                  {task.description}
+                                </p>
+                              )}
+                              <div className="flex items-center justify-between mt-3 pt-2 border-t border-slate-100 dark:border-slate-800/80 text-[10px]">
+                                <Badge className={`px-1.5 py-0.5 rounded text-[9px] uppercase font-bold ${getCategoryColor(task.category)}`}>
+                                  {task.category}
+                                </Badge>
+                                {task.dueDate && (
+                                  <span className="text-slate-400 dark:text-slate-500 font-medium">
+                                    📅 {new Date(task.dueDate).toLocaleDateString()}
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        ) : Object.keys(groupedTasks).length === 0 || sortedTasks.length === 0 ? (
           <div className="text-center py-16 opacity-0 animate-in fade-in scale-in duration-500 fill-mode-forwards">
             {tasks.length === 0 ? (
               <div className="max-w-md mx-auto card-zen p-8 text-center bg-gradient-to-br from-emerald-500/[0.02] via-white/50 to-teal-500/[0.02] dark:from-emerald-500/[0.05] dark:via-slate-900/40 dark:to-teal-500/[0.05] shadow-xl border border-emerald-100/50 dark:border-emerald-900/30">
@@ -608,7 +793,7 @@ export default function TasksPage() {
                                               onCheckedChange={(checked) =>
                                                 handleToggleSubTask(task.id, sub.id, checked as boolean)
                                               }
-                                              className="w-4 h-4 rounded-full border border-slate-300 data-[state=checked]:bg-emerald-500 data-[state=checked]:border-emerald-500 transition-all scale-90"
+                                              className="w-4 h-4 rounded-full border border-slate-350 data-[state=checked]:bg-emerald-500 data-[state=checked]:border-emerald-500 transition-all scale-90"
                                             />
                                             <span
                                               className={`text-sm font-medium ${

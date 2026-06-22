@@ -14,6 +14,7 @@ import { useData } from "@/components/local-data-provider"
 import { useAuth } from "@/components/auth-provider"
 import { Icons } from "@/components/icons"
 import { useWeather } from "@/hooks/use-weather"
+import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover"
 
 const VisualGarden = dynamic(() => import('@/components/garden/visual-garden').then(mod => mod.VisualGarden), {
   ssr: false,
@@ -21,7 +22,7 @@ const VisualGarden = dynamic(() => import('@/components/garden/visual-garden').t
 })
 
 const getWeatherEmoji = (condition: string) => {
-  switch (condition) {
+  switch (condition?.toLowerCase()) {
     case "clear": return "☀️"
     case "rain": return "🌧️"
     case "snow": return "❄️"
@@ -76,6 +77,13 @@ export default function DashboardPage() {
     return p.completed && p.startTime.split("T")[0] === today
   }).length
 
+  const todayStr = new Date().toISOString().split("T")[0]
+  const todayCompletedTasksList = tasks.filter(t => t.completed && t.completedAt?.startsWith(todayStr))
+  const todaySunlightEarned = todayCompletedTasksList.length * 10
+
+  const todayCompletedPomodorosList = pomodoros.filter(p => p.completed && p.startTime?.startsWith(todayStr))
+  const todayWaterdropsEarned = todayCompletedPomodorosList.reduce((acc, p) => acc + (Math.floor(p.duration / 60) || 1), 0)
+
   return (
     <div className="w-full h-full ambient-bg">
       {/* Welcome Header Section */}
@@ -113,18 +121,106 @@ export default function DashboardPage() {
           )}
 
           {/* Sunlight pill */}
-          <div className="flex items-center gap-2 bg-gradient-to-r from-amber-400/20 to-orange-400/20 text-amber-700 dark:text-amber-300 px-4 py-2 rounded-2xl border border-amber-400/30 text-sm font-bold shadow-md hover:shadow-lg backdrop-blur-md transition-all duration-300 hover:scale-105 active:scale-95 group cursor-default">
-            <Icons.sun className="w-4 h-4 text-amber-500 animate-[spin_8s_linear_infinite] group-hover:scale-110 transition-transform" />
-            <span>{settings?.sunlight ?? 0}</span>
-            <span className="text-[10px] uppercase font-bold tracking-wider opacity-75">Sun</span>
-          </div>
+          <Popover>
+            <PopoverTrigger asChild>
+              <button className="flex items-center gap-2 bg-gradient-to-r from-amber-400/20 to-orange-400/20 text-amber-700 dark:text-amber-300 px-4 py-2 rounded-2xl border border-amber-400/30 text-sm font-bold shadow-md hover:shadow-lg backdrop-blur-md transition-all duration-300 hover:scale-105 active:scale-95 group cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-amber-500/50">
+                <Icons.sun className="w-4 h-4 text-amber-500 animate-[spin_8s_linear_infinite] group-hover:scale-110 transition-transform" />
+                <span>{settings?.sunlight ?? 0}</span>
+                <span className="text-[10px] uppercase font-bold tracking-wider opacity-75">Sun</span>
+              </button>
+            </PopoverTrigger>
+            <PopoverContent className="w-80 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-amber-500/20 rounded-2xl shadow-xl p-4 animate-in fade-in zoom-in-95 duration-200">
+              <div className="space-y-3">
+                <div className="flex items-center gap-2 border-b border-amber-500/10 pb-2">
+                  <Icons.sun className="w-5 h-5 text-amber-500 animate-[spin_10s_linear_infinite]" />
+                  <h4 className="font-bold text-slate-800 dark:text-slate-100">Sunlight Ledger</h4>
+                </div>
+                
+                <div className="space-y-1.5 text-xs text-slate-600 dark:text-slate-400">
+                  <div className="flex justify-between font-semibold text-slate-700 dark:text-slate-300">
+                    <span>Today&apos;s Earnings:</span>
+                    <span className="text-amber-600 dark:text-amber-400">+{todaySunlightEarned} Sun</span>
+                  </div>
+                  {todayCompletedTasksList.length > 0 ? (
+                    <ul className="max-h-24 overflow-y-auto space-y-1 pl-2 border-l border-amber-500/20 mt-1 scrollbar-thin">
+                      {todayCompletedTasksList.map(t => (
+                        <li key={t.id} className="flex justify-between items-center text-[10px] text-slate-500 dark:text-slate-400">
+                          <span className="truncate max-w-[150px]">{t.title}</span>
+                          <span className="font-medium text-amber-500/80">+10 Sun</span>
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <p className="text-[10px] text-slate-400 italic">No tasks completed yet today.</p>
+                  )}
+                </div>
+
+                <div className="border-t border-slate-500/10 pt-2 space-y-1 text-[11px] text-slate-500 dark:text-slate-400">
+                  <div className="flex items-start gap-1.5">
+                    <span className="text-amber-500">☀️</span>
+                    <span><strong>Earn:</strong> Complete tasks to gain <strong>+10 Sunlight</strong>.</span>
+                  </div>
+                  <div className="flex items-start gap-1.5">
+                    <span className="text-emerald-500">🌱</span>
+                    <span><strong>Spend:</strong> Purchase/plant seeds in the Botanical Nursery.</span>
+                  </div>
+                </div>
+              </div>
+            </PopoverContent>
+          </Popover>
 
           {/* Water drops pill */}
-          <div className="flex items-center gap-2 bg-gradient-to-r from-sky-400/20 to-blue-400/20 text-sky-700 dark:text-sky-300 px-4 py-2 rounded-2xl border border-sky-400/30 text-sm font-bold shadow-md hover:shadow-lg backdrop-blur-md transition-all duration-300 hover:scale-105 active:scale-95 group cursor-default">
-            <Icons.droplets className="w-4 h-4 text-sky-500 animate-[pulse_2s_ease-in-out_infinite] group-hover:scale-110 transition-transform" />
-            <span>{settings?.waterdrops ?? 0}</span>
-            <span className="text-[10px] uppercase font-bold tracking-wider opacity-75">Water</span>
-          </div>
+          <Popover>
+            <PopoverTrigger asChild>
+              <button className="flex items-center gap-2 bg-gradient-to-r from-sky-400/20 to-blue-400/20 text-sky-700 dark:text-sky-300 px-4 py-2 rounded-2xl border border-sky-400/30 text-sm font-bold shadow-md hover:shadow-lg backdrop-blur-md transition-all duration-300 hover:scale-105 active:scale-95 group cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-sky-500/50">
+                <Icons.droplets className="w-4 h-4 text-sky-500 animate-[pulse_2s_ease-in-out_infinite] group-hover:scale-110 transition-transform" />
+                <span>{settings?.waterdrops ?? 0}</span>
+                <span className="text-[10px] uppercase font-bold tracking-wider opacity-75">Water</span>
+              </button>
+            </PopoverTrigger>
+            <PopoverContent className="w-80 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-sky-500/20 rounded-2xl shadow-xl p-4 animate-in fade-in zoom-in-95 duration-200">
+              <div className="space-y-3">
+                <div className="flex items-center gap-2 border-b border-sky-500/10 pb-2">
+                  <Icons.droplets className="w-5 h-5 text-sky-500 animate-[pulse_2s_ease-in-out_infinite]" />
+                  <h4 className="font-bold text-slate-800 dark:text-slate-100">Water Ledger</h4>
+                </div>
+
+                <div className="space-y-1.5 text-xs text-slate-600 dark:text-slate-400">
+                  <div className="flex justify-between font-semibold text-slate-700 dark:text-slate-300">
+                    <span>Today&apos;s Focus:</span>
+                    <span className="text-sky-600 dark:text-sky-400">+{todayWaterdropsEarned} Drops</span>
+                  </div>
+                  {todayCompletedPomodorosList.length > 0 ? (
+                    <ul className="max-h-24 overflow-y-auto space-y-1 pl-2 border-l border-sky-500/20 mt-1 scrollbar-thin">
+                      {todayCompletedPomodorosList.map((p, idx) => {
+                        const associatedTask = tasks.find(t => t.id === p.taskId)
+                        const displayName = associatedTask ? `Focus: ${associatedTask.title}` : 'Focus Session'
+                        return (
+                          <li key={p.id || idx} className="flex justify-between items-center text-[10px] text-slate-500 dark:text-slate-400">
+                            <span className="truncate max-w-[150px]">{displayName}</span>
+                            <span className="font-medium text-sky-500/80">+{Math.floor(p.duration / 60) || 1} Drops</span>
+                          </li>
+                        )
+                      })}
+                    </ul>
+                  ) : (
+                    <p className="text-[10px] text-slate-400 italic">No focus sessions completed today.</p>
+                  )}
+                </div>
+
+                <div className="border-t border-slate-500/10 pt-2 space-y-1 text-[11px] text-slate-500 dark:text-slate-400">
+                  <div className="flex items-start gap-1.5">
+                    <span className="text-sky-500">💧</span>
+                    <span><strong>Earn:</strong> Complete focus sessions (<strong>1 Drop/min</strong>).</span>
+                  </div>
+                  <div className="flex items-start gap-1.5">
+                    <span className="text-emerald-500">🚿</span>
+                    <span><strong>Spend:</strong> Water your personal garden plants (+20% growth).</span>
+                  </div>
+                </div>
+              </div>
+            </PopoverContent>
+          </Popover>
         </div>
       </div>
 
@@ -186,71 +282,30 @@ export default function DashboardPage() {
       </div>
 
       {/* Quick Action Menu (raised on mobile to clear bottom nav) */}
-      <div className="fixed bottom-20 right-4 lg:bottom-6 lg:right-6 z-50 quick-actions-menu group">
+      <div className="fixed bottom-20 right-4 lg:bottom-6 lg:right-6 z-50 quick-actions-menu">
         <div className="relative">
           {/* Main Toggle Button */}
           <button
             onClick={() => setIsQuickActionsOpen(!isQuickActionsOpen)}
-            className={`w-12 h-12 sm:w-14 sm:h-14 bg-gradient-to-br from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center active:scale-95 touch-manipulation ${isQuickActionsOpen ? 'rotate-45' : ''
-              }`}
+            className={`w-12 h-12 sm:w-14 sm:h-14 bg-gradient-to-br from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center active:scale-95 touch-manipulation ${
+              isQuickActionsOpen ? 'rotate-45' : ''
+            }`}
+            title="Toggle Quick Actions"
           >
-            <Icons.plus className="w-5 h-5 sm:w-6 sm:h-6 text-white transition-transform duration-200" />
+            <Icons.plus className="w-5 h-5 sm:w-6 sm:h-6 text-white transition-transform duration-300" />
           </button>
 
-          {/* Desktop: Hover tooltip */}
-          <div className="absolute bottom-full right-0 mb-2 sm:mb-3 opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none hidden sm:block">
-            <div className="bg-slate-900 text-white text-xs px-3 py-1.5 rounded-lg shadow-lg whitespace-nowrap">
-              Quick Actions
-            </div>
-          </div>
-
-          {/* Desktop: Hover actions */}
-          <div className="absolute bottom-14 sm:bottom-16 right-0 opacity-0 group-hover:opacity-100 transition-all duration-200 transform translate-y-2 group-hover:translate-y-0 pointer-events-auto hidden sm:block">
+          {/* Unified Action Menu */}
+          <div 
+            className={`absolute bottom-14 sm:bottom-16 right-0 transition-all duration-300 transform origin-bottom-right ${
+              isQuickActionsOpen
+                ? 'opacity-100 translate-y-0 pointer-events-auto scale-100'
+                : 'opacity-0 translate-y-4 pointer-events-none scale-95'
+            }`}
+          >
             <div className="flex flex-col space-y-2 items-end">
               <div className="flex items-center gap-2">
-                <span className="bg-slate-900/90 text-white text-[11px] font-semibold px-2 py-1 rounded-md shadow-sm whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 delay-75">
-                  Plant Seed
-                </span>
-                <button
-                  onClick={() => router.push("/dashboard/tasks")}
-                  className="w-12 h-12 bg-green-500 hover:bg-green-600 rounded-xl shadow-md hover:shadow-lg transition-all duration-200 flex items-center justify-center hover:scale-110 active:scale-95 touch-manipulation"
-                >
-                  <Icons.leaf className="w-5 h-5 text-white" />
-                </button>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="bg-slate-900/90 text-white text-[11px] font-semibold px-2 py-1 rounded-md shadow-sm whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 delay-100">
-                  Focus Grove
-                </span>
-                <button
-                  onClick={() => router.push("/dashboard/pomodoro")}
-                  className="w-12 h-12 bg-orange-500 hover:bg-orange-600 rounded-xl shadow-md hover:shadow-lg transition-all duration-200 flex items-center justify-center hover:scale-110 active:scale-95 touch-manipulation"
-                >
-                  <Icons.timer className="w-5 h-5 text-white" />
-                </button>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="bg-slate-900/90 text-white text-[11px] font-semibold px-2 py-1 rounded-md shadow-sm whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 delay-150">
-                  Time Planner
-                </span>
-                <button
-                  onClick={() => router.push("/dashboard/calendar")}
-                  className="w-12 h-12 bg-purple-500 hover:bg-purple-600 rounded-xl shadow-md hover:shadow-lg transition-all duration-200 flex items-center justify-center hover:scale-110 active:scale-95 touch-manipulation"
-                >
-                  <Icons.calendar className="w-5 h-5 text-white" />
-                </button>
-              </div>
-            </div>
-          </div>
-
-          {/* Mobile: Toggleable action buttons */}
-          <div className={`absolute bottom-14 right-0 sm:hidden transition-all duration-300 ${isQuickActionsOpen
-            ? 'opacity-100 translate-y-0 pointer-events-auto'
-            : 'opacity-0 translate-y-4 pointer-events-none'
-            }`}>
-            <div className="flex flex-col space-y-2 items-end">
-              <div className="flex items-center gap-2">
-                <span className="bg-slate-900/90 text-white text-[10px] font-semibold px-2 py-1 rounded-md shadow-sm whitespace-nowrap">
+                <span className="bg-slate-900/90 text-white text-[10px] sm:text-[11px] font-semibold px-2 py-1 rounded-md shadow-sm whitespace-nowrap backdrop-blur-sm">
                   Plant Seed
                 </span>
                 <button
@@ -258,13 +313,13 @@ export default function DashboardPage() {
                     setIsQuickActionsOpen(false)
                     router.push("/dashboard/tasks")
                   }}
-                  className="w-12 h-12 bg-green-500 hover:bg-green-600 rounded-xl shadow-md transition-all duration-200 flex items-center justify-center active:scale-95 touch-manipulation"
+                  className="w-12 h-12 bg-green-500 hover:bg-green-600 text-white rounded-xl shadow-md hover:shadow-lg transition-all duration-200 flex items-center justify-center hover:scale-105 active:scale-95 touch-manipulation"
                 >
                   <Icons.leaf className="w-5 h-5 text-white" />
                 </button>
               </div>
               <div className="flex items-center gap-2">
-                <span className="bg-slate-900/90 text-white text-[10px] font-semibold px-2 py-1 rounded-md shadow-sm whitespace-nowrap">
+                <span className="bg-slate-900/90 text-white text-[10px] sm:text-[11px] font-semibold px-2 py-1 rounded-md shadow-sm whitespace-nowrap backdrop-blur-sm">
                   Focus Grove
                 </span>
                 <button
@@ -272,13 +327,13 @@ export default function DashboardPage() {
                     setIsQuickActionsOpen(false)
                     router.push("/dashboard/pomodoro")
                   }}
-                  className="w-12 h-12 bg-orange-500 hover:bg-orange-600 rounded-xl shadow-md transition-all duration-200 flex items-center justify-center active:scale-95 touch-manipulation"
+                  className="w-12 h-12 bg-orange-500 hover:bg-orange-600 text-white rounded-xl shadow-md hover:shadow-lg transition-all duration-200 flex items-center justify-center hover:scale-105 active:scale-95 touch-manipulation"
                 >
                   <Icons.timer className="w-5 h-5 text-white" />
                 </button>
               </div>
               <div className="flex items-center gap-2">
-                <span className="bg-slate-900/90 text-white text-[10px] font-semibold px-2 py-1 rounded-md shadow-sm whitespace-nowrap">
+                <span className="bg-slate-900/90 text-white text-[10px] sm:text-[11px] font-semibold px-2 py-1 rounded-md shadow-sm whitespace-nowrap backdrop-blur-sm">
                   Time Planner
                 </span>
                 <button
@@ -286,7 +341,7 @@ export default function DashboardPage() {
                     setIsQuickActionsOpen(false)
                     router.push("/dashboard/calendar")
                   }}
-                  className="w-12 h-12 bg-purple-500 hover:bg-purple-600 rounded-xl shadow-md transition-all duration-200 flex items-center justify-center active:scale-95 touch-manipulation"
+                  className="w-12 h-12 bg-purple-500 hover:bg-purple-600 text-white rounded-xl shadow-md hover:shadow-lg transition-all duration-200 flex items-center justify-center hover:scale-105 active:scale-95 touch-manipulation"
                 >
                   <Icons.calendar className="w-5 h-5 text-white" />
                 </button>

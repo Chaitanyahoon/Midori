@@ -8,6 +8,7 @@ import { toast } from "sonner"
 import { Badge } from "@/components/ui/badge"
 import { collection, addDoc, onSnapshot, query, orderBy, limit, doc, getDoc } from "firebase/firestore"
 import { db } from "@/lib/firebase/client"
+import { playWatering, playUnlock } from "@/lib/sounds"
 
 interface ChatMessage {
     id: string
@@ -28,9 +29,15 @@ const PLANT_NAMES: Record<string, string> = {
     sakura: "Sakura Tree",
     maple: "Maple Tree",
     pine: "Pine Tree",
+    jacaranda: "Jacaranda Tree",
     sunflower: "Sunflower",
     tulip: "Tulip",
     orchid: "Orchid",
+    marigold: "Marigold",
+    snowdrop: "Snowdrop",
+    lily: "Lily",
+    chrysanthemum: "Chrysanthemum",
+    snowflower: "Snow Flower",
 }
 
 export default function CoopPage() {
@@ -45,8 +52,7 @@ export default function CoopPage() {
     const chatEndRef = useRef<HTMLDivElement>(null)
     const [activeTab, setActiveTab] = useState<"join" | "create">("join")
     const [memberCount, setMemberCount] = useState(0)
-    const [rightTab, setRightTab] = useState<"chat" | "nursery" | "board">("chat")
-    const [signs, setSigns] = useState<CoopSign[]>([])
+    const [rightTab, setRightTab] = useState<"chat" | "nursery" | "board" | "logs">("chat")
     const [newSignText, setNewSignText] = useState("")
 
     const handleNurture = async (plantId: string) => {
@@ -59,6 +65,10 @@ export default function CoopPage() {
             return
         }
 
+        const plant = (sharedGarden.plants || []).find((p: any) => p.id === plantId)
+        if (!plant) return
+        const name = PLANT_NAMES[plant.subtype] || plant.subtype || "Unknown Plant"
+
         const updatedPlants = (sharedGarden.plants || []).map((p: any) => {
             if (p.id === plantId) {
                 const currentNurture = p.nurtureLevel ?? 0
@@ -67,13 +77,23 @@ export default function CoopPage() {
             return p
         })
 
+        const userName = settings.userName || user?.displayName || user?.email?.split("@")[0] || "Anonymous"
+        const newLog = {
+            id: Math.random().toString(36).substring(7),
+            message: `nurtured the communal ${name} (+20% Nurture)`,
+            user: userName,
+            timestamp: new Date().toISOString()
+        }
+
         try {
             await updateSharedGarden({
                 sunlightPool: sharedGarden.sunlightPool - costSun,
                 waterPool: sharedGarden.waterPool - costWater,
-                plants: updatedPlants
+                plants: updatedPlants,
+                activityLog: [newLog, ...(sharedGarden.activityLog || [])].slice(0, 50)
             })
             toast.success("Communal plant nurtured! Check visual garden to watch it grow. 💧☀️")
+            playWatering()
         } catch (e) {
             console.error("Nurture error:", e)
             toast.error("Failed to nurture plant")
@@ -84,6 +104,7 @@ export default function CoopPage() {
         if (!sharedGarden) return
         const plant = (sharedGarden.plants || []).find((p: any) => p.id === plantId)
         if (!plant) return
+        const name = PLANT_NAMES[plant.subtype] || plant.subtype || "Unknown Plant"
         
         const bonusSun = 100
         const bonusWater = 50
@@ -95,13 +116,23 @@ export default function CoopPage() {
             return p
         })
 
+        const userName = settings.userName || user?.displayName || user?.email?.split("@")[0] || "Anonymous"
+        const newLog = {
+            id: Math.random().toString(36).substring(7),
+            message: `harvested a mature ${name} (+100 Sun, +50 Water rewards)`,
+            user: userName,
+            timestamp: new Date().toISOString()
+        }
+
         try {
             await updateSharedGarden({
                 sunlightPool: (sharedGarden.sunlightPool || 0) + bonusSun,
                 waterPool: (sharedGarden.waterPool || 0) + bonusWater,
-                plants: updatedPlants
+                plants: updatedPlants,
+                activityLog: [newLog, ...(sharedGarden.activityLog || [])].slice(0, 50)
             })
             toast.success(`🎉 Landmark complete! Earned +${bonusSun} Sun & +${bonusWater} Water pool rewards!`)
+            playUnlock()
         } catch (e) {
             console.error("Harvest error:", e)
             toast.error("Failed to harvest plant")
@@ -110,89 +141,56 @@ export default function CoopPage() {
 
     const handleRemovePlant = async (plantId: string) => {
         if (!sharedGarden) return
+        const plant = (sharedGarden.plants || []).find((p: any) => p.id === plantId)
+        const name = plant ? (PLANT_NAMES[plant.subtype] || plant.subtype || "Unknown Plant") : "Plant"
         const updatedPlants = (sharedGarden.plants || []).filter((p: any) => p.id !== plantId)
+        
+        const userName = settings.userName || user?.displayName || user?.email?.split("@")[0] || "Anonymous"
+        const newLog = {
+            id: Math.random().toString(36).substring(7),
+            message: `removed communal ${name}`,
+            user: userName,
+            timestamp: new Date().toISOString()
+        }
+
         try {
-            await updateSharedGarden({ plants: updatedPlants })
+            await updateSharedGarden({
+                plants: updatedPlants,
+                activityLog: [newLog, ...(sharedGarden.activityLog || [])].slice(0, 50)
+            })
             toast.info("Plant removed from Co-op Garden.")
         } catch (e) {
             toast.error("Failed to remove plant")
         }
     }
 
-    // Real-time signs listener
-    useEffect(() => {
-        if (!sharedGarden?.id) return
-        
-        if (!db) {
-            const storageKey = `midori_mock_signs_${sharedGarden.id}`
-            try {
-                const stored = localStorage.getItem(storageKey)
-                if (stored) {
-                    setSigns(JSON.parse(stored))
-                } else {
-                    const defaultSigns: CoopSign[] = [
-                        {
-                            id: "sign-1",
-                            text: "Remember to breathe today! 🧘‍♂️",
-                            userName: "ZenMaster",
-                            createdAt: new Date(Date.now() - 7200000).toISOString()
-                        },
-                        {
-                            id: "sign-2",
-                            text: "Let's focus on the Sakura tree! 🌸",
-                            userName: "Hana",
-                            createdAt: new Date(Date.now() - 3600000).toISOString()
-                        }
-                    ]
-                    setSigns(defaultSigns)
-                    localStorage.setItem(storageKey, JSON.stringify(defaultSigns))
-                }
-            } catch (e) {}
-            return
-        }
-
-        const q = query(
-            collection(db, "shared_gardens", sharedGarden.id, "signs"),
-            orderBy("createdAt", "desc"),
-            limit(10)
-        )
-        const unsub = onSnapshot(q, (snap) => {
-            const list = snap.docs.map(d => ({ id: d.id, ...d.data() } as CoopSign)).reverse()
-            setSigns(list)
-        }, (err) => {
-            console.error("Signs listener error:", err)
-        })
-        return () => unsub()
-    }, [sharedGarden?.id])
-
     const handlePinSign = async () => {
         if (!newSignText.trim() || !sharedGarden?.id || !user) return
         const text = newSignText.trim()
-        
-        if (!db) {
-            const newSign: CoopSign = {
-                id: Math.random().toString(36).substring(7),
-                text,
-                userName: settings.userName || user.displayName || user.email?.split("@")[0] || "Anonymous",
-                createdAt: new Date().toISOString()
-            }
-            setSigns(prev => {
-                const next = [...prev, newSign]
-                const storageKey = `midori_mock_signs_${sharedGarden.id}`
-                try { localStorage.setItem(storageKey, JSON.stringify(next)) } catch (e) {}
-                return next
-            })
-            setNewSignText("")
-            toast.success("Wooden sign pinned to the master board! 🪵")
-            return
+        const userName = settings.userName || user.displayName || user.email?.split("@")[0] || "Anonymous"
+
+        const colors = ["yellow", "pink", "blue", "green"]
+        const color = colors[Math.floor(Math.random() * colors.length)]
+
+        const newPin = {
+            id: Math.random().toString(36).substring(7),
+            text,
+            user: userName,
+            timestamp: new Date().toISOString(),
+            color
+        }
+
+        const newLog = {
+            id: Math.random().toString(36).substring(7),
+            message: `pinned a message to the bulletin board: "${text}"`,
+            user: userName,
+            timestamp: new Date().toISOString()
         }
 
         try {
-            await addDoc(collection(db, "shared_gardens", sharedGarden.id, "signs"), {
-                text,
-                userId: user.uid,
-                userName: settings.userName || user.displayName || user.email?.split("@")[0] || "Anonymous",
-                createdAt: new Date().toISOString()
+            await updateSharedGarden({
+                pins: [newPin, ...(sharedGarden.pins || [])],
+                activityLog: [newLog, ...(sharedGarden.activityLog || [])].slice(0, 50)
             })
             setNewSignText("")
             toast.success("Wooden sign pinned to the master board! 🪵")
@@ -202,7 +200,7 @@ export default function CoopPage() {
         }
     }
 
-    // Cross-tab real-time sync for offline/mock messages and signs
+    // Cross-tab real-time sync for offline/mock messages
     useEffect(() => {
         if (db || !sharedGarden?.id) return
         const handleStorage = (e: StorageEvent) => {
@@ -210,11 +208,8 @@ export default function CoopPage() {
                 if (e.key === `midori_mock_chat_${sharedGarden.id}` && e.newValue) {
                     setMessages(JSON.parse(e.newValue))
                 }
-                if (e.key === `midori_mock_signs_${sharedGarden.id}` && e.newValue) {
-                    setSigns(JSON.parse(e.newValue))
-                }
             } catch (err) {
-                console.error("Storage event chat/signs sync error:", err)
+                console.error("Storage event chat sync error:", err)
             }
         }
         window.addEventListener("storage", handleStorage)
@@ -598,7 +593,7 @@ export default function CoopPage() {
                         <div>
                             <div className="flex items-center gap-2">
                                 <h2 className="font-bold text-slate-900 dark:text-slate-100 text-sm">
-                                    {rightTab === "chat" ? "Garden Chat" : rightTab === "nursery" ? "Kyōei Nursery" : "Master Board"}
+                                    {rightTab === "chat" ? "Garden Chat" : rightTab === "nursery" ? "Kyōei Nursery" : rightTab === "board" ? "Master Board" : "Activity Log"}
                                 </h2>
                                 {!db && (
                                     <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-medium bg-amber-100 dark:bg-amber-900/40 text-amber-800 dark:text-amber-300 animate-pulse">
@@ -611,7 +606,9 @@ export default function CoopPage() {
                                     ? `${!db ? "Local Sandbox" : "Real-time"} • ${messages.length} messages` 
                                     : rightTab === "nursery"
                                         ? `Communal Growth • ${(sharedGarden.plants || []).length} active projects`
-                                        : `Leaderboards & Signs • ${signs.length} signs pinned`}
+                                        : rightTab === "board"
+                                            ? `Leaderboards & Signs • ${(sharedGarden.pins || []).length} signs pinned`
+                                            : `Communal Growth Timeline • ${(sharedGarden.activityLog || []).length} entries`}
                             </p>
                         </div>
                     </div>
@@ -647,6 +644,16 @@ export default function CoopPage() {
                             }`}
                         >
                             🏆 Board
+                        </button>
+                        <button
+                            onClick={() => setRightTab("logs")}
+                            className={`px-3 py-1.5 rounded-md text-[10px] font-bold tracking-wide uppercase transition-all ${
+                                rightTab === "logs" 
+                                    ? "bg-white dark:bg-slate-700 text-emerald-700 dark:text-emerald-300 shadow-sm" 
+                                    : "text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200"
+                            }`}
+                        >
+                            📜 Logs
                         </button>
                     </div>
                 </div>
@@ -805,7 +812,7 @@ export default function CoopPage() {
                             </div>
                         )}
                     </div>
-                ) : (
+                ) : rightTab === "board" ? (
                     /* MASTER BOARD TAB */
                     <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-8 custom-scrollbar">
                         {/* Leaderboard Section */}
@@ -874,33 +881,86 @@ export default function CoopPage() {
                             </div>
 
                             {/* signs board */}
-                            {signs.length === 0 ? (
-                                <p className="text-xs text-slate-400 italic">No signs pinned yet. Be the first to write a message!</p>
-                            ) : (
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                    {signs.map(sign => (
-                                        <div
-                                            key={sign.id}
-                                            className="bg-gradient-to-br from-amber-850 via-amber-900 to-amber-950 border border-amber-950 text-amber-50 rounded-2xl shadow-md p-5 relative pt-6 flex flex-col justify-between hover:scale-[1.02] transition-transform duration-250"
-                                        >
-                                            {/* Tack */}
-                                            <div className="w-2.5 h-2.5 bg-rose-600 rounded-full absolute top-2.5 left-1/2 -translate-x-1/2 border border-rose-800 shadow" />
-                                            
-                                            <p className="text-sm font-medium leading-relaxed italic text-amber-100">
-                                                "{sign.text}"
-                                            </p>
-                                            
-                                            <div className="flex justify-between items-center mt-4 border-t border-amber-900/40 pt-2 text-[10px] text-amber-300 font-bold">
-                                                <span>By {sign.userName}</span>
-                                                <span>
-                                                    {new Date(sign.createdAt).toLocaleDateString([], { month: "short", day: "numeric" })}
-                                                </span>
+                            {(() => {
+                                const pinColors: Record<string, string> = {
+                                    yellow: "bg-amber-100/95 dark:bg-amber-950/40 text-amber-900 dark:text-amber-100 border-amber-200 dark:border-amber-900/40",
+                                    pink: "bg-pink-100/95 dark:bg-pink-950/40 text-pink-900 dark:text-pink-100 border-pink-200 dark:border-pink-900/40",
+                                    blue: "bg-blue-100/95 dark:bg-blue-950/40 text-blue-900 dark:text-blue-100 border-blue-200 dark:border-blue-900/40",
+                                    green: "bg-emerald-100/95 dark:bg-emerald-950/40 text-emerald-900 dark:text-emerald-100 border-emerald-200 dark:border-emerald-900/40"
+                                }
+                                const pins = sharedGarden.pins || []
+                                return pins.length === 0 ? (
+                                    <p className="text-xs text-slate-400 italic">No signs pinned yet. Be the first to write a message!</p>
+                                ) : (
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                        {pins.map(sign => (
+                                            <div
+                                                key={sign.id}
+                                                className={`border rounded-2xl shadow-md p-5 relative pt-7 flex flex-col justify-between hover:scale-[1.02] transition-transform duration-250 ${
+                                                    pinColors[sign.color] || pinColors.yellow
+                                                }`}
+                                            >
+                                                {/* Tack */}
+                                                <div className="w-2.5 h-2.5 bg-rose-600 rounded-full absolute top-2.5 left-1/2 -translate-x-1/2 border border-rose-800 shadow" />
+                                                
+                                                <p className="text-sm font-medium leading-relaxed italic">
+                                                    "{sign.text}"
+                                                </p>
+                                                
+                                                <div className="flex justify-between items-center mt-4 border-t border-slate-500/10 pt-2 text-[10px] opacity-75 font-bold">
+                                                    <span>By {sign.user}</span>
+                                                    <span>
+                                                        {new Date(sign.timestamp).toLocaleDateString([], { month: "short", day: "numeric" })}
+                                                    </span>
+                                                </div>
                                             </div>
-                                        </div>
-                                    ))}
-                                </div>
-                            )}
+                                        ))}
+                                    </div>
+                                )
+                            })()}
                         </div>
+                    </div>
+                ) : (
+                    /* BOTANICAL ACTIVITY LOG TAB */
+                    <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4 custom-scrollbar">
+                        <div className="mb-2">
+                            <h3 className="font-bold text-slate-800 dark:text-slate-100 text-sm">📜 Botanical Activity Log</h3>
+                            <p className="text-xs text-slate-500">Communal history and growth timeline of the garden</p>
+                        </div>
+
+                        {(!sharedGarden.activityLog || sharedGarden.activityLog.length === 0) ? (
+                             <div className="flex flex-col items-center justify-center py-16 text-center card-zen p-6">
+                                 <span className="text-4xl mb-3">📜</span>
+                                 <p className="text-sm font-semibold text-slate-600 dark:text-slate-400">No activity logged yet</p>
+                                 <p className="text-xs text-slate-400 dark:text-slate-500 mt-1.5 max-w-xs leading-relaxed">
+                                     Activity will appear here as members water plants, harvest rewards, complete tasks, or focus!
+                                 </p>
+                             </div>
+                        ) : (
+                             <div className="relative border-l-2 border-emerald-500/20 dark:border-emerald-500/10 ml-3 pl-6 space-y-6 py-2">
+                                 {sharedGarden.activityLog.map((log: any) => (
+                                     <div key={log.id} className="relative group">
+                                         {/* Timeline Dot */}
+                                         <div className="absolute -left-[31px] top-1.5 w-4 h-4 rounded-full border-2 border-emerald-500 bg-white dark:bg-slate-900 group-hover:scale-125 transition-transform duration-200 flex items-center justify-center">
+                                             <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                                         </div>
+                                         <div className="card-zen p-4 hover:translate-y-[-2px] transition-all font-sans">
+                                             <div className="flex items-start justify-between gap-3 mb-1">
+                                                 <span className="text-xs font-bold text-emerald-700 dark:text-emerald-400">
+                                                     {log.user}
+                                                 </span>
+                                                 <span className="text-[10px] text-slate-400 font-medium">
+                                                     {new Date(log.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                                 </span>
+                                             </div>
+                                             <p className="text-xs text-slate-700 dark:text-slate-350 font-medium">
+                                                 {log.message}
+                                             </p>
+                                         </div>
+                                     </div>
+                                 ))}
+                             </div>
+                        )}
                     </div>
                 )}
             </div>

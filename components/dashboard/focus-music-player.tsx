@@ -359,6 +359,7 @@ export function FocusMusicPlayer({
     setIsAmbientPlaying,
     ambientVolume,
     setAmbientVolume,
+    activeAmbients,
   } = useMusicStore()
 
   const playerRef = useRef<any>(null)
@@ -445,34 +446,31 @@ export function FocusMusicPlayer({
   }, [currentTrack, isPlaying, ambientTrack, isAmbientPlaying])
 
 
-  // Sync Ambient Track Playback (Synthesized soundscapes)
+  // Sync Ambient Track Playback (Multi-sound synthesized soundscapes)
   useEffect(() => {
-    if (!isAmbientPlaying || !ambientTrack) {
-      ambientGenerator.stopAll()
-      return
-    }
+    const allSynthesizedNames = [
+      "Rain Sounds",
+      "Forest Sounds",
+      "Ocean Waves",
+      "Fireplace Sounds",
+      "Zen Temple Ambient"
+    ]
 
-    if (ambientTrack.type === "synthesized") {
-      const vol = Array.isArray(ambientVolume) ? ambientVolume[0] : ambientVolume || 30
-      ambientGenerator.start(ambientTrack.name, vol)
-    } else {
-      ambientGenerator.stopAll()
-    }
-
-    return () => {
-      if (ambientTrack && ambientTrack.type === "synthesized") {
-        ambientGenerator.stop(ambientTrack.name)
+    allSynthesizedNames.forEach(name => {
+      const vol = activeAmbients[name]
+      if (vol !== undefined) {
+        if (ambientGenerator.isPlaying(name)) {
+          ambientGenerator.setVolume(name, vol)
+        } else {
+          ambientGenerator.start(name, vol)
+        }
+      } else {
+        if (ambientGenerator.isPlaying(name)) {
+          ambientGenerator.stop(name)
+        }
       }
-    }
-  }, [ambientTrack, isAmbientPlaying])
-
-  // Sync Ambient Volume Changes
-  useEffect(() => {
-    if (isAmbientPlaying && ambientTrack && ambientTrack.type === "synthesized") {
-      const vol = Array.isArray(ambientVolume) ? ambientVolume[0] : ambientVolume || 30
-      ambientGenerator.setVolume(ambientTrack.name, vol)
-    }
-  }, [ambientVolume, ambientTrack, isAmbientPlaying])
+    })
+  }, [activeAmbients])
 
   // Main YouTube Player Manager
   useEffect(() => {

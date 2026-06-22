@@ -633,6 +633,49 @@ export default function PomodoroPage() {
               )}
             </CardContent>
           </Card>
+
+          {/* Daily Focus Milestones */}
+          <Card className="card-zen mt-6 p-5 border border-slate-200/50 dark:border-slate-800/40 relative overflow-hidden group">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/5 rounded-full blur-2xl pointer-events-none group-hover:bg-emerald-500/10 transition-colors duration-1000" />
+            <h3 className="text-sm font-bold text-gray-900 dark:text-gray-100 uppercase tracking-wider mb-4 flex items-center gap-2">
+              <Icons.sprout className="w-4 h-4 text-emerald-500" />
+              Focus Grove Milestones
+            </h3>
+            
+            {(() => {
+              const focusMins = completedSessionsToday * (settings?.focusTime || 25)
+              const milestones = [
+                { name: "Sprout 🌱", mins: 25, desc: "25m Focused" },
+                { name: "Sapling 🌳", mins: 50, desc: "50m Focused" },
+                { name: "Forest 🌲🌲", mins: 100, desc: "100m Focused" },
+                { name: "Lotus 🌸", mins: 150, desc: "150m+ Focused" }
+              ]
+
+              return (
+                <div className="grid grid-cols-4 gap-2.5">
+                  {milestones.map((m) => {
+                    const active = focusMins >= m.mins
+                    return (
+                      <div
+                        key={m.name}
+                        className={`flex flex-col items-center justify-center p-3 rounded-2xl border transition-all duration-300 text-center ${
+                          active
+                            ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-600 dark:text-emerald-400 font-semibold shadow-md animate-[pulse_3s_infinite]"
+                            : "bg-white/5 border-slate-250/50 dark:border-slate-800/30 text-slate-400 dark:text-slate-500"
+                        }`}
+                      >
+                        <span className={`text-base mb-1 transition-transform duration-500 ${active ? 'scale-110 rotate-3' : 'scale-100 opacity-60'}`}>
+                          {m.name.split(" ")[1] || "🌱"}
+                        </span>
+                        <span className="text-[10px] leading-tight block font-bold">{m.name.split(" ")[0]}</span>
+                        <span className="text-[9px] font-normal opacity-60 mt-0.5">{m.desc}</span>
+                      </div>
+                    )
+                  })}
+                </div>
+              )
+            })()}
+          </Card>
         </div>
 
         {/* Sidebar */}
@@ -1149,12 +1192,14 @@ export default function PomodoroPage() {
                   activeCategory: musicCat,
                   setActiveCategory: setMusicCat,
                   recentlyPlayed: recents,
-                  ambientTrack: activeAmbient,
-                  setAmbientTrack: setActiveAmbient,
-                  isAmbientPlaying: ambientPlaying,
-                  setIsAmbientPlaying: setAmbientPlaying,
-                  ambientVolume: ambientVol,
-                  setAmbientVolume: setAmbientVol,
+                  activeAmbients,
+                  toggleAmbient,
+                  setAmbientVolumeSingle,
+                  clearAllAmbients,
+                  savedPresets,
+                  saveAudioPreset,
+                  loadAudioPreset,
+                  deleteAudioPreset,
                 } = useMusicStore()
 
                 const handleToggleMusicPlay = () => {
@@ -1176,13 +1221,7 @@ export default function PomodoroPage() {
                 }
 
                 const handleToggleAmbient = (track: MusicTrack) => {
-                  if (activeAmbient?.name === track.name && ambientPlaying) {
-                    setAmbientPlaying(false)
-                    setActiveAmbient(null)
-                  } else {
-                    setActiveAmbient(track)
-                    setAmbientPlaying(true)
-                  }
+                  toggleAmbient(track.name)
                 }
 
                 const handleSelectFocusTrack = (track: MusicTrack) => {
@@ -1206,9 +1245,10 @@ export default function PomodoroPage() {
                     </div>
 
                     <Tabs defaultValue="tracks" className="flex-1 flex flex-col min-h-0">
-                      <TabsList className="grid grid-cols-2 bg-white/5 border border-white/5 rounded-xl p-1 mb-4 h-9">
-                        <TabsTrigger value="tracks" className="text-xs text-white/50 data-[state=active]:bg-white/10 data-[state=active]:text-white rounded-lg h-7 font-semibold">🎵 Focus Music</TabsTrigger>
-                        <TabsTrigger value="ambient" className="text-xs text-white/50 data-[state=active]:bg-white/10 data-[state=active]:text-white rounded-lg h-7 font-semibold">🍃 Soundscapes</TabsTrigger>
+                      <TabsList className="grid grid-cols-3 bg-white/5 border border-white/5 rounded-xl p-1 mb-4 h-9">
+                        <TabsTrigger value="tracks" className="text-xs text-white/50 data-[state=active]:bg-white/10 data-[state=active]:text-white rounded-lg h-7 font-semibold">🎵 Music</TabsTrigger>
+                        <TabsTrigger value="ambient" className="text-xs text-white/50 data-[state=active]:bg-white/10 data-[state=active]:text-white rounded-lg h-7 font-semibold">🍃 Mixer</TabsTrigger>
+                        <TabsTrigger value="presets" className="text-xs text-white/50 data-[state=active]:bg-white/10 data-[state=active]:text-white rounded-lg h-7 font-semibold">✨ Presets</TabsTrigger>
                       </TabsList>
 
                       <TabsContent value="tracks" className="flex-1 flex flex-col min-h-0 focus-visible:outline-none">
@@ -1306,9 +1346,9 @@ export default function PomodoroPage() {
                         </div>
                       </TabsContent>
 
-                      <TabsContent value="ambient" className="flex-1 flex flex-col min-h-0 focus-visible:outline-none justify-between">
+                      <TabsContent value="ambient" className="flex-1 flex flex-col min-h-0 focus-visible:outline-none">
                         {/* Soundscapes grid */}
-                        <div className="grid grid-cols-2 gap-2 max-h-[220px] overflow-y-auto pr-1">
+                        <div className="grid grid-cols-2 gap-2 max-h-[160px] overflow-y-auto pr-1">
                           {[
                             { name: "Rain Sounds", icon: <Icons.cloudRain className="w-4 h-4" />, label: "Rain" },
                             { name: "Forest Sounds", icon: <Icons.tree className="w-4 h-4" />, label: "Forest" },
@@ -1316,54 +1356,134 @@ export default function PomodoroPage() {
                             { name: "Fireplace Sounds", icon: <Icons.sun className="w-4 h-4" />, label: "Fire" },
                             { name: "Zen Temple Ambient", icon: <Icons.sprout className="w-4 h-4" />, label: "Zen Drone" }
                           ].map((scape) => {
-                            const track = MUSIC_OPTIONS.find(t => t.name === scape.name)
-                            const active = activeAmbient?.name === scape.name && ambientPlaying
-                            if (!track) return null
-
+                            const active = activeAmbients[scape.name] !== undefined
                             return (
                               <button
                                 key={scape.name}
-                                onClick={() => handleToggleAmbient(track)}
-                                className={`flex flex-col items-center justify-center p-3 rounded-2xl border transition-all text-center min-h-[64px] ${
+                                onClick={() => toggleAmbient(scape.name)}
+                                className={`flex flex-col items-center justify-center p-2.5 rounded-2xl border transition-all text-center min-h-[58px] ${
                                   active
                                     ? "bg-emerald-500/20 border-emerald-500/40 text-emerald-400 shadow-lg"
                                     : "bg-white/5 border-white/5 text-white hover:bg-white/10"
                                 }`}
                               >
                                 {scape.icon}
-                                <span className="text-[10px] mt-1.5 font-bold tracking-wide">{scape.label}</span>
+                                <span className="text-[10px] mt-1 font-bold tracking-wide">{scape.label}</span>
                               </button>
                             )
                           })}
                         </div>
 
-                        {/* Ambient volume controls */}
-                        {ambientPlaying && activeAmbient && (
-                          <div className="mt-4 pt-3.5 border-t border-white/5 bg-slate-900/40 p-3.5 rounded-2xl border border-white/5 space-y-2">
-                            <div className="flex justify-between items-center text-xs">
-                              <span className="font-semibold text-emerald-400">Ambient: {activeAmbient.name}</span>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => { setAmbientPlaying(false); setActiveAmbient(null) }}
-                                className="h-6 text-[10px] hover:bg-red-500/10 text-red-400 hover:text-red-300 rounded-lg px-2"
-                              >
-                                Mute
-                              </Button>
-                            </div>
+                        {/* Ambient Volume controls for active sounds */}
+                        <div className="flex-1 overflow-y-auto scrollbar-hide space-y-2 mt-3 pr-1 max-h-[180px]">
+                          {Object.keys(activeAmbients).length > 0 ? (
+                            Object.keys(activeAmbients).map((name) => {
+                              const vol = activeAmbients[name]
+                              return (
+                                <div key={name} className="bg-slate-900/40 p-2.5 rounded-xl border border-white/5 space-y-1.5">
+                                  <div className="flex justify-between items-center text-[10px] font-semibold text-emerald-400">
+                                    <span>{name}</span>
+                                    <button
+                                      onClick={() => toggleAmbient(name)}
+                                      className="text-red-400 hover:text-red-300 animate-fade-in"
+                                    >
+                                      Remove
+                                    </button>
+                                  </div>
+                                  <div className="flex items-center gap-2">
+                                    <Icons.volume className="w-3 h-3 text-white/40" />
+                                    <Slider
+                                      value={[vol]}
+                                      onValueChange={(val) => setAmbientVolumeSingle(name, val[0])}
+                                      max={100}
+                                      className="flex-1"
+                                    />
+                                    <span className="text-[9px] font-mono text-white/40 w-5 text-right">{vol}%</span>
+                                  </div>
+                                </div>
+                              )
+                            })
+                          ) : (
+                            <div className="text-center py-6 text-[11px] text-white/30 italic">No ambient sounds active. Turn some on above!</div>
+                          )}
+                        </div>
+                      </TabsContent>
 
-                            <div className="flex items-center gap-2">
-                              <Icons.volume className="w-3.5 h-3.5 text-white/40" />
-                              <Slider
-                                value={ambientVol}
-                                onValueChange={setAmbientVol}
-                                max={100}
-                                className="flex-1"
-                              />
-                              <span className="text-[10px] font-mono text-white/40 w-6 text-right">{ambientVol[0]}%</span>
-                            </div>
+                      <TabsContent value="presets" className="flex-1 flex flex-col min-h-0 focus-visible:outline-none">
+                        {/* Save Preset Form */}
+                        <div className="bg-slate-900/40 p-3 rounded-2xl border border-white/5 space-y-2 mb-3">
+                          <Label className="text-[10px] uppercase font-bold tracking-wider text-white/60">Save Current Mix</Label>
+                          <div className="flex gap-2">
+                            <Input
+                              id="preset-name-input"
+                              placeholder="Preset name (e.g. Cozy Study)"
+                              className="h-8 text-xs bg-white/5 border-white/10 text-white rounded-xl placeholder:text-white/25 focus-visible:ring-emerald-500/50"
+                              onKeyDown={(e) => {
+                                if (e.key === "Enter") {
+                                  const val = (e.target as HTMLInputElement).value.trim()
+                                  if (val) {
+                                    saveAudioPreset(val)
+                                    ;(e.target as HTMLInputElement).value = ""
+                                    toast.success(`Preset "${val}" saved! ✨`)
+                                  }
+                                }
+                              }}
+                            />
+                            <Button
+                              onClick={() => {
+                                const input = document.getElementById("preset-name-input") as HTMLInputElement
+                                const val = input?.value.trim()
+                                if (val) {
+                                  saveAudioPreset(val)
+                                  input.value = ""
+                                  toast.success(`Preset "${val}" saved! ✨`)
+                                } else {
+                                  toast.error("Please enter a preset name")
+                                }
+                              }}
+                              className="h-8 text-xs rounded-xl px-3 bg-emerald-500 hover:bg-emerald-600 text-white font-semibold flex-shrink-0"
+                            >
+                              Save
+                            </Button>
                           </div>
-                        )}
+                        </div>
+
+                        {/* Presets List */}
+                        <div className="flex-1 overflow-y-auto scrollbar-hide space-y-2 pr-1 min-h-[140px]">
+                          {savedPresets.length > 0 ? (
+                            savedPresets.map((preset) => (
+                              <div
+                                key={preset.name}
+                                className="w-full flex items-center justify-between p-2.5 rounded-xl border border-white/5 bg-white/5 hover:bg-white/10 group transition-all"
+                              >
+                                <button
+                                  onClick={() => {
+                                    loadAudioPreset(preset)
+                                    toast.success(`Loaded preset "${preset.name}"! 🎧`)
+                                  }}
+                                  className="flex-1 text-left min-w-0"
+                                >
+                                  <div className="text-xs font-bold text-white truncate">{preset.name}</div>
+                                  <div className="text-[9px] text-white/30 truncate mt-0.5">
+                                    {preset.activeMusic?.name || "No music"} • {Object.keys(preset.activeAmbients).length} sounds
+                                  </div>
+                                </button>
+                                <button
+                                  onClick={() => {
+                                    deleteAudioPreset(preset.name)
+                                    toast.success(`Deleted preset "${preset.name}"`)
+                                  }}
+                                  className="text-red-400 hover:text-red-300 p-1.5 opacity-0 group-hover:opacity-100 transition-opacity"
+                                  title="Delete Preset"
+                                >
+                                  <Icons.trash className="w-3.5 h-3.5" />
+                                </button>
+                              </div>
+                            ))
+                          ) : (
+                            <div className="text-center py-10 text-[11px] text-white/30 italic">No saved presets yet. Save current mix above!</div>
+                          )}
+                        </div>
                       </TabsContent>
                     </Tabs>
                   </div>

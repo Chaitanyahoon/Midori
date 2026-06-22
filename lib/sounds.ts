@@ -72,3 +72,48 @@ export function playUnlock() {
     /* silent fail */
   }
 }
+
+/** Bubbling water sound effect for watering plants */
+export function playWatering() {
+  try {
+    const ctx = getCtx();
+    const now = ctx.currentTime;
+    // Play 3 rapid soft bubble tones
+    for (let i = 0; i < 3; i++) {
+      const t = now + i * 0.08;
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = "sine";
+      const startFreq = 600 + Math.random() * 200;
+      osc.frequency.setValueAtTime(startFreq, t);
+      osc.frequency.exponentialRampToValueAtTime(startFreq + 300, t + 0.06);
+      gain.gain.setValueAtTime(0.06, t);
+      gain.gain.exponentialRampToValueAtTime(0.001, t + 0.06);
+      osc.connect(gain).connect(ctx.destination);
+      osc.start(t);
+      osc.stop(t + 0.06);
+    }
+  } catch {
+    /* silent fail */
+  }
+}
+
+/** Earthy sliding tone for placing a plant seed */
+export function playPlanting() {
+  try {
+    const ctx = getCtx();
+    const now = ctx.currentTime;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = "triangle";
+    osc.frequency.setValueAtTime(220, now); // A3
+    osc.frequency.exponentialRampToValueAtTime(440, now + 0.2); // A4
+    gain.gain.setValueAtTime(0.12, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.25);
+    osc.connect(gain).connect(ctx.destination);
+    osc.start(now);
+    osc.stop(now + 0.25);
+  } catch {
+    /* silent fail */
+  }
+}

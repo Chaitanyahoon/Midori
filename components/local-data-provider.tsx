@@ -49,12 +49,29 @@ export interface UserStats {
   lastActiveDate: string
 }
 
+export interface SharedGardenLogEntry {
+  id: string
+  message: string
+  user: string
+  timestamp: string
+}
+
+export interface SharedGardenPin {
+  id: string
+  text: string
+  user: string
+  timestamp: string
+  color: string
+}
+
 export interface SharedGarden {
   id: string
   name: string
   sunlightPool: number
   waterPool: number
   plants: any[]
+  activityLog?: SharedGardenLogEntry[]
+  pins?: SharedGardenPin[]
 }
 
 export interface UserSettings {

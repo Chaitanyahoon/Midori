@@ -80,6 +80,40 @@ export async function POST(request: Request) {
     }
     const ai = new GoogleGenAI({ apiKey });
 
+    if (intent === "quote") {
+      const mood = context?.mood || "stressed";
+      const prompt = `You are a Zen master and productivity botanist for the Midori (みどり) app.
+The user is feeling ${mood} today.
+Generate a tailored, inspiring Zen quote for them.
+The quote should be around 15 words or fewer, calming, and deeply resonant with their mood: "${mood}".
+Include:
+1. The quote text.
+2. The author (can be an ancient Zen proverb, a famous Zen master, or "Midori Sensei").
+3. A single Japanese Kanji character that encapsulates the vibe/essence of the advice (e.g., 楽 for joy/ease, 静 for quiet/calm, 忍 for patience/endurance, 動 for action/movement, 空 for emptiness/sky, etc.).
+
+Respond ONLY with a JSON object in the exact following structure:
+{
+  "text": "The quote text here.",
+  "author": "Author Name",
+  "kanji": "静"
+}`;
+
+      const response = await ai.models.generateContent({
+        model: MODEL,
+        contents: prompt,
+        config: {
+          responseMimeType: "application/json",
+          temperature: 0.7,
+        }
+      });
+
+      const responseText = response.text || "{}";
+      const cleanedText = cleanJsonResponse(responseText);
+      const parsed = JSON.parse(cleanedText);
+
+      return Response.json(parsed);
+    }
+
     if (intent === "schedule") {
       const pendingTasks = context.pendingTasks || [];
       const tasksStr = pendingTasks.map((t: any) => `- ${t.title} (ID: ${t.id}, Priority: ${t.priority}, Category: ${t.category})`).join('\n');

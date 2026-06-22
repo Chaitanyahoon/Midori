@@ -180,6 +180,10 @@ export class AmbientSoundscapeGenerator {
       this.stop(type)
     })
   }
+  
+  public isPlaying(type: string): boolean {
+    return !!this.activeSounds[type]
+  }
 
   // --- SYNTHESIS SETUP METHODS ---
 

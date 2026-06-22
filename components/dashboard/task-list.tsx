@@ -17,6 +17,7 @@ import { useAuth } from "@/components/auth-provider"
 import getAppreciation from '@/lib/appreciation'
 import { useToast } from "@/hooks/use-toast"
 import { SmartScheduleButton } from "@/components/dashboard/smart-schedule-button"
+import { playTaskComplete } from "@/lib/sounds"
 
 export function TaskList() {
   const router = useRouter()
@@ -44,6 +45,7 @@ export function TaskList() {
     updateTask(taskId, { completed })
     const task = tasks.find((t) => t.id === taskId)
     if (completed && task) {
+      playTaskComplete()
       const app = getAppreciation(task.title, { userName, tone: (userTone as any) || 'balanced' })
       toast({ title: app.title, description: app.message })
     } else {

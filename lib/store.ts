@@ -89,6 +89,13 @@ export interface MusicTrack {
   icon?: string
 }
 
+export interface AudioPreset {
+  name: string
+  activeMusic: MusicTrack | null
+  musicVolume: number
+  activeAmbients: Record<string, number>
+}
+
 interface MusicStore {
   isPlaying: boolean
   currentTrack: MusicTrack | null
@@ -99,6 +106,10 @@ interface MusicStore {
   isAmbientPlaying: boolean
   ambientVolume: number[]
 
+  // Multi-sound mixer additions
+  activeAmbients: Record<string, number>
+  savedPresets: AudioPreset[]
+
   setIsPlaying: (isPlaying: boolean) => void
   setCurrentTrack: (track: MusicTrack | null) => void
   setVolume: (volume: number[]) => void
@@ -107,6 +118,14 @@ interface MusicStore {
   setAmbientTrack: (track: MusicTrack | null) => void
   setIsAmbientPlaying: (isAmbientPlaying: boolean) => void
   setAmbientVolume: (volume: number[]) => void
+
+  // Multi-sound actions
+  toggleAmbient: (trackName: string, volumeDefault?: number) => void
+  setAmbientVolumeSingle: (trackName: string, vol: number) => void
+  clearAllAmbients: () => void
+  saveAudioPreset: (name: string) => void
+  loadAudioPreset: (preset: AudioPreset) => void
+  deleteAudioPreset: (name: string) => void
 }
 
 export const useMusicStore = create<MusicStore>((set) => ({
@@ -119,6 +138,19 @@ export const useMusicStore = create<MusicStore>((set) => ({
   isAmbientPlaying: false,
   ambientVolume: [30],
 
+  // Initial multi-sound states
+  activeAmbients: {},
+  savedPresets: typeof window !== "undefined"
+    ? (() => {
+        try {
+          const stored = localStorage.getItem("midori_audio_presets")
+          return stored ? JSON.parse(stored) : []
+        } catch (e) {
+          return []
+        }
+      })()
+    : [],
+
   setIsPlaying: (isPlaying) => set({ isPlaying }),
   setCurrentTrack: (currentTrack) => set({ currentTrack }),
   setVolume: (volume) => set({ volume }),
@@ -130,5 +162,49 @@ export const useMusicStore = create<MusicStore>((set) => ({
   setAmbientTrack: (ambientTrack) => set({ ambientTrack }),
   setIsAmbientPlaying: (isAmbientPlaying) => set({ isAmbientPlaying }),
   setAmbientVolume: (ambientVolume) => set({ ambientVolume }),
+
+  toggleAmbient: (trackName, volumeDefault = 30) => set((state) => {
+    const next = { ...state.activeAmbients }
+    if (next[trackName] !== undefined) {
+      delete next[trackName]
+    } else {
+      next[trackName] = volumeDefault
+    }
+    return { activeAmbients: next }
+  }),
+  setAmbientVolumeSingle: (trackName, vol) => set((state) => {
+    const next = { ...state.activeAmbients }
+    next[trackName] = vol
+    return { activeAmbients: next }
+  }),
+  clearAllAmbients: () => set({ activeAmbients: {} }),
+  saveAudioPreset: (name) => set((state) => {
+    const newPreset: AudioPreset = {
+      name,
+      activeMusic: state.currentTrack,
+      musicVolume: state.volume[0],
+      activeAmbients: state.activeAmbients
+    }
+    const nextPresets = [...state.savedPresets.filter(p => p.name !== name), newPreset]
+    if (typeof window !== "undefined") {
+      localStorage.setItem("midori_audio_presets", JSON.stringify(nextPresets))
+    }
+    return { savedPresets: nextPresets }
+  }),
+  loadAudioPreset: (preset) => set(() => {
+    return {
+      currentTrack: preset.activeMusic,
+      isPlaying: !!preset.activeMusic,
+      volume: [preset.musicVolume],
+      activeAmbients: preset.activeAmbients
+    }
+  }),
+  deleteAudioPreset: (name) => set((state) => {
+    const nextPresets = state.savedPresets.filter(p => p.name !== name)
+    if (typeof window !== "undefined") {
+      localStorage.setItem("midori_audio_presets", JSON.stringify(nextPresets))
+    }
+    return { savedPresets: nextPresets }
+  }),
 }))
 

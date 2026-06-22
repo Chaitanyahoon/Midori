@@ -47,6 +47,7 @@ import {
   FiChevronUp,
   FiList,
   FiActivity,
+  FiSmile,
 } from "react-icons/fi"
 
 import {
@@ -68,6 +69,7 @@ export const Icons = {
   insights: FiBarChart2,
   sparkles: FiStar,
   user: FiUser,
+  smile: FiSmile,
   settings: FiSettings,
   bell: FiBell,
   search: FiSearch,

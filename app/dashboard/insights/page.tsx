@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import dynamic from "next/dynamic"
 import { useData } from "@/components/local-data-provider"
 import { InsightsDemoBanner } from "@/components/dashboard/insights-demo-banner"
@@ -15,6 +15,12 @@ const ProductivityTrends = dynamic(() => import("@/components/dashboard/producti
 export default function InsightsPage() {
   const { tasks, pomodoros, loading, settings } = useData()
   const [showDemo, setShowDemo] = useState(false)
+  const [isActive, setIsActive] = useState(false)
+
+  useEffect(() => {
+    setIsActive(true)
+  }, [])
+
   const hasNoData = tasks.length === 0 && pomodoros.length === 0
   const isDemoData = showDemo && hasNoData
 
@@ -162,7 +168,7 @@ export default function InsightsPage() {
   }
 
   return (
-    <div className="w-full min-h-full ambient-bg px-4 sm:px-6 lg:px-8 py-6 sm:py-10 relative overflow-hidden">
+    <div className={`w-full min-h-full ambient-bg px-4 sm:px-6 lg:px-8 py-6 sm:py-10 relative overflow-hidden ${isActive ? "active" : ""}`}>
       {/* Decorative vertical text (Ma) */}
       <div className="hidden xl:flex fixed right-8 top-1/2 -translate-y-1/2 flex-col items-center gap-8 opacity-[0.05] select-none pointer-events-none z-0">
         <span className="vertical-text text-5xl font-serif text-slate-800 dark:text-emerald-100 reveal-staggered delay-2">成長の洞察</span>

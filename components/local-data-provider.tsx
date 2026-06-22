@@ -147,33 +147,46 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
   // Real-time listeners for Firestore collections
   useEffect(() => {
     if (!uid) { setLoading(false); return }
+
+    // Load from localStorage immediately for fast / offline render
+    try {
+      const storedTasks = localStorage.getItem(`midori_tasks_${uid}`)
+      const storedPomodoros = localStorage.getItem(`midori_pomodoros_${uid}`)
+      const storedSettings = localStorage.getItem(`midori_settings_${uid}`)
+      const storedCustomTracks = localStorage.getItem(`midori_customTracks_${uid}`)
+
+      if (storedTasks) setTasks(JSON.parse(storedTasks))
+      if (storedPomodoros) setPomodoros(JSON.parse(storedPomodoros))
+      if (storedSettings) setSettings(JSON.parse(storedSettings))
+      if (storedCustomTracks) setCustomTracks(JSON.parse(storedCustomTracks))
+    } catch (err) {
+      console.error("[DataProvider] Failed to load initial cache:", err)
+    }
+
     if (!db) {
       console.warn("[DataProvider] Firestore `db` is null — Falling back to localStorage.")
-      try {
-        const storedTasks = localStorage.getItem(`midori_tasks_${uid}`)
-        const storedPomodoros = localStorage.getItem(`midori_pomodoros_${uid}`)
-        const storedSettings = localStorage.getItem(`midori_settings_${uid}`)
-        const storedCustomTracks = localStorage.getItem(`midori_customTracks_${uid}`)
-
-        if (storedTasks) setTasks(JSON.parse(storedTasks))
-        if (storedPomodoros) setPomodoros(JSON.parse(storedPomodoros))
-        if (storedSettings) setSettings(JSON.parse(storedSettings))
-        if (storedCustomTracks) setCustomTracks(JSON.parse(storedCustomTracks))
-      } catch (err) {
-        console.error("[DataProvider] Failed to load from localStorage:", err)
-      }
       setLoading(false)
       return
     }
+
     setLoading(true)
 
     const unsubs: (() => void)[] = []
     let loadedCount = 0
     const totalListeners = 4
 
+    // Fallback timeout to prevent hanging on Firestore network connection
+    const fallbackTimeout = setTimeout(() => {
+      console.warn("[DataProvider] Firestore listener connection timed out — rendering with cached data.")
+      setLoading(false)
+    }, 1500)
+
     const checkAllLoaded = () => {
       loadedCount++
-      if (loadedCount >= totalListeners) setLoading(false)
+      if (loadedCount >= totalListeners) {
+        clearTimeout(fallbackTimeout)
+        setLoading(false)
+      }
     }
 
     // Tasks
@@ -222,7 +235,10 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
       checkAllLoaded()
     }))
 
-    return () => unsubs.forEach(u => u())
+    return () => {
+      clearTimeout(fallbackTimeout)
+      unsubs.forEach(u => u())
+    }
   }, [uid])
 
   // Cross-tab real-time sync for offline/mock sandbox mode

@@ -442,7 +442,7 @@ export function ProductivityCharts() {
               />
             ) : (
               <div className="h-[300px]">
-                <ResponsiveContainer width="99%" height="100%" minWidth={0}>
+                <ResponsiveContainer width="99%" height="100%" minWidth={0} initialDimension={{ width: 100, height: 100 }}>
                   <AreaChart data={weeklyData}>
                     <defs>
                       <linearGradient id="colorFocus" x1="0" y1="0" x2="0" y2="1">
@@ -500,7 +500,7 @@ export function ProductivityCharts() {
               />
             ) : (
               <div className="h-[300px]">
-                <ResponsiveContainer width="99%" height="100%" minWidth={0}>
+                <ResponsiveContainer width="99%" height="100%" minWidth={0} initialDimension={{ width: 100, height: 100 }}>
                   <BarChart data={weeklyData}>
                     <defs>
                       <linearGradient id="colorPomodoros" x1="0" y1="0" x2="0" y2="1">
@@ -552,7 +552,7 @@ export function ProductivityCharts() {
             ) : (
               <>
                 <div className="h-[300px]">
-                  <ResponsiveContainer width="99%" height="100%" minWidth={0}>
+                  <ResponsiveContainer width="99%" height="100%" minWidth={0} initialDimension={{ width: 100, height: 100 }}>
                     <PieChart>
                       <Pie
                         data={focusTimeByCategory}
@@ -623,7 +623,7 @@ export function ProductivityCharts() {
             ) : (
               <>
                 <div className="h-[300px]">
-                  <ResponsiveContainer width="99%" height="100%" minWidth={0}>
+                  <ResponsiveContainer width="99%" height="100%" minWidth={0} initialDimension={{ width: 100, height: 100 }}>
                     <PieChart>
                       <Pie
                         data={priorityDistribution}

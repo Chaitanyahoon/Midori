@@ -121,14 +121,20 @@ export default function HomePage() {
                                     filter="url(#glow)"
                                 />
                                 <path
-                                    d="M 50,22 C 65,22 75,35 75,55 C 75,70 60,78 50,78 C 40,78 25,70 25,55 C 25,35 35,22 50,22 Z"
+                                    d="M 48,22 C 63,30 65,58 48,76 C 33,58 35,30 48,22 Z"
                                     fill="url(#leafGrad)"
                                     className="drop-shadow-md"
                                 />
                                 <path
-                                    d="M 50,22 C 53,35 55,60 50,78"
+                                    d="M 52,48 C 66,48 72,36 62,30 C 52,36 50,44 52,48 Z"
+                                    fill="url(#leafGrad)"
+                                    className="drop-shadow-md"
+                                    opacity="0.85"
+                                />
+                                <path
+                                    d="M 48,22 C 47,38 47,60 48,76"
                                     stroke="rgba(255,255,255,0.3)"
-                                    strokeWidth="2.5"
+                                    strokeWidth="2"
                                     strokeLinecap="round"
                                 />
                             </svg>

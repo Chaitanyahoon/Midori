@@ -159,7 +159,7 @@ export function ProductivityTrendChart() {
         <CardTitle className="text-lg">30-Day Trend</CardTitle>
       </CardHeader>
       <CardContent>
-        <ResponsiveContainer width="100%" height={300}>
+        <ResponsiveContainer width="99%" height={300} minWidth={0}>
           <LineChart data={chartData}>
             <CartesianGrid strokeDasharray="3 3" />
             <XAxis dataKey="date" style={{ fontSize: "12px" }} />

@@ -91,57 +91,11 @@ export default function HomePage() {
             {/* Main Content Card */}
             <div className="relative z-10 text-center max-w-xl w-full px-6 py-10 md:py-14 bg-white/30 dark:bg-emerald-950/5 backdrop-blur-md rounded-[2.5rem] border border-white/20 dark:border-emerald-500/5 shadow-2xl mx-4 transition-all duration-700 hover:border-white/30 dark:hover:border-emerald-500/10 hover:shadow-emerald-500/5 animate-bloom">
                 
-                {/* Custom Glassmorphic SVG Logo */}
+                {/* Logo Branding */}
                 <div className="mb-6 md:mb-8 flex flex-col items-center reveal-staggered delay-1">
-                    <div className="relative p-5 bg-gradient-to-tr from-white/20 to-white/10 dark:from-emerald-950/20 dark:to-emerald-950/5 backdrop-blur-xl rounded-full border border-white/20 dark:border-emerald-500/10 shadow-lg transition-all duration-500 hover:scale-105 group hover:border-emerald-500/20 flex items-center justify-center">
-                        <div className="flex items-center justify-center">
-                            <svg className="w-14 h-14 md:w-16 md:h-16" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                <defs>
-                                    <linearGradient id="leafGrad" x1="20" y1="20" x2="80" y2="80" gradientUnits="userSpaceOnUse">
-                                        <stop offset="0%" stopColor="#10B981" />
-                                        <stop offset="100%" stopColor="#059669" />
-                                    </linearGradient>
-                                    <linearGradient id="goldGrad" x1="0" y1="0" x2="100" y2="100" gradientUnits="userSpaceOnUse">
-                                        <stop offset="0%" stopColor="#F59E0B" />
-                                        <stop offset="50%" stopColor="#D97706" />
-                                        <stop offset="100%" stopColor="#B45309" />
-                                    </linearGradient>
-                                    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
-                                        <feGaussianBlur stdDeviation="3" result="blur" />
-                                        <feComposite in="SourceGraphic" in2="blur" operator="over" />
-                                    </filter>
-                                </defs>
-                                <path
-                                    d="M 50,15 A 35,35 0 1,1 25,28"
-                                    stroke="url(#goldGrad)"
-                                    strokeWidth="4.5"
-                                    strokeLinecap="round"
-                                    fill="none"
-                                    className="opacity-70 dark:opacity-85"
-                                    filter="url(#glow)"
-                                />
-                                <path
-                                    d="M 48,22 C 63,30 65,58 48,76 C 33,58 35,30 48,22 Z"
-                                    fill="url(#leafGrad)"
-                                    className="drop-shadow-md"
-                                />
-                                <path
-                                    d="M 52,48 C 66,48 72,36 62,30 C 52,36 50,44 52,48 Z"
-                                    fill="url(#leafGrad)"
-                                    className="drop-shadow-md"
-                                    opacity="0.85"
-                                />
-                                <path
-                                    d="M 48,22 C 47,38 47,60 48,76"
-                                    stroke="rgba(255,255,255,0.3)"
-                                    strokeWidth="2"
-                                    strokeLinecap="round"
-                                />
-                            </svg>
-                        </div>
-                        {/* Hanko Seal */}
-                        <div className="absolute -bottom-1 -right-1 hanko-seal hanko-seal-filter animate-pulse-slow scale-110">
-                            <span className="text-red-700 dark:text-red-500 font-serif font-black text-sm select-none">緑</span>
+                    <div className="relative p-4 bg-white/30 dark:bg-emerald-950/20 backdrop-blur-md rounded-2xl border border-white/20 dark:border-emerald-500/10 shadow-md transition-all duration-500 hover:scale-105 group flex items-center justify-center">
+                        <div className="bg-white/90 dark:bg-emerald-900/10 rounded-xl p-3 flex items-center justify-center shadow-inner">
+                            <img src="/midori_logo.png" alt="Midori Logo" className="w-12 h-12 md:w-14 md:h-14 pointer-events-none transition-transform group-hover:rotate-6 duration-500" />
                         </div>
                     </div>
                 </div>

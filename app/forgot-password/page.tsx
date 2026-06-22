@@ -67,50 +67,9 @@ export default function ForgotPasswordPage() {
                     
                     {/* Logo Branding */}
                     <div className="flex flex-col items-center mb-6">
-                        <div className="relative p-3.5 bg-gradient-to-tr from-white/20 to-white/10 dark:from-emerald-950/20 dark:to-emerald-950/5 backdrop-blur-xl rounded-full border border-white/20 dark:border-emerald-500/10 shadow-md mb-3 flex items-center justify-center group hover:border-emerald-500/20 transition-all duration-300">
-                            <div className="flex items-center justify-center">
-                                <svg className="w-10 h-10" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                    <defs>
-                                        <linearGradient id="leafGrad" x1="20" y1="20" x2="80" y2="80" gradientUnits="userSpaceOnUse">
-                                            <stop offset="0%" stopColor="#10B981" />
-                                            <stop offset="100%" stopColor="#059669" />
-                                        </linearGradient>
-                                        <linearGradient id="goldGrad" x1="0" y1="0" x2="100" y2="100" gradientUnits="userSpaceOnUse">
-                                            <stop offset="0%" stopColor="#F59E0B" />
-                                            <stop offset="50%" stopColor="#D97706" />
-                                            <stop offset="100%" stopColor="#B45309" />
-                                        </linearGradient>
-                                    </defs>
-                                    <path
-                                        d="M 50,15 A 35,35 0 1,1 25,28"
-                                        stroke="url(#goldGrad)"
-                                        strokeWidth="5"
-                                        strokeLinecap="round"
-                                        fill="none"
-                                        className="opacity-70 dark:opacity-85"
-                                    />
-                                    <path
-                                        d="M 48,22 C 63,30 65,58 48,76 C 33,58 35,30 48,22 Z"
-                                        fill="url(#leafGrad)"
-                                        className="drop-shadow-sm"
-                                    />
-                                    <path
-                                        d="M 52,48 C 66,48 72,36 62,30 C 52,36 50,44 52,48 Z"
-                                        fill="url(#leafGrad)"
-                                        className="drop-shadow-sm"
-                                        opacity="0.85"
-                                    />
-                                    <path
-                                        d="M 48,22 C 47,38 47,60 48,76"
-                                        stroke="rgba(255,255,255,0.3)"
-                                        strokeWidth="2"
-                                        strokeLinecap="round"
-                                    />
-                                </svg>
-                            </div>
-                            {/* Hanko Seal */}
-                            <div className="absolute -bottom-1 -right-1 hanko-seal hanko-seal-filter scale-90">
-                                <span className="text-red-700 dark:text-red-500 font-serif font-black text-[10px] select-none">緑</span>
+                        <div className="relative p-3 bg-white/30 dark:bg-emerald-950/20 backdrop-blur-md rounded-2xl border border-white/20 dark:border-emerald-500/10 shadow-md mb-3 flex items-center justify-center group hover:border-emerald-500/20 transition-all duration-300">
+                            <div className="bg-white/90 dark:bg-emerald-900/10 rounded-xl p-2.5 flex items-center justify-center shadow-inner">
+                                <img src="/midori_logo.png" alt="Midori Logo" className="w-10 h-10 pointer-events-none transition-transform group-hover:rotate-6 duration-500" />
                             </div>
                         </div>
                         <h1 className="text-xl font-serif-luxury text-slate-900 dark:text-white mb-0 tracking-tight">Midori</h1>

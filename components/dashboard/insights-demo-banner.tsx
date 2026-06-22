@@ -4,7 +4,13 @@ import { Button } from "@/components/ui/button"
 import { Icons } from "@/components/icons"
 import { useRouter } from "next/navigation"
 
-export function InsightsDemoBanner() {
+export function InsightsDemoBanner({
+  showDemo,
+  onToggleDemo
+}: {
+  showDemo: boolean
+  onToggleDemo: () => void
+}) {
   const router = useRouter()
   return (
     <div className="card-zen p-6 bg-gradient-to-r from-emerald-500/10 via-teal-500/10 to-transparent border-emerald-500/30 flex flex-col md:flex-row items-center justify-between gap-6 animate-bloom relative overflow-hidden group">
@@ -18,11 +24,27 @@ export function InsightsDemoBanner() {
         <div>
           <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100">Welcome to your Insights!</h3>
           <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5 max-w-xl leading-relaxed">
-            We are displaying a <span className="text-emerald-600 dark:text-emerald-400 font-semibold">Sample Garden Log</span>. As you complete tasks and run focus sessions, this page will dynamically update with your real productivity trends.
+            {showDemo ? (
+              <>
+                You are currently viewing <span className="text-emerald-600 dark:text-emerald-400 font-semibold">Sample Preview Data</span>. Click the toggle to view your actual empty logs.
+              </>
+            ) : (
+              <>
+                You have no productivity records yet. Click <span className="text-emerald-600 dark:text-emerald-400 font-semibold">Preview Sample Data</span> to see how your charts will look.
+              </>
+            )}
           </p>
         </div>
       </div>
-      <div className="flex items-center gap-3 w-full md:w-auto relative z-10">
+      <div className="flex flex-wrap items-center gap-3 w-full md:w-auto relative z-10">
+        <Button
+          onClick={onToggleDemo}
+          variant="outline"
+          className="flex-1 md:flex-none bg-emerald-500/10 dark:bg-emerald-500/20 border-emerald-500/30 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-500/20"
+        >
+          <Icons.activity className="w-4 h-4 mr-2" />
+          {showDemo ? "Show Real Stats (0s)" : "Preview Sample Data"}
+        </Button>
         <Button 
           onClick={() => router.push("/dashboard/tasks")} 
           className="btn-organic flex-1 md:flex-none shadow-md hover:shadow-emerald-500/10"

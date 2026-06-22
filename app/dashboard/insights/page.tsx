@@ -1,5 +1,6 @@
 "use client"
 
+import { useState } from "react"
 import dynamic from "next/dynamic"
 import { useData } from "@/components/local-data-provider"
 import { InsightsDemoBanner } from "@/components/dashboard/insights-demo-banner"
@@ -13,7 +14,9 @@ const ProductivityTrends = dynamic(() => import("@/components/dashboard/producti
 
 export default function InsightsPage() {
   const { tasks, pomodoros, loading, settings } = useData()
-  const isDemoData = tasks.length === 0 && pomodoros.length === 0
+  const [showDemo, setShowDemo] = useState(false)
+  const hasNoData = tasks.length === 0 && pomodoros.length === 0
+  const isDemoData = showDemo && hasNoData
 
   // 1. Calculate Peak Focus Hours / Days
   const getPeakFocusAnalytics = (sessions: PomodoroSession[]) => {
@@ -177,16 +180,16 @@ export default function InsightsPage() {
             <p className="text-slate-500 dark:text-slate-400 font-semibold uppercase tracking-widest text-xs">Track your productivity journey — <span className="text-emerald-600 dark:text-emerald-400 italic">Satori</span></p>
           </div>
 
-          {isDemoData && (
+          {hasNoData && (
             <div className="reveal-staggered delay-1">
-              <InsightsDemoBanner />
+              <InsightsDemoBanner showDemo={showDemo} onToggleDemo={() => setShowDemo(!showDemo)} />
             </div>
           )}
 
           <div className="grid grid-cols-1 gap-8">
             {/* 1. Habit Streak & Weekly Growth */}
             <div className="reveal-staggered delay-2">
-              <WeeklyStats />
+              <WeeklyStats showDemo={showDemo} />
             </div>
 
             {/* Peak Focus & Achievements Card Row */}
@@ -268,12 +271,12 @@ export default function InsightsPage() {
 
             {/* 2. Qualitative Insights & Levels */}
             <div className="reveal-staggered delay-3">
-              <ProductivityTrends />
+              <ProductivityTrends showDemo={showDemo} />
             </div>
 
             {/* 3. Detailed Quantitative Charts */}
             <div className="reveal-staggered delay-4">
-              <ProductivityCharts />
+              <ProductivityCharts showDemo={showDemo} />
             </div>
           </div>
         </div>

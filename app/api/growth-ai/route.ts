@@ -6,29 +6,40 @@ const MODEL = "gemini-2.5-flash";
 
 // Simple in-memory rate limiter: track requests per IP/user
 const requestLog = new Map<string, number[]>();
+let globalRequestLog: number[] = [];
+
 const RATE_LIMIT_WINDOW = 60 * 1000; // 1 minute
-const MAX_REQUESTS_PER_WINDOW = 10; // 10 requests per minute
+const MAX_REQUESTS_PER_IP_WINDOW = 3; // 3 requests per minute per IP
+const MAX_GLOBAL_REQUESTS_WINDOW = 12; // 12 global requests per minute per instance
 
 /**
  * Check if a request should be rate limited based on IP/identifier
  */
-function checkRateLimit(identifier: string): { allowed: boolean; retryAfter?: number } {
+function checkRateLimit(identifier: string): { allowed: boolean; retryAfter?: number; reason?: string } {
   const now = Date.now();
-  const userRequests = requestLog.get(identifier) || [];
 
-  // Remove requests older than the window
-  const recentRequests = userRequests.filter(timestamp => now - timestamp < RATE_LIMIT_WINDOW);
-
-  if (recentRequests.length >= MAX_REQUESTS_PER_WINDOW) {
-    // Calculate retry-after time
-    const oldestRequest = recentRequests[0];
-    const retryAfter = Math.ceil((oldestRequest + RATE_LIMIT_WINDOW - now) / 1000);
-    return { allowed: false, retryAfter: Math.max(1, retryAfter) };
+  // 1. Check global limit first to protect free-tier key
+  globalRequestLog = globalRequestLog.filter(timestamp => now - timestamp < RATE_LIMIT_WINDOW);
+  if (globalRequestLog.length >= MAX_GLOBAL_REQUESTS_WINDOW) {
+    const oldestGlobal = globalRequestLog[0];
+    const retryAfter = Math.ceil((oldestGlobal + RATE_LIMIT_WINDOW - now) / 1000);
+    return { allowed: false, reason: "Global limit reached", retryAfter: Math.max(1, retryAfter) };
   }
 
-  // Add current request timestamp
+  // 2. Check per-IP limit to prevent individual user abuse
+  const userRequests = requestLog.get(identifier) || [];
+  const recentRequests = userRequests.filter(timestamp => now - timestamp < RATE_LIMIT_WINDOW);
+
+  if (recentRequests.length >= MAX_REQUESTS_PER_IP_WINDOW) {
+    const oldestRequest = recentRequests[0];
+    const retryAfter = Math.ceil((oldestRequest + RATE_LIMIT_WINDOW - now) / 1000);
+    return { allowed: false, reason: "IP limit exceeded", retryAfter: Math.max(1, retryAfter) };
+  }
+
+  // 3. Log the request
   recentRequests.push(now);
   requestLog.set(identifier, recentRequests);
+  globalRequestLog.push(now);
 
   return { allowed: true };
 }
@@ -58,10 +69,14 @@ export async function POST(request: Request) {
     // Check rate limit
     const rateLimitCheck = checkRateLimit(clientIp);
     if (!rateLimitCheck.allowed) {
+      const msg = rateLimitCheck.reason === "Global limit reached"
+        ? `The AI assistant is receiving high traffic. Please try again in ${rateLimitCheck.retryAfter} seconds.`
+        : `Too many requests from this device. Please try again in ${rateLimitCheck.retryAfter} seconds.`;
+
       return Response.json(
         {
           error: "Rate limit exceeded",
-          message: `Too many requests. Please try again in ${rateLimitCheck.retryAfter} seconds.`
+          message: msg
         },
         {
           status: 429,

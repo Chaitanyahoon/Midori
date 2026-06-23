@@ -152,108 +152,157 @@ export function MotivationalQuote() {
   }
 
   return (
-    <div
-      className={`card-zen relative overflow-hidden px-6 sm:px-8 py-6 sm:py-7 transition-all duration-700 ${
+    <div 
+      className={`relative pt-7 pb-2 transition-all duration-700 ${
         isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-2"
       }`}
     >
-      {/* Gradient overlay */}
-      <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/[0.04] via-transparent to-amber-500/[0.04] dark:from-emerald-500/[0.06] dark:via-transparent dark:to-amber-500/[0.04] pointer-events-none" />
+      {/* Hanging String */}
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-28 h-7 pointer-events-none z-10">
+        <svg className="w-full h-full text-amber-800/50 dark:text-emerald-700/40" viewBox="0 0 100 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+          <path d="M50,3 L15,24 M50,3 L85,24" />
+          <circle cx="50" cy="3" r="2.5" fill="currentColor" />
+        </svg>
+      </div>
 
-      {/* Decorative kanji */}
+      {/* Scroll Container */}
       <div
-        className={`absolute -right-2 -bottom-4 text-[7rem] sm:text-[9rem] font-black leading-none select-none pointer-events-none text-emerald-500/[0.04] dark:text-emerald-400/[0.06] font-serif-luxury transition-all duration-300 ${
-          isFading ? "opacity-0 scale-75" : "opacity-100 scale-100"
-        }`}
-        aria-hidden="true"
+        className="kakemono-scroll relative overflow-hidden mx-auto mt-2 px-6 sm:px-10 py-8 bg-[#fdfaf2] dark:bg-[#121c15] border-l-2 border-r-2 border-[#ebdcb9] dark:border-emerald-800/20 shadow-xl transition-all duration-500 rounded-sm"
+        style={{
+          backgroundImage: `
+            radial-gradient(rgba(139, 90, 43, 0.02) 1px, transparent 0),
+            radial-gradient(rgba(139, 90, 43, 0.015) 1px, transparent 0)
+          `,
+          backgroundSize: '12px 12px',
+          backgroundPosition: '0 0, 6px 6px',
+        }}
       >
-        {currentQuote.kanji}
-      </div>
+        {/* Sway animation styling */}
+        <style dangerouslySetInnerHTML={{ __html: `
+          @keyframes kakemono-sway {
+            0% { transform: rotate(0deg); }
+            25% { transform: rotate(0.5deg); }
+            75% { transform: rotate(-0.5deg); }
+            100% { transform: rotate(0deg); }
+          }
+          .kakemono-scroll {
+            transform-origin: top center;
+          }
+          .kakemono-scroll:hover {
+            animation: kakemono-sway 4s ease-in-out infinite;
+          }
+        `}} />
 
-      {/* Action Buttons */}
-      <div className="absolute top-4 right-4 z-20 flex items-center gap-1">
-        {/* Mood Selector Popover */}
-        <Popover>
-          <PopoverTrigger asChild>
-            <button
-              disabled={isLoadingMood}
-              className="p-2 text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 rounded-full hover:bg-slate-100/50 dark:hover:bg-slate-800/50 transition-all duration-300 focus:outline-none disabled:opacity-50"
-              title="How are you feeling?"
-            >
-              {isLoadingMood ? (
-                <Icons.spinner className="w-4 h-4 animate-spin text-emerald-500" />
-              ) : (
-                <Icons.smile className="w-4 h-4" />
-              )}
-            </button>
-          </PopoverTrigger>
-          <PopoverContent className="w-48 bg-white/95 dark:bg-slate-900/90 backdrop-blur-md border-emerald-500/20 rounded-2xl shadow-xl p-3">
-            <div className="space-y-2">
-              <h4 className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider text-center">My Mood Today</h4>
-              <div className="grid grid-cols-2 gap-1.5">
-                <button
-                  onClick={() => fetchMoodQuote("stressed")}
-                  className="flex flex-col items-center p-2 rounded-xl hover:bg-emerald-500/10 active:scale-95 transition-all text-xs font-medium text-slate-700 dark:text-slate-300"
-                >
-                  <span className="text-xl">😩</span>
-                  <span>Stressed</span>
-                </button>
-                <button
-                  onClick={() => fetchMoodQuote("tired")}
-                  className="flex flex-col items-center p-2 rounded-xl hover:bg-emerald-500/10 active:scale-95 transition-all text-xs font-medium text-slate-700 dark:text-slate-300"
-                >
-                  <span className="text-xl">😴</span>
-                  <span>Tired</span>
-                </button>
-                <button
-                  onClick={() => fetchMoodQuote("uninspired")}
-                  className="flex flex-col items-center p-2 rounded-xl hover:bg-emerald-500/10 active:scale-95 transition-all text-xs font-medium text-slate-700 dark:text-slate-300"
-                >
-                  <span className="text-xl">😶‍🌫️</span>
-                  <span>Uninspired</span>
-                </button>
-                <button
-                  onClick={() => fetchMoodQuote("restless")}
-                  className="flex flex-col items-center p-2 rounded-xl hover:bg-emerald-500/10 active:scale-95 transition-all text-xs font-medium text-slate-700 dark:text-slate-300"
-                >
-                  <span className="text-xl">🧘</span>
-                  <span>Restless</span>
-                </button>
-              </div>
-            </div>
-          </PopoverContent>
-        </Popover>
+        {/* Top Roller Bar */}
+        <div className="absolute top-0 left-2 right-2 h-3.5 bg-gradient-to-r from-[#5c4033] via-[#8B5A2B] to-[#5c4033] dark:from-[#0f1911] dark:via-[#26442e] dark:to-[#0f1911] rounded-sm shadow-md z-20 flex justify-between items-center px-1">
+          <div className="w-2.5 h-5 -ml-2 bg-[#3d2b1f] dark:bg-[#070d09] rounded-sm shadow-inner" />
+          <div className="w-2.5 h-5 -mr-2 bg-[#3d2b1f] dark:bg-[#070d09] rounded-sm shadow-inner" />
+        </div>
 
-        {/* Refresh Button */}
-        <button
-          onClick={handleRefresh}
-          className="p-2 text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 rounded-full hover:bg-slate-100/50 dark:hover:bg-slate-800/50 transition-all duration-300 focus:outline-none"
-          title="Refresh Quote"
+        {/* Bottom Roller Bar */}
+        <div className="absolute bottom-0 left-2 right-2 h-3.5 bg-gradient-to-r from-[#5c4033] via-[#8B5A2B] to-[#5c4033] dark:from-[#0f1911] dark:via-[#26442e] dark:to-[#0f1911] rounded-sm shadow-md z-20 flex justify-between items-center px-1">
+          <div className="w-2.5 h-5 -ml-2 bg-[#3d2b1f] dark:bg-[#070d09] rounded-sm shadow-inner" />
+          <div className="w-2.5 h-5 -mr-2 bg-[#3d2b1f] dark:bg-[#070d09] rounded-sm shadow-inner" />
+        </div>
+
+        {/* Gradient overlay */}
+        <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/[0.02] via-transparent to-amber-500/[0.02] dark:from-emerald-500/[0.04] dark:via-transparent dark:to-amber-500/[0.02] pointer-events-none" />
+
+        {/* Decorative kanji */}
+        <div
+          className={`absolute -right-2 -bottom-4 text-[7rem] sm:text-[9rem] font-black leading-none select-none pointer-events-none text-emerald-500/[0.03] dark:text-emerald-400/[0.05] font-serif-luxury transition-all duration-300 ${
+            isFading ? "opacity-0 scale-75" : "opacity-100 scale-100"
+          }`}
+          aria-hidden="true"
         >
-          <Icons.reset
-            className={`w-4 h-4 transition-transform duration-500 ${
-              spinRefresh ? "rotate-[360deg]" : ""
-            }`}
-          />
-        </button>
-      </div>
+          {currentQuote.kanji}
+        </div>
 
-      {/* Content */}
-      <div className="relative z-10 flex items-start gap-4 sm:gap-5 pr-8">
-        {/* Decorative accent line */}
-        <div className="hidden sm:block w-1 self-stretch rounded-full bg-gradient-to-b from-emerald-400/60 via-emerald-500/40 to-transparent flex-shrink-0" />
+        {/* Action Buttons */}
+        <div className="absolute top-5 right-5 z-20 flex items-center gap-1">
+          {/* Mood Selector Popover */}
+          <Popover>
+            <PopoverTrigger asChild>
+              <button
+                disabled={isLoadingMood}
+                className="p-1.5 text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 rounded-full hover:bg-slate-200/50 dark:hover:bg-slate-800/50 transition-all duration-300 focus:outline-none disabled:opacity-50"
+                title="How are you feeling?"
+              >
+                {isLoadingMood ? (
+                  <Icons.spinner className="w-3.5 h-3.5 animate-spin text-emerald-500" />
+                ) : (
+                  <Icons.smile className="w-3.5 h-3.5" />
+                )}
+              </button>
+            </PopoverTrigger>
+            <PopoverContent className="w-48 bg-white/95 dark:bg-slate-900/90 backdrop-blur-md border-emerald-500/20 rounded-2xl shadow-xl p-3">
+              <div className="space-y-2">
+                <h4 className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider text-center">My Mood Today</h4>
+                <div className="grid grid-cols-2 gap-1.5">
+                  <button
+                    onClick={() => fetchMoodQuote("stressed")}
+                    className="flex flex-col items-center p-2 rounded-xl hover:bg-emerald-500/10 active:scale-95 transition-all text-xs font-medium text-slate-700 dark:text-slate-300"
+                  >
+                    <span className="text-xl">😩</span>
+                    <span>Stressed</span>
+                  </button>
+                  <button
+                    onClick={() => fetchMoodQuote("tired")}
+                    className="flex flex-col items-center p-2 rounded-xl hover:bg-emerald-500/10 active:scale-95 transition-all text-xs font-medium text-slate-700 dark:text-slate-300"
+                  >
+                    <span className="text-xl">😴</span>
+                    <span>Tired</span>
+                  </button>
+                  <button
+                    onClick={() => fetchMoodQuote("uninspired")}
+                    className="flex flex-col items-center p-2 rounded-xl hover:bg-emerald-500/10 active:scale-95 transition-all text-xs font-medium text-slate-700 dark:text-slate-300"
+                  >
+                    <span className="text-xl">😶‍🌫️</span>
+                    <span>Uninspired</span>
+                  </button>
+                  <button
+                    onClick={() => fetchMoodQuote("restless")}
+                    className="flex flex-col items-center p-2 rounded-xl hover:bg-emerald-500/10 active:scale-95 transition-all text-xs font-medium text-slate-700 dark:text-slate-300"
+                  >
+                    <span className="text-xl">🧘</span>
+                    <span>Restless</span>
+                  </button>
+                </div>
+              </div>
+            </PopoverContent>
+          </Popover>
 
-        <div className={`flex-1 min-w-0 transition-all duration-300 ${
-          isFading ? "opacity-0 translate-x-1" : "opacity-100 translate-x-0"
-        }`}>
-          <blockquote className="font-serif-luxury text-lg sm:text-xl lg:text-2xl text-slate-700 dark:text-slate-200 leading-relaxed tracking-wide italic">
-            &ldquo;{currentQuote.text}&rdquo;
-          </blockquote>
-          <div className="mt-3 flex items-center gap-3">
-            <div className="w-6 h-px bg-gradient-to-r from-emerald-400/50 to-transparent" />
-            <cite className="text-xs sm:text-sm font-medium text-slate-400 dark:text-slate-500 not-italic tracking-wide">
-              {currentQuote.author}
-            </cite>
+          {/* Refresh Button */}
+          <button
+            onClick={handleRefresh}
+            className="p-1.5 text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 rounded-full hover:bg-slate-200/50 dark:hover:bg-slate-800/50 transition-all duration-300 focus:outline-none"
+            title="Refresh Quote"
+          >
+            <Icons.reset
+              className={`w-3.5 h-3.5 transition-transform duration-500 ${
+                spinRefresh ? "rotate-[360deg]" : ""
+              }`}
+            />
+          </button>
+        </div>
+
+        {/* Content */}
+        <div className="relative z-10 flex items-start gap-4 sm:gap-5 pr-8 mt-1.5">
+          {/* Decorative accent line */}
+          <div className="hidden sm:block w-0.5 self-stretch rounded-full bg-gradient-to-b from-[#8B5A2B]/40 via-emerald-500/20 to-transparent flex-shrink-0" />
+
+          <div className={`flex-1 min-w-0 transition-all duration-300 ${
+            isFading ? "opacity-0 translate-x-1" : "opacity-100 translate-x-0"
+          }`}>
+            <blockquote className="font-serif-luxury text-base sm:text-lg lg:text-xl text-[#3d2b1f]/90 dark:text-slate-200 leading-relaxed tracking-wide italic">
+              &ldquo;{currentQuote.text}&rdquo;
+            </blockquote>
+            <div className="mt-3 flex items-center gap-3">
+              <div className="w-6 h-px bg-gradient-to-r from-[#8B5A2B]/40 to-transparent" />
+              <cite className="text-xs sm:text-sm font-semibold text-[#8B5A2B]/75 dark:text-emerald-500/80 not-italic tracking-wide uppercase">
+                {currentQuote.author}
+              </cite>
+            </div>
           </div>
         </div>
       </div>

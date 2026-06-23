@@ -6,9 +6,9 @@ import { Badge } from "@/components/ui/badge"
 import { Icons } from "@/components/icons"
 import { useData } from "@/components/local-data-provider"
 
-export function ProductivityTrends({ showDemo = false }: { showDemo?: boolean }) {
+export function ProductivityTrends() {
   const { tasks, pomodoros, stats, settings } = useData()
-  const isDemoData = showDemo && tasks.length === 0 && pomodoros.length === 0
+  const isDemoData = false
 
   const activeStats = isDemoData ? {
     totalTasks: 15,

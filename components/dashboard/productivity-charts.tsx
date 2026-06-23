@@ -98,9 +98,9 @@ const PriorityTooltip = ({ active, payload }: any) => {
   return null
 }
 
-export function ProductivityCharts({ showDemo = false }: { showDemo?: boolean }) {
+export function ProductivityCharts() {
   const { tasks, pomodoros } = useData()
-  const isDemoData = showDemo && tasks.length === 0 && pomodoros.length === 0
+  const isDemoData = false
 
   const DEMO_WEEKLY_DATA = [
     { day: "Mon", tasks: 2, pomodoros: 3, hours: 1.5 },

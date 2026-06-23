@@ -23,6 +23,120 @@ const PLANT_NAMES: Record<string, string> = {
     snowdrop: "Snowdrop", lily: "Lily", chrysanthemum: "Chrysanthemum", snowflower: "Snow Flower",
 }
 
+const drawStoneLantern = (ctx: CanvasRenderingContext2D, lx: number, ly: number, size: number, isLit: boolean, isDark: boolean) => {
+  ctx.save()
+  ctx.translate(lx, ly)
+  
+  // Stone color (grayish with texture/shadows)
+  const stoneCol = isDark ? "#2d3748" : "#718096"
+  const stoneLight = isDark ? "#4a5568" : "#a0aec0"
+  const stoneShadow = isDark ? "#1a202c" : "#4a5568"
+  
+  // 1. Pedestal (Sao)
+  ctx.fillStyle = stoneShadow
+  ctx.fillRect(-size * 0.15, -size * 0.3, size * 0.3, size * 0.3)
+  ctx.fillStyle = stoneCol
+  ctx.fillRect(-size * 0.1, -size * 0.3, size * 0.2, size * 0.3)
+  
+  // 2. Middle Platform (Chūdai)
+  ctx.fillStyle = stoneShadow
+  ctx.beginPath()
+  ctx.moveTo(-size * 0.35, -size * 0.3)
+  ctx.lineTo(size * 0.35, -size * 0.3)
+  ctx.lineTo(size * 0.25, -size * 0.4)
+  ctx.lineTo(-size * 0.25, -size * 0.4)
+  ctx.closePath()
+  ctx.fill()
+  
+  ctx.fillStyle = stoneCol
+  ctx.beginPath()
+  ctx.moveTo(-size * 0.3, -size * 0.3)
+  ctx.lineTo(size * 0.3, -size * 0.3)
+  ctx.lineTo(size * 0.2, -size * 0.38)
+  ctx.lineTo(-size * 0.2, -size * 0.38)
+  ctx.closePath()
+  ctx.fill()
+  
+  // 3. Fire Box / Light Chamber (Hibukuro)
+  ctx.fillStyle = stoneShadow
+  ctx.fillRect(-size * 0.2, -size * 0.65, size * 0.4, size * 0.25)
+  // Light opening inside
+  if (isLit && isDark) {
+    // Glowing chamber
+    const glow = ctx.createRadialGradient(0, -size * 0.52, 0, 0, -size * 0.52, size * 0.35)
+    glow.addColorStop(0, "#fffbeb")
+    glow.addColorStop(0.3, "#fef08a")
+    glow.addColorStop(0.7, "#f59e0b")
+    glow.addColorStop(1, "transparent")
+    ctx.fillStyle = glow
+    ctx.beginPath()
+    ctx.arc(0, -size * 0.52, size * 0.35, 0, Math.PI * 2)
+    ctx.fill()
+    
+    ctx.fillStyle = "#fffbeb"
+  } else {
+    ctx.fillStyle = "#1a202c"
+  }
+  // Draw the window cut-out
+  ctx.beginPath()
+  ctx.arc(0, -size * 0.52, size * 0.09, 0, Math.PI * 2)
+  ctx.fill()
+  
+  // 4. Roof (Kasa)
+  ctx.fillStyle = stoneShadow
+  ctx.beginPath()
+  ctx.moveTo(-size * 0.48, -size * 0.65)
+  ctx.lineTo(size * 0.48, -size * 0.65)
+  ctx.lineTo(size * 0.25, -size * 0.8)
+  ctx.lineTo(-size * 0.25, -size * 0.8)
+  ctx.closePath()
+  ctx.fill()
+  
+  ctx.fillStyle = stoneCol
+  ctx.beginPath()
+  ctx.moveTo(-size * 0.42, -size * 0.65)
+  ctx.lineTo(size * 0.42, -size * 0.65)
+  ctx.lineTo(size * 0.2, -size * 0.78)
+  ctx.lineTo(-size * 0.2, -size * 0.78)
+  ctx.closePath()
+  ctx.fill()
+  
+  // 5. Finial top jewel (Hōju)
+  ctx.fillStyle = stoneCol
+  ctx.beginPath()
+  ctx.arc(0, -size * 0.84, size * 0.07, 0, Math.PI * 2)
+  ctx.fill()
+  
+  ctx.fillStyle = stoneShadow
+  ctx.beginPath()
+  ctx.moveTo(-size * 0.08, -size * 0.8)
+  ctx.lineTo(size * 0.08, -size * 0.8)
+  ctx.lineTo(0, -size * 0.93)
+  ctx.closePath()
+  ctx.fill()
+  
+  // 6. Soft light cone projection (if lit and dark)
+  if (isLit && isDark) {
+    ctx.restore() // Restore translation to paint in absolute coordinates
+    ctx.save()
+    ctx.translate(lx, ly)
+    const cone = ctx.createLinearGradient(0, -size * 0.52, 0, size * 2.5)
+    cone.addColorStop(0, "rgba(254, 240, 138, 0.38)")
+    cone.addColorStop(0.3, "rgba(254, 240, 138, 0.14)")
+    cone.addColorStop(1, "rgba(254, 240, 138, 0)")
+    
+    ctx.fillStyle = cone
+    ctx.beginPath()
+    ctx.moveTo(0, -size * 0.52)
+    ctx.lineTo(-size * 1.5, size * 2.5)
+    ctx.lineTo(size * 1.5, size * 2.5)
+    ctx.closePath()
+    ctx.fill()
+  }
+  
+  ctx.restore()
+}
+
 export function VisualGarden({ onAddPlant }: { onAddPlant?: () => void }) {
     const cvs = useRef<HTMLCanvasElement>(null)
     const cont = useRef<HTMLDivElement>(null)
@@ -40,6 +154,8 @@ export function VisualGarden({ onAddPlant }: { onAddPlant?: () => void }) {
     const [gardenView, setGardenView] = useState<"personal" | "shared">("personal")
     const [plants, setPlants] = useState<Plant[]>([])
     const [clickedPlant, setClickedPlant] = useState<{ plant: Plant; x: number; y: number } | null>(null)
+    const [lanternLit, setLanternLit] = useState(true)
+    const mousePosRef = useRef({ x: 0.5, y: 0.5, isOver: false })
     const sparkleRef = useRef<{ x: number; y: number; vx: number; vy: number; life: number; color: string; size: number }[]>([])
 
     const handleWaterPersonal = (plantId: string) => {
@@ -90,6 +206,39 @@ export function VisualGarden({ onAddPlant }: { onAddPlant?: () => void }) {
                         vy: Math.sin(angle) * (1.2 + Math.random()) - 1.5,
                         life: 1, color: colors[j % colors.length],
                         size: 2.5 + Math.random() * 3.5,
+                    })
+                }
+
+                // Soil sprays (brown particles shooting up from the base py)
+                const soilColors = ['#5c4033', '#8B5A2B', '#3d2b1f', '#4a3728']
+                for (let j = 0; j < 8; j++) {
+                    parts.current.push({
+                        x: px + (Math.random() - 0.5) * 20,
+                        y: py,
+                        vx: (Math.random() - 0.5) * 1.5,
+                        vy: -Math.random() * 2 - 1,
+                        rot: Math.random() * Math.PI,
+                        size: Math.random() * 2.5 + 1.5,
+                        color: soilColors[j % soilColors.length],
+                        op: 0.9,
+                        type: 'soil',
+                        life: 0
+                    })
+                }
+
+                // Vapor mist (rising white/blue cloudlets)
+                for (let j = 0; j < 6; j++) {
+                    parts.current.push({
+                        x: px + (Math.random() - 0.5) * 30,
+                        y: py - Math.random() * 20,
+                        vx: (Math.random() - 0.5) * 0.5,
+                        vy: -0.4 - Math.random() * 0.4,
+                        rot: Math.random() * Math.PI,
+                        size: Math.random() * 12 + 8,
+                        color: 'rgba(224, 242, 254, 0.35)',
+                        op: 0.35,
+                        type: 'vapor',
+                        life: 0
                     })
                 }
 
@@ -169,6 +318,39 @@ export function VisualGarden({ onAddPlant }: { onAddPlant?: () => void }) {
                             vy: Math.sin(angle) * (1.2 + Math.random()) - 1.5,
                             life: 1, color: colors[j % colors.length],
                             size: 2.5 + Math.random() * 3.5,
+                        })
+                    }
+
+                    // Soil sprays (brown particles shooting up from the base py)
+                    const soilColors = ['#5c4033', '#8B5A2B', '#3d2b1f', '#4a3728']
+                    for (let j = 0; j < 8; j++) {
+                        parts.current.push({
+                            x: px + (Math.random() - 0.5) * 20,
+                            y: py,
+                            vx: (Math.random() - 0.5) * 1.5,
+                            vy: -Math.random() * 2 - 1,
+                            rot: Math.random() * Math.PI,
+                            size: Math.random() * 2.5 + 1.5,
+                            color: soilColors[j % soilColors.length],
+                            op: 0.9,
+                            type: 'soil',
+                            life: 0
+                        })
+                    }
+
+                    // Vapor mist (rising white/blue cloudlets)
+                    for (let j = 0; j < 6; j++) {
+                        parts.current.push({
+                            x: px + (Math.random() - 0.5) * 30,
+                            y: py - Math.random() * 20,
+                            vx: (Math.random() - 0.5) * 0.5,
+                            vy: -0.4 - Math.random() * 0.4,
+                            rot: Math.random() * Math.PI,
+                            size: Math.random() * 12 + 8,
+                            color: 'rgba(224, 242, 254, 0.35)',
+                            op: 0.35,
+                            type: 'vapor',
+                            life: 0
                         })
                     }
 
@@ -630,6 +812,59 @@ export function VisualGarden({ onAddPlant }: { onAddPlant?: () => void }) {
                 })
             }
 
+            // ── WATERCOLOR MOUNTAIN PARALLAX ──
+            const mouseXOffset = mousePosRef.current.isOver ? (mousePosRef.current.x - 0.5) : 0
+            
+            // Far Mountain Layer (shifts less)
+            ctx.save()
+            ctx.translate(mouseXOffset * 18, 0)
+            const farGrad = ctx.createLinearGradient(0, H * 0.32, 0, H * 0.72)
+            if (dark) {
+                farGrad.addColorStop(0, "rgba(22, 28, 45, 0.55)")
+                farGrad.addColorStop(1, "rgba(5, 8, 20, 0)")
+            } else if (eve) {
+                farGrad.addColorStop(0, "rgba(180, 110, 130, 0.45)")
+                farGrad.addColorStop(1, "rgba(80, 40, 50, 0)")
+            } else {
+                farGrad.addColorStop(0, "rgba(147, 197, 253, 0.4)")
+                farGrad.addColorStop(1, "rgba(239, 246, 255, 0)")
+            }
+            ctx.fillStyle = farGrad
+            ctx.beginPath()
+            ctx.moveTo(-50, H * 0.72)
+            ctx.lineTo(-50, H * 0.45)
+            ctx.bezierCurveTo(W * 0.25, H * 0.33, W * 0.5, H * 0.52, W * 0.7, H * 0.42)
+            ctx.bezierCurveTo(W * 0.88, H * 0.35, W * 1.0, H * 0.48, W + 50, H * 0.42)
+            ctx.lineTo(W + 50, H * 0.72)
+            ctx.closePath()
+            ctx.fill()
+            ctx.restore()
+
+            // Mid Mountain Layer (shifts more)
+            ctx.save()
+            ctx.translate(mouseXOffset * 32, 0)
+            const midGrad = ctx.createLinearGradient(0, H * 0.38, 0, H * 0.72)
+            if (dark) {
+                midGrad.addColorStop(0, "rgba(28, 42, 60, 0.75)")
+                midGrad.addColorStop(1, "rgba(5, 8, 20, 0)")
+            } else if (eve) {
+                midGrad.addColorStop(0, "rgba(194, 90, 80, 0.65)")
+                midGrad.addColorStop(1, "rgba(80, 40, 50, 0)")
+            } else {
+                midGrad.addColorStop(0, "rgba(191, 219, 254, 0.55)")
+                midGrad.addColorStop(1, "rgba(239, 246, 255, 0)")
+            }
+            ctx.fillStyle = midGrad
+            ctx.beginPath()
+            ctx.moveTo(-50, H * 0.72)
+            ctx.lineTo(-50, H * 0.52)
+            ctx.bezierCurveTo(W * 0.2, H * 0.42, W * 0.45, H * 0.58, W * 0.65, H * 0.46)
+            ctx.bezierCurveTo(W * 0.8, H * 0.38, W * 1.0, H * 0.54, W + 50, H * 0.5)
+            ctx.lineTo(W + 50, H * 0.72)
+            ctx.closePath()
+            ctx.fill()
+            ctx.restore()
+
 
             // ── GROUND LAYERS (Garden) ──
             const gPal: Record<string, Record<string, string[]>> = {
@@ -653,6 +888,12 @@ export function VisualGarden({ onAddPlant }: { onAddPlant?: () => void }) {
             ctx.bezierCurveTo(W * 0.18, H * 0.74, W * 0.45, H * 0.79, W * 0.7, H * 0.75)
             ctx.bezierCurveTo(W * 0.85, H * 0.73, W, H * 0.77, W, H * 0.75)
             ctx.lineTo(W, H); ctx.closePath(); ctx.fill()
+
+            // ── STONE LANTERN (Tōrō) ──
+            const lx = 0.78 * W
+            const ly = 0.74 * H
+            const lSize = 50
+            drawStoneLantern(ctx, lx, ly, lSize, lanternLit, dark)
 
             // Front garden ground
             ctx.fillStyle = gp[2]
@@ -776,13 +1017,72 @@ export function VisualGarden({ onAddPlant }: { onAddPlant?: () => void }) {
             if (vs === 'autumn' && rnd < 0.02) parts.current.push({ x: Math.random() * W * 1.1, y: -15, vx: (Math.random() - 0.4) * 0.8, vy: Math.random() * 0.5 + 0.3, rot: Math.random() * Math.PI * 2, size: Math.random() * 6 + 3, color: ["#EA580C", "#F59E0B", "#DC2626", "#D97706"][Math.floor(Math.random() * 4)], op: 0.85, type: "leaf", life: 0 })
             if (vs === 'winter' && rnd < 0.06) parts.current.push({ x: Math.random() * W, y: -10, vx: (Math.random() - 0.5) * 0.4, vy: Math.random() * 0.6 + 0.3, rot: 0, size: Math.random() * 3 + 1, color: "#F0F9FF", op: 0.7 + Math.random() * 0.3, type: "snow", life: 0 })
             if (vs === 'summer' && !night && rnd < 0.01) parts.current.push({ x: Math.random() * W, y: H * 0.5 + Math.random() * H * 0.4, vx: (Math.random() - 0.5) * 0.3, vy: -Math.random() * 0.3 - 0.1, rot: 0, size: Math.random() * 2 + 0.5, color: "#FDE047", op: 0, type: "pollen", life: 0 })
+            
+            // Rain Particle Spawning
+            if (condition === 'rain' && Math.random() < 0.35) {
+                parts.current.push({
+                    x: Math.random() * W,
+                    y: -15,
+                    vx: 0.8 + Math.random() * 0.4,
+                    vy: 7 + Math.random() * 3,
+                    rot: 0,
+                    size: Math.random() * 1.5 + 1.2,
+                    color: dark ? "rgba(186, 230, 253, 0.35)" : "rgba(156, 163, 175, 0.3)",
+                    op: 0.5,
+                    type: "rain",
+                    life: 0
+                })
+            }
 
             for (let i = parts.current.length - 1; i >= 0; i--) {
                 const p = parts.current[i]; p.life++
                 const drift = Math.sin(t * 0.03 + p.y * 0.01) * 0.3
-                p.x += p.vx + drift; p.y += p.vy; p.rot += 0.025
-                if (p.type === 'pollen') p.op = p.life < 30 ? p.life / 30 : (p.life > 170 ? (200 - p.life) / 30 : 0.6)
-                if (p.y > H + 30 || p.x < -50 || p.x > W + 50 || p.life > 350) { parts.current.splice(i, 1); continue }
+                
+                // Position updates
+                if (p.type === 'rain') {
+                    p.x += p.vx
+                    p.y += p.vy
+                } else if (p.type === 'ripple' || p.type === 'vapor') {
+                    p.x += p.vx
+                    p.y += p.vy
+                } else {
+                    p.x += p.vx + drift
+                    p.y += p.vy
+                    p.rot += 0.025
+                }
+                
+                // Specific updates
+                if (p.type === 'pollen') {
+                    p.op = p.life < 30 ? p.life / 30 : (p.life > 170 ? (200 - p.life) / 30 : 0.6)
+                }
+                if (p.type === 'rain') {
+                    // check collision with ground
+                    const groundY = H * 0.87 + Math.sin(p.x * 0.03) * H * 0.01
+                    if (p.y >= groundY) {
+                        p.type = 'ripple'
+                        p.vy = 0
+                        p.vx = 0
+                        p.life = 0
+                        p.size = 1
+                        p.color = dark ? "rgba(186, 230, 253, 0.45)" : "rgba(156, 163, 175, 0.4)"
+                    }
+                }
+                if (p.type === 'ripple') {
+                    p.size += 0.6
+                    p.op = Math.max(0, (25 - p.life) / 25)
+                }
+                if (p.type === 'soil') {
+                    p.vy += 0.08 // gravity
+                    p.op = Math.max(0, (40 - p.life) / 40)
+                }
+                if (p.type === 'vapor') {
+                    p.vy *= 0.98
+                    p.size += 0.15
+                    p.op = Math.max(0, (60 - p.life) / 60 * 0.35)
+                }
+
+                if (p.y > H + 30 || p.x < -50 || p.x > W + 50 || p.life > 350 || p.op <= 0) { parts.current.splice(i, 1); continue }
+                
                 ctx.save(); ctx.translate(p.x, p.y); ctx.globalAlpha = Math.max(0, p.op)
                 if (p.type === 'snow') {
                     ctx.strokeStyle = p.color; ctx.lineWidth = p.size * 0.28
@@ -797,6 +1097,32 @@ export function VisualGarden({ onAddPlant }: { onAddPlant?: () => void }) {
                     const pg = ctx.createRadialGradient(0, 0, 0, 0, 0, p.size * 2)
                     pg.addColorStop(0, "rgba(253,224,71,0.9)"); pg.addColorStop(1, "rgba(253,224,71,0)")
                     ctx.fillStyle = pg; ctx.beginPath(); ctx.arc(0, 0, p.size * 2, 0, Math.PI * 2); ctx.fill()
+                } else if (p.type === 'rain') {
+                    ctx.strokeStyle = p.color
+                    ctx.lineWidth = p.size * 0.5
+                    ctx.beginPath()
+                    ctx.moveTo(0, 0)
+                    ctx.lineTo(-p.vx * 1.2, -p.vy * 1.2)
+                    ctx.stroke()
+                } else if (p.type === 'ripple') {
+                    ctx.strokeStyle = p.color
+                    ctx.lineWidth = 1
+                    ctx.beginPath()
+                    ctx.ellipse(0, 0, p.size * 1.5, p.size * 0.5, 0, 0, Math.PI * 2)
+                    ctx.stroke()
+                } else if (p.type === 'soil') {
+                    ctx.fillStyle = p.color
+                    ctx.beginPath()
+                    ctx.arc(0, 0, p.size, 0, Math.PI * 2)
+                    ctx.fill()
+                } else if (p.type === 'vapor') {
+                    const mistGrad = ctx.createRadialGradient(0, 0, 0, 0, 0, p.size)
+                    mistGrad.addColorStop(0, p.color)
+                    mistGrad.addColorStop(1, 'transparent')
+                    ctx.fillStyle = mistGrad
+                    ctx.beginPath()
+                    ctx.arc(0, 0, p.size, 0, Math.PI * 2)
+                    ctx.fill()
                 } else {
                     ctx.rotate(p.rot + Math.sin(t * 0.05) * 0.3); ctx.scale(1, Math.abs(Math.sin(t * 0.04 + p.y * 0.05)) * 0.6 + 0.4)
                     ctx.fillStyle = p.color; ctx.beginPath(); ctx.ellipse(0, 0, p.size, p.size * 0.45, 0, 0, Math.PI * 2); ctx.fill()
@@ -804,7 +1130,7 @@ export function VisualGarden({ onAddPlant }: { onAddPlant?: () => void }) {
                 }
                 ctx.restore()
             }
-            if (parts.current.length > 200) parts.current.splice(0, 30)
+            if (parts.current.length > 250) parts.current.splice(0, 30)
 
             // ── SPARKLE PARTICLES (plant click) ──
             for (let i = sparkleRef.current.length - 1; i >= 0; i--) {
@@ -837,6 +1163,116 @@ export function VisualGarden({ onAddPlant }: { onAddPlant?: () => void }) {
                 })
             }
 
+            // ── FUDA (Wooden Name Tag Hover) ──
+            let hoveredPlant: Plant | null = null
+            if (mousePosRef.current.isOver && !editMode) {
+                const mx = mousePosRef.current.x * W
+                const my = mousePosRef.current.y * H
+                for (let i = plants.length - 1; i >= 0; i--) {
+                    const p = plants[i]
+                    if (!p.id) continue
+                    const px = p.x * W
+                    const py = p.y * H
+                    const size = p.type === 'tree' ? 180 : 85
+                    const scale = p.scale * p.growth
+                    const sz = size * scale
+                    const centerX = px
+                    const centerY = py - sz / 2
+                    
+                    const dx = mx - centerX
+                    const dy = my - centerY
+                    const dist = Math.sqrt(dx * dx + dy * dy)
+                    if (dist < sz / 2 + 10) {
+                        hoveredPlant = p
+                        break
+                    }
+                }
+            }
+
+            if (hoveredPlant) {
+                const px = hoveredPlant.x * W
+                const py = hoveredPlant.y * H
+                const size = hoveredPlant.type === 'tree' ? 180 : 85
+                const scale = hoveredPlant.scale * hoveredPlant.growth
+                const sz = size * scale
+                
+                const tagW = 125
+                const tagH = 56
+                
+                // Position tag to the right or left depending on space
+                let tagX = px + sz / 2 + 8
+                if (tagX + tagW > W - 10) {
+                    tagX = px - sz / 2 - tagW - 8
+                }
+                const tagY = py - sz / 2 - 25
+                
+                ctx.save()
+                
+                // Shadow
+                ctx.shadowColor = 'rgba(0,0,0,0.18)'
+                ctx.shadowBlur = 6
+                ctx.shadowOffsetY = 3
+                
+                // Wooden board background
+                ctx.fillStyle = '#dfc39d' // light wood
+                ctx.strokeStyle = '#5c4033' // dark wood border
+                ctx.lineWidth = 1.5
+                
+                ctx.beginPath()
+                if (ctx.roundRect) {
+                    ctx.roundRect(tagX, tagY, tagW, tagH, 5)
+                } else {
+                    ctx.rect(tagX, tagY, tagW, tagH)
+                }
+                ctx.fill()
+                ctx.stroke()
+                
+                // Inner wood grain lines
+                ctx.strokeStyle = 'rgba(92, 64, 51, 0.08)'
+                ctx.lineWidth = 1
+                ctx.beginPath()
+                ctx.moveTo(tagX + 5, tagY + 12)
+                ctx.quadraticCurveTo(tagX + tagW/2, tagY + 15, tagX + tagW - 5, tagY + 10)
+                ctx.moveTo(tagX + 5, tagY + 28)
+                ctx.quadraticCurveTo(tagX + tagW/2, tagY + 30, tagX + tagW - 5, tagY + 26)
+                ctx.moveTo(tagX + 5, tagY + 44)
+                ctx.quadraticCurveTo(tagX + tagW/2, tagY + 46, tagX + tagW - 5, tagY + 42)
+                ctx.stroke()
+                
+                // Double border line inside
+                ctx.strokeStyle = 'rgba(92, 64, 51, 0.25)'
+                ctx.lineWidth = 0.5
+                ctx.strokeRect(tagX + 3, tagY + 3, tagW - 6, tagH - 6)
+                
+                ctx.shadowColor = 'transparent'
+                
+                // Text drawing
+                const pName = PLANT_NAMES[hoveredPlant.subtype] || hoveredPlant.subtype
+                const growPct = Math.round(hoveredPlant.growth * 100)
+                const nurtureVal = Math.round((hoveredPlant.targetGrowth ?? 1) * 100)
+                
+                // Title
+                ctx.fillStyle = '#2f1f17' // dark brown text
+                ctx.font = 'bold 11px sans-serif'
+                ctx.fillText(pName, tagX + 10, tagY + 16)
+                
+                // Growth info
+                ctx.fillStyle = '#5c4033'
+                ctx.font = '9px sans-serif'
+                ctx.fillText(`Growth: ${growPct}%`, tagX + 10, tagY + 31)
+                
+                // Hydration info
+                ctx.fillText(`Hydration: ${nurtureVal}%`, tagX + 10, tagY + 44)
+                
+                // Draw a tiny water drop indicator icon
+                ctx.fillStyle = '#0ea5e9'
+                ctx.beginPath()
+                ctx.arc(tagX + tagW - 15, tagY + 38, 3, 0, Math.PI * 2)
+                ctx.fill()
+                
+                ctx.restore()
+            }
+
             raf = requestAnimationFrame(render)
         }
         render()
@@ -850,6 +1286,22 @@ export function VisualGarden({ onAddPlant }: { onAddPlant?: () => void }) {
         toast.info(`Click anywhere in the garden to plant your ${item.name}!`)
     }
 
+    const handlePointerMoveCanvas = (e: React.PointerEvent<HTMLDivElement>) => {
+        if (!cont.current) return
+        const rect = cont.current.getBoundingClientRect()
+        mousePosRef.current = {
+            x: (e.clientX - rect.left) / rect.width,
+            y: (e.clientY - rect.top) / rect.height,
+            isOver: true
+        }
+        handlePointerMove(e)
+    }
+
+    const handlePointerLeaveCanvas = () => {
+        mousePosRef.current.isOver = false
+        handlePointerUp()
+    }
+
     const handlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
         const target = e.target as HTMLElement
         if (target.closest('.plant-control-overlay')) {
@@ -861,6 +1313,19 @@ export function VisualGarden({ onAddPlant }: { onAddPlant?: () => void }) {
         const clickY = e.clientY - rect.top
         const x = clickX / rect.width
         const y = clickY / rect.height
+
+        // Check if clicked the stone lantern (Tōrō)
+        const lx = 0.78 * rect.width
+        const ly = 0.74 * rect.height
+        const lSize = 50
+        const ldx = clickX - lx
+        const ldy = clickY - (ly - lSize / 2)
+        const lDist = Math.sqrt(ldx * ldx + ldy * ldy)
+        if (lDist < lSize * 0.8) {
+            setLanternLit(prev => !prev)
+            toast.success(!lanternLit ? "Stone lantern lit. 🏮" : "Stone lantern extinguished.")
+            return
+        }
 
         if (plantToPlace) {
             // Constrain placement y to ground zone [0.48, 0.92]
@@ -1267,9 +1732,9 @@ export function VisualGarden({ onAddPlant }: { onAddPlant?: () => void }) {
                 <div 
                     ref={cont} 
                     onPointerDown={handlePointerDown} 
-                    onPointerMove={handlePointerMove}
-                    onPointerUp={handlePointerUp}
-                    onPointerLeave={handlePointerUp}
+                    onPointerMove={handlePointerMoveCanvas}
+                    onPointerUp={handlePointerLeaveCanvas}
+                    onPointerLeave={handlePointerLeaveCanvas}
                     className={`min-w-[800px] w-full h-72 sm:h-96 relative ${plantToPlace ? 'cursor-crosshair' : editMode ? 'cursor-move' : ''}`}
                 >
                     <canvas ref={cvs} className="w-full h-full block" />

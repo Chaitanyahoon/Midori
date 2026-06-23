@@ -10,7 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { ChartContainer } from "@/components/ui/chart"
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Tooltip } from "recharts"
 
-export function WeeklyStats({ showDemo = false }: { showDemo?: boolean }) {
+export function WeeklyStats() {
   const { tasks, pomodoros, settings, loading } = useData()
 
   if (loading) {
@@ -67,7 +67,7 @@ export function WeeklyStats({ showDemo = false }: { showDemo?: boolean }) {
     return weekData
   }
 
-  const isDemoData = showDemo && tasks.length === 0 && pomodoros.length === 0
+  const isDemoData = false
 
   const DEMO_WEEKLY_DATA = [
     { day: "Mon", date: "", tasks: 2, pomodoros: 3, focusTime: 1.5 },

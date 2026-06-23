@@ -31,6 +31,21 @@ const getWeatherEmoji = (condition: string) => {
   }
 }
 
+const getWeatherDescription = (condition: string) => {
+  switch (condition?.toLowerCase()) {
+    case "clear":
+      return "Sunny skies warm the soil. Growth rates are accelerated by 10% today! ☀️"
+    case "rain":
+      return "Soft rain is falling. Hydration is auto-replenishing, no watering needed! 🌧️"
+    case "snow":
+      return "A peaceful chill covers the garden. Plants are resting, winter beauty abounds. ❄️"
+    case "cloudy":
+      return "Overcast skies keep the soil cool. A perfect day for quiet concentration and steady growth. ☁️"
+    default:
+      return "The environment is calm and balanced. Your garden is thriving under gentle care. 🌿"
+  }
+}
+
 export default function DashboardPage() {
   const router = useRouter()
   const [currentDate, setCurrentDate] = useState(new Date())
@@ -87,140 +102,168 @@ export default function DashboardPage() {
   return (
     <div className="w-full h-full ambient-bg">
       {/* Welcome Header Section */}
-      <div className="px-4 sm:px-8 pt-6 sm:pt-8 pb-2 flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div className="animate-bloom">
-          <div className="flex items-baseline gap-3 flex-wrap">
-            <h1 className="text-2xl sm:text-4xl lg:text-5xl font-bold bg-gradient-to-r from-emerald-800 to-teal-600 dark:from-emerald-200 dark:to-teal-200 bg-clip-text text-transparent leading-tight">
-              Good {new Date().getHours() < 12 ? 'Morning' : new Date().getHours() < 17 ? 'Afternoon' : 'Evening'}
-              {userName && (
-                <span className="text-emerald-600 dark:text-emerald-400">, {userName}</span>
-              )}
-            </h1>
-          </div>
-          <div className="mt-2 flex items-center gap-3 flex-wrap">
-            <p className="text-sm sm:text-base text-slate-500 dark:text-slate-400 font-medium">
-              Ready to nurture your ideas today? 🌿
-            </p>
-            <span className="text-xs text-slate-400 dark:text-slate-500 font-medium tracking-wide">
-              {currentDate.toLocaleDateString("en-US", { weekday: "long", month: "short", day: "numeric" })}
-              {" · "}
-              {currentDate.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })}
-            </span>
-          </div>
-        </div>
-
-        {/* Weather & Balances Widget */}
-        <div className="flex flex-wrap items-center gap-3 animate-bloom select-none">
-          {!weatherLoading && (
-            <div className="flex items-center gap-2 bg-sky-500/10 dark:bg-sky-500/20 text-sky-700 dark:text-sky-300 px-3.5 py-1.5 rounded-2xl border border-sky-500/20 text-xs font-semibold shadow-sm backdrop-blur-sm transition-all duration-300 hover:scale-105">
-              <span className="text-base leading-none">{getWeatherEmoji(weatherCondition)}</span>
-              <span className="capitalize">{weatherCondition}</span>
-              <span className="opacity-50">·</span>
-              <span>{Math.round(weatherTemp)}°C</span>
+      <div className="px-4 sm:px-8 pt-6 sm:pt-8 pb-2">
+        <div className="backdrop-blur-md bg-white/20 dark:bg-emerald-950/10 border border-white/20 dark:border-emerald-800/20 rounded-3xl p-6 sm:p-8 flex flex-col md:flex-row md:items-center justify-between gap-6 shadow-xl animate-bloom">
+          <div className="space-y-3">
+            <div className="flex items-baseline gap-3 flex-wrap">
+              <h1 className="text-2xl sm:text-4xl lg:text-5xl font-bold bg-gradient-to-r from-emerald-800 to-teal-600 dark:from-emerald-200 dark:to-teal-200 bg-clip-text text-transparent leading-tight">
+                Good {new Date().getHours() < 12 ? 'Morning' : new Date().getHours() < 17 ? 'Afternoon' : 'Evening'}
+                {userName && (
+                  <span className="text-emerald-600 dark:text-emerald-400">, {userName}</span>
+                )}
+              </h1>
             </div>
-          )}
-
-          {/* Sunlight pill */}
-          <Popover>
-            <PopoverTrigger asChild>
-              <button className="flex items-center gap-2 bg-gradient-to-r from-amber-400/20 to-orange-400/20 text-amber-700 dark:text-amber-300 px-4 py-2 rounded-2xl border border-amber-400/30 text-sm font-bold shadow-md hover:shadow-lg backdrop-blur-md transition-all duration-300 hover:scale-105 active:scale-95 group cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-amber-500/50">
-                <Icons.sun className="w-4 h-4 text-amber-500 animate-[spin_8s_linear_infinite] group-hover:scale-110 transition-transform" />
-                <span>{settings?.sunlight ?? 0}</span>
-                <span className="text-[10px] uppercase font-bold tracking-wider opacity-75">Sun</span>
-              </button>
-            </PopoverTrigger>
-            <PopoverContent className="w-80 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-amber-500/20 rounded-2xl shadow-xl p-4 animate-in fade-in zoom-in-95 duration-200">
-              <div className="space-y-3">
-                <div className="flex items-center gap-2 border-b border-amber-500/10 pb-2">
-                  <Icons.sun className="w-5 h-5 text-amber-500 animate-[spin_10s_linear_infinite]" />
-                  <h4 className="font-bold text-slate-800 dark:text-slate-100">Sunlight Ledger</h4>
-                </div>
-                
-                <div className="space-y-1.5 text-xs text-slate-600 dark:text-slate-400">
-                  <div className="flex justify-between font-semibold text-slate-700 dark:text-slate-300">
-                    <span>Today&apos;s Earnings:</span>
-                    <span className="text-amber-600 dark:text-amber-400">+{todaySunlightEarned} Sun</span>
-                  </div>
-                  {todayCompletedTasksList.length > 0 ? (
-                    <ul className="max-h-24 overflow-y-auto space-y-1 pl-2 border-l border-amber-500/20 mt-1 scrollbar-thin">
-                      {todayCompletedTasksList.map(t => (
-                        <li key={t.id} className="flex justify-between items-center text-[10px] text-slate-500 dark:text-slate-400">
-                          <span className="truncate max-w-[150px]">{t.title}</span>
-                          <span className="font-medium text-amber-500/80">+10 Sun</span>
-                        </li>
-                      ))}
-                    </ul>
-                  ) : (
-                    <p className="text-[10px] text-slate-400 italic">No tasks completed yet today.</p>
-                  )}
-                </div>
-
-                <div className="border-t border-slate-500/10 pt-2 space-y-1 text-[11px] text-slate-500 dark:text-slate-400">
-                  <div className="flex items-start gap-1.5">
-                    <span className="text-amber-500">☀️</span>
-                    <span><strong>Earn:</strong> Complete tasks to gain <strong>+10 Sunlight</strong>.</span>
-                  </div>
-                  <div className="flex items-start gap-1.5">
-                    <span className="text-emerald-500">🌱</span>
-                    <span><strong>Spend:</strong> Purchase/plant seeds in the Botanical Nursery.</span>
-                  </div>
-                </div>
+            <div className="flex flex-col gap-1">
+              <p className="text-sm sm:text-base text-slate-500 dark:text-slate-400 font-medium">
+                Ready to nurture your ideas today? 🌿
+              </p>
+              <div className="text-xs text-slate-400 dark:text-slate-500 font-medium tracking-wide flex items-center gap-2">
+                <span>{currentDate.toLocaleDateString("en-US", { weekday: "long", month: "short", day: "numeric" })}</span>
+                <span>·</span>
+                <span>{currentDate.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })}</span>
               </div>
-            </PopoverContent>
-          </Popover>
+            </div>
+            
+            {/* Weather Ticker */}
+            {!weatherLoading && (
+              <div className="pt-2 border-t border-slate-500/10 flex items-center gap-2 text-xs text-emerald-700/80 dark:text-emerald-300/80 font-medium animate-[pulse_3s_ease-in-out_infinite]">
+                <span className="text-sm leading-none">{getWeatherEmoji(weatherCondition)}</span>
+                <span>{getWeatherDescription(weatherCondition)}</span>
+              </div>
+            )}
+          </div>
 
-          {/* Water drops pill */}
-          <Popover>
-            <PopoverTrigger asChild>
-              <button className="flex items-center gap-2 bg-gradient-to-r from-sky-400/20 to-blue-400/20 text-sky-700 dark:text-sky-300 px-4 py-2 rounded-2xl border border-sky-400/30 text-sm font-bold shadow-md hover:shadow-lg backdrop-blur-md transition-all duration-300 hover:scale-105 active:scale-95 group cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-sky-500/50">
-                <Icons.droplets className="w-4 h-4 text-sky-500 animate-[pulse_2s_ease-in-out_infinite] group-hover:scale-110 transition-transform" />
-                <span>{settings?.waterdrops ?? 0}</span>
-                <span className="text-[10px] uppercase font-bold tracking-wider opacity-75">Water</span>
-              </button>
-            </PopoverTrigger>
-            <PopoverContent className="w-80 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-sky-500/20 rounded-2xl shadow-xl p-4 animate-in fade-in zoom-in-95 duration-200">
-              <div className="space-y-3">
-                <div className="flex items-center gap-2 border-b border-sky-500/10 pb-2">
-                  <Icons.droplets className="w-5 h-5 text-sky-500 animate-[pulse_2s_ease-in-out_infinite]" />
-                  <h4 className="font-bold text-slate-800 dark:text-slate-100">Water Ledger</h4>
-                </div>
+          {/* Weather & Balances Widget */}
+          <div className="flex flex-wrap items-center gap-4 select-none">
+            {!weatherLoading && (
+              <div className="flex items-center gap-2 bg-sky-500/10 dark:bg-sky-500/20 text-sky-700 dark:text-sky-300 px-3.5 py-2 rounded-2xl border border-sky-500/20 text-xs font-semibold shadow-sm backdrop-blur-sm transition-all duration-300 hover:scale-105">
+                <span className="text-base leading-none">{getWeatherEmoji(weatherCondition)}</span>
+                <span className="capitalize">{weatherCondition}</span>
+                <span className="opacity-50">·</span>
+                <span>{Math.round(weatherTemp)}°C</span>
+              </div>
+            )}
 
-                <div className="space-y-1.5 text-xs text-slate-600 dark:text-slate-400">
-                  <div className="flex justify-between font-semibold text-slate-700 dark:text-slate-300">
-                    <span>Today&apos;s Focus:</span>
-                    <span className="text-sky-600 dark:text-sky-400">+{todayWaterdropsEarned} Drops</span>
+            {/* Sunlight pill */}
+            <Popover>
+              <PopoverTrigger asChild>
+                <button className="flex items-center gap-3 bg-gradient-to-r from-amber-400/20 to-orange-400/20 text-amber-700 dark:text-amber-300 pl-2 pr-4 py-1.5 rounded-2xl border border-amber-400/30 text-sm font-bold shadow-md hover:shadow-lg backdrop-blur-md transition-all duration-300 hover:scale-105 active:scale-95 group cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-amber-500/50">
+                  <div className="relative w-8 h-8 flex items-center justify-center rounded-full bg-amber-500/15 border border-amber-500/30 group-hover:bg-amber-500/25 transition-all duration-300">
+                    <div className="absolute inset-0 rounded-full bg-amber-400/30 blur-md animate-pulse pointer-events-none" />
+                    <Icons.sun className="w-4 h-4 text-amber-500 animate-[spin_12s_linear_infinite] group-hover:scale-110 transition-transform relative z-10" />
                   </div>
-                  {todayCompletedPomodorosList.length > 0 ? (
-                    <ul className="max-h-24 overflow-y-auto space-y-1 pl-2 border-l border-sky-500/20 mt-1 scrollbar-thin">
-                      {todayCompletedPomodorosList.map((p, idx) => {
-                        const associatedTask = tasks.find(t => t.id === p.taskId)
-                        const displayName = associatedTask ? `Focus: ${associatedTask.title}` : 'Focus Session'
-                        return (
-                          <li key={p.id || idx} className="flex justify-between items-center text-[10px] text-slate-500 dark:text-slate-400">
-                            <span className="truncate max-w-[150px]">{displayName}</span>
-                            <span className="font-medium text-sky-500/80">+{Math.floor(p.duration / 60) || 1} Drops</span>
+                  <div className="flex flex-col items-start leading-none">
+                    <span className="text-xs uppercase font-bold tracking-wider opacity-60">Sunlight</span>
+                    <span className="text-base mt-0.5">{settings?.sunlight ?? 0}</span>
+                  </div>
+                </button>
+              </PopoverTrigger>
+              <PopoverContent className="w-80 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-amber-500/20 rounded-2xl shadow-xl p-4 animate-in fade-in zoom-in-95 duration-200">
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2 border-b border-amber-500/10 pb-2">
+                    <Icons.sun className="w-5 h-5 text-amber-500 animate-[spin_10s_linear_infinite]" />
+                    <h4 className="font-bold text-slate-800 dark:text-slate-100">Sunlight Ledger</h4>
+                  </div>
+                  
+                  <div className="space-y-1.5 text-xs text-slate-600 dark:text-slate-400">
+                    <div className="flex justify-between font-semibold text-slate-700 dark:text-slate-300">
+                      <span>Today&apos;s Earnings:</span>
+                      <span className="text-amber-600 dark:text-amber-400">+{todaySunlightEarned} Sun</span>
+                    </div>
+                    {todayCompletedTasksList.length > 0 ? (
+                      <ul className="max-h-24 overflow-y-auto space-y-1 pl-2 border-l border-amber-500/20 mt-1 scrollbar-thin">
+                        {todayCompletedTasksList.map(t => (
+                          <li key={t.id} className="flex justify-between items-center text-[10px] text-slate-500 dark:text-slate-400">
+                            <span className="truncate max-w-[150px]">{t.title}</span>
+                            <span className="font-medium text-amber-500/80">+10 Sun</span>
                           </li>
-                        )
-                      })}
-                    </ul>
-                  ) : (
-                    <p className="text-[10px] text-slate-400 italic">No focus sessions completed today.</p>
-                  )}
-                </div>
+                        ))}
+                      </ul>
+                    ) : (
+                      <p className="text-[10px] text-slate-400 italic">No tasks completed yet today.</p>
+                    )}
+                  </div>
 
-                <div className="border-t border-slate-500/10 pt-2 space-y-1 text-[11px] text-slate-500 dark:text-slate-400">
-                  <div className="flex items-start gap-1.5">
-                    <span className="text-sky-500">💧</span>
-                    <span><strong>Earn:</strong> Complete focus sessions (<strong>1 Drop/min</strong>).</span>
-                  </div>
-                  <div className="flex items-start gap-1.5">
-                    <span className="text-emerald-500">🚿</span>
-                    <span><strong>Spend:</strong> Water your personal garden plants (+20% growth).</span>
+                  <div className="border-t border-slate-500/10 pt-2 space-y-1 text-[11px] text-slate-500 dark:text-slate-400">
+                    <div className="flex items-start gap-1.5">
+                      <span className="text-amber-500">☀️</span>
+                      <span><strong>Earn:</strong> Complete tasks to gain <strong>+10 Sunlight</strong>.</span>
+                    </div>
+                    <div className="flex items-start gap-1.5">
+                      <span className="text-emerald-500">🌱</span>
+                      <span><strong>Spend:</strong> Purchase/plant seeds in the Botanical Nursery.</span>
+                    </div>
                   </div>
                 </div>
-              </div>
-            </PopoverContent>
-          </Popover>
+              </PopoverContent>
+            </Popover>
+
+            {/* Water drops pill */}
+            <Popover>
+              <PopoverTrigger asChild>
+                <button className="flex items-center gap-3 bg-gradient-to-r from-sky-400/20 to-blue-400/20 text-sky-700 dark:text-sky-300 pl-2 pr-4 py-1.5 rounded-2xl border border-sky-400/30 text-sm font-bold shadow-md hover:shadow-lg backdrop-blur-md transition-all duration-300 hover:scale-105 active:scale-95 group cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-sky-500/50">
+                  <div className="relative w-6 h-9 border-2 border-sky-400/40 rounded-b-xl rounded-t-sm overflow-hidden bg-sky-950/10 flex items-end">
+                    <div 
+                      className="w-full bg-gradient-to-t from-sky-500/80 to-sky-400/80 transition-all duration-1000 ease-out" 
+                      style={{ height: `${Math.min(100, Math.max(10, ((settings?.waterdrops ?? 0) / 100) * 100))}%` }}
+                    >
+                      <div className="absolute top-0 left-0 right-0 h-1 bg-sky-300/50 animate-pulse rounded-full" />
+                    </div>
+                    <div className="absolute inset-0 flex justify-around items-end pb-1 pointer-events-none opacity-40">
+                      <span className="w-0.5 h-0.5 bg-white rounded-full animate-bounce" style={{ animationDelay: '100ms' }} />
+                      <span className="w-1 h-1 bg-white rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                    </div>
+                  </div>
+                  <div className="flex flex-col items-start leading-none">
+                    <span className="text-xs uppercase font-bold tracking-wider opacity-60">Water</span>
+                    <span className="text-base mt-0.5">{settings?.waterdrops ?? 0}</span>
+                  </div>
+                </button>
+              </PopoverTrigger>
+              <PopoverContent className="w-80 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-sky-500/20 rounded-2xl shadow-xl p-4 animate-in fade-in zoom-in-95 duration-200">
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2 border-b border-sky-500/10 pb-2">
+                    <Icons.droplets className="w-5 h-5 text-sky-500 animate-[pulse_2s_ease-in-out_infinite]" />
+                    <h4 className="font-bold text-slate-800 dark:text-slate-100">Water Ledger</h4>
+                  </div>
+
+                  <div className="space-y-1.5 text-xs text-slate-600 dark:text-slate-400">
+                    <div className="flex justify-between font-semibold text-slate-700 dark:text-slate-300">
+                      <span>Today&apos;s Focus:</span>
+                      <span className="text-sky-600 dark:text-sky-400">+{todayWaterdropsEarned} Drops</span>
+                    </div>
+                    {todayCompletedPomodorosList.length > 0 ? (
+                      <ul className="max-h-24 overflow-y-auto space-y-1 pl-2 border-l border-sky-500/20 mt-1 scrollbar-thin">
+                        {todayCompletedPomodorosList.map((p, idx) => {
+                          const associatedTask = tasks.find(t => t.id === p.taskId)
+                          const displayName = associatedTask ? `Focus: ${associatedTask.title}` : 'Focus Session'
+                          return (
+                            <li key={p.id || idx} className="flex justify-between items-center text-[10px] text-slate-500 dark:text-slate-400">
+                              <span className="truncate max-w-[150px]">{displayName}</span>
+                              <span className="font-medium text-sky-500/80">+{Math.floor(p.duration / 60) || 1} Drops</span>
+                            </li>
+                          )
+                        })}
+                      </ul>
+                    ) : (
+                      <p className="text-[10px] text-slate-400 italic">No focus sessions completed today.</p>
+                    )}
+                  </div>
+
+                  <div className="border-t border-slate-500/10 pt-2 space-y-1 text-[11px] text-slate-500 dark:text-slate-400">
+                    <div className="flex items-start gap-1.5">
+                      <span className="text-sky-500">💧</span>
+                      <span><strong>Earn:</strong> Complete focus sessions (<strong>1 Drop/min</strong>).</span>
+                    </div>
+                    <div className="flex items-start gap-1.5">
+                      <span className="text-emerald-500">🚿</span>
+                      <span><strong>Spend:</strong> Water your personal garden plants (+20% growth).</span>
+                    </div>
+                  </div>
+                </div>
+              </PopoverContent>
+            </Popover>
+          </div>
         </div>
       </div>
 

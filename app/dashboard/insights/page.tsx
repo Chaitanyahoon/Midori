@@ -13,16 +13,12 @@ const WeeklyStats = dynamic(() => import("@/components/dashboard/weekly-stats").
 const ProductivityTrends = dynamic(() => import("@/components/dashboard/productivity-trends").then(m => ({ default: m.ProductivityTrends })), { ssr: false })
 
 export default function InsightsPage() {
-  const { tasks, pomodoros, loading, settings } = useData()
-  const [showDemo, setShowDemo] = useState(false)
+  const { tasks, pomodoros, loading, settings, stats } = useData()
   const [isActive, setIsActive] = useState(false)
 
   useEffect(() => {
     setIsActive(true)
   }, [])
-
-  const hasNoData = tasks.length === 0 && pomodoros.length === 0
-  const isDemoData = showDemo && hasNoData
 
   // 1. Calculate Peak Focus Hours / Days
   const getPeakFocusAnalytics = (sessions: PomodoroSession[]) => {
@@ -84,23 +80,46 @@ export default function InsightsPage() {
     }
   }
 
-  const analytics = isDemoData 
-    ? { peakHourRange: "10:00 AM - 12:00 PM", peakDay: "Wednesday", totalCompleted: 14 }
-    : getPeakFocusAnalytics(pomodoros)
+  const analytics = getPeakFocusAnalytics(pomodoros)
 
   // 2. Evaluate Locked / Unlocked Achievement Badges
-  const getBadges = (tList: Task[], pList: PomodoroSession[], activeSharedGardenId: string | null | undefined) => {
+  const getBadges = (
+    tList: Task[],
+    pList: PomodoroSession[],
+    activeSharedGardenId: string | null | undefined,
+    currentSun: number,
+    currentWater: number,
+    streak: number
+  ) => {
     const completedTasksCount = tList.filter(t => t.completed).length
     const completedPomodorosCount = pList.filter(p => p.completed).length
 
     const pomodoroDates = pList.filter(p => p.completed && p.startTime).map(p => {
-      return new Date(p.startTime).toDateString()
-    })
+      try {
+        return new Date(p.startTime).toDateString()
+      } catch (e) {
+        return ""
+      }
+    }).filter(Boolean)
+    
     const dateCounts: Record<string, number> = {}
     pomodoroDates.forEach(d => {
       dateCounts[d] = (dateCounts[d] || 0) + 1
     })
-    const hasThreeInADay = Object.values(dateCounts).some(c => c >= 3)
+    
+    const maxSessionsInADay = Object.keys(dateCounts).length > 0 ? Math.max(...Object.values(dateCounts)) : 0
+    const hasThreeInADay = maxSessionsInADay >= 3
+
+    const morningSessions = pList.filter(p => {
+      if (!p.completed || !p.startTime) return false
+      try {
+        const hour = new Date(p.startTime).getHours()
+        return hour >= 4 && hour < 12
+      } catch (e) {
+        return false
+      }
+    })
+    const hasMorningSession = morningSessions.length >= 1
 
     return [
       {
@@ -109,15 +128,10 @@ export default function InsightsPage() {
         desc: "Complete your first task",
         unlocked: completedTasksCount >= 1,
         color: "from-emerald-400 to-teal-500",
-        icon: "🌱"
-      },
-      {
-        id: "zen_master",
-        name: "Zen Master 🧘‍♂️",
-        desc: "Complete 5 focus sessions",
-        unlocked: completedPomodorosCount >= 5,
-        color: "from-indigo-400 to-violet-500",
-        icon: "🧘‍♂️"
+        icon: "🌱",
+        current: completedTasksCount,
+        target: 1,
+        unit: "task"
       },
       {
         id: "deep_roots",
@@ -125,15 +139,21 @@ export default function InsightsPage() {
         desc: "Complete 10 tasks in total",
         unlocked: completedTasksCount >= 10,
         color: "from-amber-400 to-orange-500",
-        icon: "🌳"
+        icon: "🌳",
+        current: completedTasksCount,
+        target: 10,
+        unit: "tasks"
       },
       {
-        id: "communal_spirit",
-        name: "Communal Spirit 🤝",
-        desc: "Join or create a Co-op Garden",
-        unlocked: !!activeSharedGardenId,
-        color: "from-pink-400 to-rose-500",
-        icon: "🤝"
+        id: "zen_master",
+        name: "Zen Master 🧘‍♂️",
+        desc: "Complete 5 focus sessions",
+        unlocked: completedPomodorosCount >= 5,
+        color: "from-indigo-400 to-violet-500",
+        icon: "🧘‍♂️",
+        current: completedPomodorosCount,
+        target: 5,
+        unit: "sessions"
       },
       {
         id: "super_satori",
@@ -141,20 +161,77 @@ export default function InsightsPage() {
         desc: "Complete 3 focus sessions in a day",
         unlocked: hasThreeInADay,
         color: "from-cyan-400 to-blue-500",
-        icon: "🌸"
+        icon: "🌸",
+        current: maxSessionsInADay,
+        target: 3,
+        unit: "sessions"
+      },
+      {
+        id: "morning_dew",
+        name: "Morning Dew ☀️",
+        desc: "Complete a focus session before 12:00 PM",
+        unlocked: hasMorningSession,
+        color: "from-yellow-400 to-amber-500",
+        icon: "☀️",
+        current: hasMorningSession ? 1 : 0,
+        target: 1,
+        unit: "session"
+      },
+      {
+        id: "sunlight_harvest",
+        name: "Sunlight Harvest 🌞",
+        desc: "Accumulate 100 Sunlight points",
+        unlocked: currentSun >= 100,
+        color: "from-amber-400 to-yellow-500",
+        icon: "🌞",
+        current: currentSun,
+        target: 100,
+        unit: "Sun"
+      },
+      {
+        id: "water_saver",
+        name: "Water Saver 💧",
+        desc: "Accumulate 100 Waterdrops",
+        unlocked: currentWater >= 100,
+        color: "from-sky-400 to-blue-500",
+        icon: "💧",
+        current: currentWater,
+        target: 100,
+        unit: "Drops"
+      },
+      {
+        id: "communal_spirit",
+        name: "Communal Spirit 🤝",
+        desc: "Join or create a Co-op Garden",
+        unlocked: !!activeSharedGardenId,
+        color: "from-pink-400 to-rose-500",
+        icon: "🤝",
+        current: activeSharedGardenId ? 1 : 0,
+        target: 1,
+        unit: "garden"
+      },
+      {
+        id: "consistent_gardener",
+        name: "Consistent Gardener 📅",
+        desc: "Reach a 3-day active productivity streak",
+        unlocked: streak >= 3,
+        color: "from-emerald-500 to-teal-600",
+        icon: "📅",
+        current: streak,
+        target: 3,
+        unit: "days"
       }
     ]
   }
 
-  const evaluatedBadges = isDemoData 
-    ? [
-        { id: "first_bloom", name: "First Bloom 🌱", desc: "Complete your first task", unlocked: true, color: "from-emerald-400 to-teal-500", icon: "🌱" },
-        { id: "zen_master", name: "Zen Master 🧘‍♂️", desc: "Complete 5 focus sessions", unlocked: true, color: "from-indigo-400 to-violet-500", icon: "🧘‍♂️" },
-        { id: "deep_roots", name: "Deep Roots 🌳", desc: "Complete 10 tasks in total", unlocked: false, color: "from-amber-400 to-orange-500", icon: "🌳" },
-        { id: "communal_spirit", name: "Communal Spirit 🤝", desc: "Join or create a Co-op Garden", unlocked: true, color: "from-pink-400 to-rose-500", icon: "🤝" },
-        { id: "super_satori", name: "Super Satori 🌸", desc: "Complete 3 focus sessions in a day", unlocked: false, color: "from-cyan-400 to-blue-500", icon: "🌸" }
-      ]
-    : getBadges(tasks, pomodoros, settings?.activeSharedGardenId)
+  const evaluatedBadges = getBadges(
+    tasks,
+    pomodoros,
+    settings?.activeSharedGardenId,
+    settings?.sunlight ?? 0,
+    settings?.waterdrops ?? 0,
+    stats?.streak ?? 0
+  )
 
   if (loading) {
     return (
@@ -186,16 +263,12 @@ export default function InsightsPage() {
             <p className="text-slate-500 dark:text-slate-400 font-semibold uppercase tracking-widest text-xs">Track your productivity journey — <span className="text-emerald-600 dark:text-emerald-400 italic">Satori</span></p>
           </div>
 
-          {hasNoData && (
-            <div className="reveal-staggered delay-1">
-              <InsightsDemoBanner showDemo={showDemo} onToggleDemo={() => setShowDemo(!showDemo)} />
-            </div>
-          )}
+
 
           <div className="grid grid-cols-1 gap-8">
             {/* 1. Habit Streak & Weekly Growth */}
             <div className="reveal-staggered delay-2">
-              <WeeklyStats showDemo={showDemo} />
+              <WeeklyStats />
             </div>
 
             {/* Peak Focus & Achievements Card Row */}
@@ -240,30 +313,59 @@ export default function InsightsPage() {
               </Card>
 
               {/* Achievements Grid */}
-              <Card className="card-zen p-6 border border-slate-200/50 dark:border-slate-800/40 relative overflow-hidden group hover:scale-[1.01] transition-transform duration-300">
-                <div className="absolute top-0 right-0 w-36 h-36 bg-emerald-505/5 rounded-full blur-3xl pointer-events-none group-hover:bg-emerald-505/10 transition-colors duration-1000" />
+              <Card className="card-zen p-6 border border-slate-200/50 dark:border-slate-800/40 relative overflow-hidden group">
+                <div className="absolute top-0 right-0 w-36 h-36 bg-emerald-500/5 rounded-full blur-3xl pointer-events-none group-hover:bg-emerald-500/10 transition-colors duration-1000" />
                 <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100 uppercase tracking-wider mb-5 flex items-center gap-2">
                   <Icons.sparkles className="w-4 h-4 text-emerald-500" />
                   Growth Achievements
                 </h3>
 
-                <div className="grid grid-cols-5 gap-3 mt-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
                   {evaluatedBadges.map((badge) => (
-                    <div key={badge.id} className="group/badge relative flex flex-col items-center">
-                      <div className={`w-12 h-12 rounded-2xl border flex items-center justify-center text-xl transition-all duration-300 ${
-                        badge.unlocked 
-                          ? `bg-gradient-to-br ${badge.color} text-white border-transparent shadow-md hover:scale-110` 
-                          : 'bg-slate-100 dark:bg-slate-800 border-slate-200 dark:border-slate-700 opacity-40 grayscale'
-                      }`}>
-                        {badge.unlocked ? badge.icon : "🔒"}
+                    <div
+                      key={badge.id}
+                      className={`relative overflow-hidden card-zen p-4 border flex items-center gap-4 group transition-all duration-300 hover:scale-[1.02] hover:shadow-md ${
+                        badge.unlocked
+                          ? 'border-emerald-500/20 dark:border-emerald-500/10'
+                          : 'border-slate-200/50 dark:border-slate-800/40 opacity-75'
+                      }`}
+                    >
+                      {/* Left: Badge Icon */}
+                      <div className="relative flex-shrink-0">
+                        <div
+                          className={`w-12 h-12 rounded-2xl border flex items-center justify-center text-xl transition-transform duration-500 group-hover:scale-110 ${
+                            badge.unlocked
+                              ? `bg-gradient-to-br ${badge.color} text-white border-transparent shadow-md`
+                              : 'bg-slate-100 dark:bg-slate-800 border-slate-200 dark:border-slate-700 opacity-40 grayscale'
+                          }`}
+                        >
+                          {badge.icon}
+                        </div>
+                        {!badge.unlocked && (
+                          <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-slate-900 dark:bg-slate-800 rounded-full border border-slate-700/50 flex items-center justify-center text-[8px] text-white">
+                            🔒
+                          </div>
+                        )}
                       </div>
-                      {/* Tooltip on hover */}
-                      <div className="absolute bottom-14 hidden group-hover/badge:flex flex-col items-center w-36 text-center z-50 bg-slate-900 dark:bg-slate-950 text-white rounded-xl p-2 shadow-lg text-[9px] leading-tight border border-slate-700/50">
-                        <p className="font-bold">{badge.name}</p>
-                        <p className="opacity-75 mt-0.5">{badge.desc}</p>
-                        <span className={`mt-1 inline-block font-black uppercase text-[8px] tracking-wider ${badge.unlocked ? 'text-emerald-400' : 'text-slate-400'}`}>
-                          {badge.unlocked ? 'Unlocked' : 'Locked'}
-                        </span>
+
+                      {/* Right: Info & Progress */}
+                      <div className="flex-grow min-w-0 space-y-1.5">
+                        <div className="flex items-center justify-between gap-2">
+                          <h4 className="text-sm font-bold text-slate-800 dark:text-slate-250 truncate">{badge.name}</h4>
+                          <span className="text-[10px] font-black text-slate-450 dark:text-slate-500 shrink-0">
+                            {badge.current} / {badge.target}
+                          </span>
+                        </div>
+                        
+                        <p className="text-[10px] text-slate-500 dark:text-slate-400 leading-tight line-clamp-1">{badge.desc}</p>
+                        
+                        {/* Progress Bar */}
+                        <div className="h-1 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+                          <div
+                            className={`h-full rounded-full transition-all duration-500 bg-gradient-to-r ${badge.color}`}
+                            style={{ width: `${Math.min((badge.current / badge.target) * 100, 100)}%` }}
+                          />
+                        </div>
                       </div>
                     </div>
                   ))}
@@ -277,12 +379,12 @@ export default function InsightsPage() {
 
             {/* 2. Qualitative Insights & Levels */}
             <div className="reveal-staggered delay-3">
-              <ProductivityTrends showDemo={showDemo} />
+              <ProductivityTrends />
             </div>
 
             {/* 3. Detailed Quantitative Charts */}
             <div className="reveal-staggered delay-4">
-              <ProductivityCharts showDemo={showDemo} />
+              <ProductivityCharts />
             </div>
           </div>
         </div>

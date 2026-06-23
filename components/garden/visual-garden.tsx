@@ -7,6 +7,7 @@ import { useTheme } from "next-themes"
 import { useWeather } from "@/hooks/use-weather"
 import { toast } from "sonner"
 import { playWatering, playPlanting, playUnlock } from "@/lib/sounds"
+import { Dialog, DialogContent } from "@/components/ui/dialog"
 
 
 interface Plant { id?: string; x: number; y: number; type: "flower" | "tree"; subtype: string; color: string; scale: number; growth: number; delay: number; swayOffset: number; swaySpeed: number; seed: number; targetGrowth?: number }
@@ -1648,85 +1649,80 @@ export function VisualGarden({ onAddPlant }: { onAddPlant?: () => void }) {
                 </div>
             </CardHeader>
 
-            {showStore && (
-                <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/20 dark:bg-slate-900/60 backdrop-blur-sm animate-in fade-in" onClick={() => setShowStore(false)}>
-                    <div 
-                        className="relative w-full max-w-md bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border border-slate-200 dark:border-slate-700 rounded-3xl shadow-2xl mx-4 animate-in zoom-in-95 overflow-hidden flex flex-col max-h-[80vh]"
-                        onClick={e => e.stopPropagation()}
-                    >
-                        <div className="p-4 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center bg-emerald-50/50 dark:bg-emerald-950/20">
-                            <div>
-                                <h3 className="font-bold text-emerald-900 dark:text-emerald-100 flex items-center gap-2">
-                                    <Icons.flower className="w-5 h-5" /> The Nursery {gardenView === "shared" && "(Co-op)"}
-                                </h3>
-                                <p className="text-xs text-emerald-600 dark:text-emerald-400">
-                                    {gardenView === "shared" 
-                                        ? "Spend pooled resources to customize your shared garden" 
-                                        : "Spend resources to customize your garden"}
-                                </p>
-                            </div>
-                            <button onClick={() => setShowStore(false)} className="w-8 h-8 rounded-full bg-white dark:bg-slate-800 flex items-center justify-center text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 shadow-sm border border-slate-200 dark:border-slate-700">
-                                <Icons.close className="w-4 h-4" />
-                            </button>
-                        </div>
-                        
-                        <div className="p-4 overflow-y-auto custom-scrollbar flex-1">
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                {NURSERY_ITEMS.map(item => {
-                                    const canAfford = gardenView === "shared"
-                                        ? (sharedGarden?.sunlightPool || 0) >= item.costSunlight && (sharedGarden?.waterPool || 0) >= item.costWater
-                                        : (settings?.sunlight || 0) >= item.costSunlight && (settings?.waterdrops || 0) >= item.costWater
-                                    return (
-                                        <div key={item.id} className={`flex flex-col p-3 rounded-xl border ${canAfford ? 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:border-emerald-300 dark:hover:border-emerald-700' : 'bg-slate-50 dark:bg-slate-900/50 border-slate-100 dark:border-slate-800 opacity-70'} transition-all`}>
-                                            <div className="flex items-start justify-between mb-2">
-                                                <div className="flex items-center gap-2">
-                                                    <span className="text-2xl">{item.icon}</span>
-                                                    <div>
-                                                        <h4 className="font-bold text-sm text-slate-800 dark:text-slate-200">{item.name}</h4>
-                                                        <p className="text-[10px] text-slate-500">{item.desc}</p>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div className="mt-auto pt-3 flex items-center justify-between border-t border-slate-100 dark:border-slate-700/50">
-                                                <div className="flex gap-2">
-                                                    <span className="text-xs font-bold text-amber-500 flex items-center gap-1"><Icons.sun className="w-3 h-3"/>{item.costSunlight}</span>
-                                                    <span className="text-xs font-bold text-blue-500 flex items-center gap-1"><Icons.droplets className="w-3 h-3"/>{item.costWater}</span>
-                                                </div>
-                                                <button 
-                                                    onClick={() => startPlacement(item)}
-                                                    disabled={!canAfford}
-                                                    className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${canAfford ? 'bg-emerald-500 hover:bg-emerald-600 text-white shadow-md hover:shadow-emerald-500/30 active:scale-95' : 'bg-slate-200 dark:bg-slate-800 text-slate-400 cursor-not-allowed'}`}
-                                                >
-                                                    Select
-                                                </button>
-                                            </div>
-                                        </div>
-                                    )
-                                })}
-                            </div>
-                            
-                            {/* Quick resource boost for testing */}
-                            <button 
-                                onClick={() => {
-                                    if (gardenView === "shared") {
-                                        updateSharedGarden({
-                                            sunlightPool: (sharedGarden?.sunlightPool || 0) + 500,
-                                            waterPool: (sharedGarden?.waterPool || 0) + 100
-                                        }).catch(() => {})
-                                        toast.success("Added +500 ☀️ and +100 💧 to Co-op pool!")
-                                    } else {
-                                        updateSettings({ sunlight: (settings?.sunlight || 0) + 500, waterdrops: (settings?.waterdrops || 0) + 100 })
-                                        toast.success("Added +500 ☀️ and +100 💧!")
-                                    }
-                                }}
-                                className="w-full mt-4 p-2.5 bg-gradient-to-r from-amber-50 to-blue-50 dark:from-amber-950/20 dark:to-blue-950/20 hover:from-amber-100 hover:to-blue-100 dark:hover:from-amber-950/40 dark:hover:to-blue-950/40 text-xs font-semibold rounded-xl border border-amber-200/50 dark:border-amber-800/30 text-slate-600 dark:text-slate-300 transition-colors"
-                            >
-                                🎁 Bonus: +500 ☀️  +100 💧 {gardenView === "shared" && "(Co-op)"}
-                            </button>
+            <Dialog open={showStore} onOpenChange={setShowStore}>
+                <DialogContent className="w-full max-w-md p-0 overflow-hidden border border-slate-200 dark:border-slate-700 bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl rounded-3xl shadow-2xl flex flex-col max-h-[85vh] gap-0">
+                    <div className="p-4 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center bg-emerald-50/50 dark:bg-emerald-950/20">
+                        <div>
+                            <h3 className="font-bold text-emerald-900 dark:text-emerald-100 flex items-center gap-2">
+                                <Icons.flower className="w-5 h-5 animate-pulse" /> The Nursery {gardenView === "shared" && "(Co-op)"}
+                            </h3>
+                            <p className="text-xs text-emerald-600 dark:text-emerald-400 mt-0.5">
+                                {gardenView === "shared" 
+                                    ? "Spend pooled resources to plant seeds in the shared garden" 
+                                    : "Spend resources to plant seeds in your garden"}
+                            </p>
                         </div>
                     </div>
-                </div>
-            )}
+                    
+                    <div className="p-4 overflow-y-auto custom-scrollbar flex-1">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            {NURSERY_ITEMS.map(item => {
+                                const canAfford = gardenView === "shared"
+                                    ? (sharedGarden?.sunlightPool || 0) >= item.costSunlight && (sharedGarden?.waterPool || 0) >= item.costWater
+                                    : (settings?.sunlight || 0) >= item.costSunlight && (settings?.waterdrops || 0) >= item.costWater
+                                return (
+                                    <div key={item.id} className={`flex flex-col p-3 rounded-2xl border transition-all duration-200 ${canAfford ? 'bg-white dark:bg-slate-800/60 border-slate-200 dark:border-slate-700 hover:border-emerald-300 dark:hover:border-emerald-700 shadow-sm hover:shadow' : 'bg-slate-50 dark:bg-slate-900/50 border-slate-100 dark:border-slate-800/80 opacity-70'}`}>
+                                        <div className="flex items-start justify-between mb-2">
+                                            <div className="flex items-center gap-2">
+                                                <span className="text-2xl">{item.icon}</span>
+                                                <div>
+                                                    <h4 className="font-bold text-sm text-slate-850 dark:text-slate-250">{item.name}</h4>
+                                                    <p className="text-[10px] text-slate-500 leading-normal">{item.desc}</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div className="mt-auto pt-3 flex items-center justify-between border-t border-slate-100 dark:border-slate-700/50">
+                                            <div className="flex flex-col gap-0.5">
+                                                <span className="text-[10px] font-bold text-amber-500 flex items-center gap-1"><Icons.sun className="w-3 h-3"/>{item.costSunlight}</span>
+                                                <span className="text-[10px] font-bold text-blue-500 flex items-center gap-1"><Icons.droplets className="w-3 h-3"/>{item.costWater}</span>
+                                            </div>
+                                            <button 
+                                                onClick={() => {
+                                                    setShowStore(false)
+                                                    startPlacement(item)
+                                                }}
+                                                disabled={!canAfford}
+                                                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${canAfford ? 'bg-emerald-500 hover:bg-emerald-600 text-white shadow-md hover:shadow-emerald-500/30 active:scale-95' : 'bg-slate-200 dark:bg-slate-800 text-slate-400 cursor-not-allowed'}`}
+                                            >
+                                                Select
+                                            </button>
+                                        </div>
+                                    </div>
+                                )
+                            })}
+                        </div>
+                        
+                        {/* Quick resource boost for testing */}
+                        <button 
+                            onClick={() => {
+                                if (gardenView === "shared") {
+                                    updateSharedGarden({
+                                        sunlightPool: (sharedGarden?.sunlightPool || 0) + 500,
+                                        waterPool: (sharedGarden?.waterPool || 0) + 100
+                                    }).catch(() => {})
+                                    toast.success("Added +500 ☀️ and +100 💧 to Co-op pool!")
+                                } else {
+                                    updateSettings({ sunlight: (settings?.sunlight || 0) + 500, waterdrops: (settings?.waterdrops || 0) + 100 })
+                                    toast.success("Added +500 ☀️ and +100 💧!")
+                                }
+                            }}
+                            className="w-full mt-4 p-2.5 bg-gradient-to-r from-amber-50 to-blue-50 dark:from-amber-950/20 dark:to-blue-950/20 hover:from-amber-100 hover:to-blue-100 dark:hover:from-amber-950/40 dark:hover:to-blue-950/40 text-xs font-semibold rounded-xl border border-amber-200/50 dark:border-amber-800/30 text-slate-600 dark:text-slate-350 transition-colors"
+                        >
+                            🎁 Bonus: +500 ☀️  +100 💧 {gardenView === "shared" && "(Co-op)"}
+                        </button>
+                    </div>
+                </DialogContent>
+            </Dialog>
 
             <div className="w-full relative bg-slate-50 dark:bg-slate-900 transition-colors duration-700 flex-1 overflow-x-auto overflow-y-hidden custom-scrollbar">
                 <div 

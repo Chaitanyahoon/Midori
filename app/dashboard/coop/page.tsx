@@ -738,7 +738,18 @@ export default function CoopPage() {
                                     const isMature = plant.status === "mature" || nurture >= 100
                                     const name = PLANT_NAMES[plant.subtype] || plant.subtype || "Unknown Plant"
                                     const plantIcons: Record<string, string> = {
-                                        sakura: "🌸", maple: "🍁", pine: "🌲", sunflower: "🌻", tulip: "🌷", orchid: "🌺"
+                                        sakura: "🌸",
+                                        maple: "🍁",
+                                        pine: "🌲",
+                                        jacaranda: "🌳",
+                                        sunflower: "🌻",
+                                        tulip: "🌷",
+                                        orchid: "🌺",
+                                        marigold: "🌼",
+                                        snowdrop: "❄️",
+                                        lily: "🪷",
+                                        chrysanthemum: "🏵️",
+                                        snowflower: "💮"
                                     }
                                     const icon = plantIcons[plant.subtype] || (plant.type === 'tree' ? '🌳' : '🌱')
                                     

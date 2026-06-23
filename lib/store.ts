@@ -10,6 +10,7 @@ interface Notification {
     isRead: boolean
     type?: "warning" | "info" | "success"
     priority?: "low" | "medium" | "high" | string
+    path?: string
 }
 
 interface UIStore {
@@ -28,6 +29,7 @@ interface UIStore {
     addNotification: (notification: Omit<Notification, "id" | "isRead">) => void
     markNotificationAsRead: (id: string) => void
     markAllNotificationsAsRead: () => void
+    removeNotification: (id: string) => void
     clearNotifications: () => void
 }
 
@@ -42,6 +44,7 @@ export const useUIStore = create<UIStore>((set) => ({
             message: "Start by setting up your first task or pomodoro session.",
             time: new Date().toISOString(),
             isRead: false,
+            path: "/dashboard/tasks",
         },
     ],
 
@@ -75,6 +78,11 @@ export const useUIStore = create<UIStore>((set) => ({
     markAllNotificationsAsRead: () =>
         set((state) => ({
             notifications: state.notifications.map((n) => ({ ...n, isRead: true })),
+        })),
+
+    removeNotification: (id) =>
+        set((state) => ({
+            notifications: state.notifications.filter((n) => n.id !== id),
         })),
 
     clearNotifications: () => set({ notifications: [] }),

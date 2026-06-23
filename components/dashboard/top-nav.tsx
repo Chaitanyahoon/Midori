@@ -13,13 +13,23 @@ import { SettingsDialog } from "@/components/dashboard/settings-dialog"
 import { ModeToggle } from "@/components/mode-toggle"
 import { useUIStore } from "@/lib/store"
 import { useAuth } from "@/components/auth-provider"
-import { usePathname } from "next/navigation"
+import { usePathname, useRouter } from "next/navigation"
 
 export function TopNav() {
   const pathname = usePathname()
+  const router = useRouter()
   const { tasks, pomodoros, settings } = useData()
   const { user, signOut } = useAuth()
-  const { setAIModalOpen, setSidebarOpen, notifications, markAllNotificationsAsRead, addNotification, markNotificationAsRead } = useUIStore()
+  const {
+    setAIModalOpen,
+    setSidebarOpen,
+    notifications,
+    markAllNotificationsAsRead,
+    addNotification,
+    markNotificationAsRead,
+    removeNotification,
+    clearNotifications,
+  } = useUIStore()
 
   const getPageTitle = (path: string) => {
     if (path === "/dashboard") return "Growth Hub"
@@ -70,6 +80,7 @@ export function TopNav() {
         message: `"${task.title}" needs attention - overdue since ${new Date(task.dueDate!).toLocaleDateString()}`,
         time: task.dueDate!,
         priority: task.priority,
+        path: "/dashboard/tasks",
       })),
       ...todayTasks.map((task) => ({
         type: "info" as const,
@@ -77,6 +88,7 @@ export function TopNav() {
         message: `"${task.title}" is ready for completion today`,
         time: task.dueDate!,
         priority: task.priority,
+        path: "/dashboard/tasks",
       })),
       ...recentCompletions.slice(0, 3).map((task) => {
         const app = getAppreciation(task.title, { userName, tone: userTone || 'balanced' })
@@ -86,6 +98,7 @@ export function TopNav() {
           message: app.message,
           time: task.completedAt!,
           priority: task.priority,
+          path: "/dashboard/insights",
         }
       }),
     ]
@@ -98,6 +111,7 @@ export function TopNav() {
         message: `You've cultivated ${todayPomodoros} focus sessions today - your productivity forest is thriving!`,
         time: new Date().toISOString(),
         priority: "medium" as const,
+        path: "/dashboard/pomodoro",
       })
     }
 
@@ -120,9 +134,9 @@ export function TopNav() {
   const getNotificationIcon = (type: string) => {
     switch (type) {
       case "warning":
-        return <Icons.droplets className="w-4 h-4 text-orange-500" />
+        return <Icons.droplets className="w-4 h-4 text-orange-500 animate-bounce" style={{ animationDuration: '3s' }} />
       case "info":
-        return <Icons.sun className="w-4 h-4 text-blue-500" />
+        return <Icons.sun className="w-4 h-4 text-blue-500 animate-spin" style={{ animationDuration: '10s' }} />
       case "success":
         return <Icons.flower className="w-4 h-4 text-green-500" />
       default:
@@ -133,13 +147,13 @@ export function TopNav() {
   const getNotificationBg = (type: string) => {
     switch (type) {
       case "warning":
-        return "bg-gradient-to-r from-orange-50 to-yellow-50 border-orange-200/50"
+        return "bg-gradient-to-r from-orange-50/70 to-yellow-50/70 dark:from-amber-950/20 dark:to-orange-950/20 border-orange-200/50 dark:border-orange-900/30"
       case "info":
-        return "bg-gradient-to-r from-blue-50 to-sky-50 border-blue-200/50"
+        return "bg-gradient-to-r from-blue-50/70 to-sky-50/70 dark:from-blue-950/20 dark:to-sky-950/20 border-blue-200/50 dark:border-blue-900/30"
       case "success":
-        return "bg-gradient-to-r from-green-50 to-emerald-50 border-green-200/50"
+        return "bg-gradient-to-r from-green-50/70 to-emerald-50/70 dark:from-emerald-950/20 dark:to-green-950/20 border-green-200/50 dark:border-green-900/30"
       default:
-        return "bg-gradient-to-r from-gray-50 to-slate-50 border-gray-200/50"
+        return "bg-gradient-to-r from-gray-50/70 to-slate-50/70 dark:from-slate-800/40 dark:to-slate-900/40 border-gray-200/50 dark:border-slate-800/50"
     }
   }
 
@@ -235,32 +249,46 @@ export function TopNav() {
               <Button
                 variant="ghost"
                 size="icon"
-                className="relative w-10 h-10 rounded-full hover:bg-emerald-50 transition-all duration-300 border border-transparent hover:border-emerald-200"
+                className="relative w-10 h-10 rounded-full hover:bg-emerald-50 dark:hover:bg-slate-800 transition-all duration-300 border border-transparent hover:border-emerald-200 dark:hover:border-slate-700"
               >
-                <div className="w-5 h-5 text-emerald-600">
+                <div className="w-5 h-5 text-emerald-600 dark:text-emerald-450">
                   <Icons.bell className="w-full h-full" />
                 </div>
                 {unreadCount > 0 && (
-                  <div className="absolute -top-1 -right-1 w-5 h-5 bg-gradient-to-br from-emerald-500 to-teal-600 text-white text-[10px] font-medium rounded-full flex items-center justify-center shadow-lg border border-white">
+                  <div className="absolute -top-1 -right-1 w-5 h-5 bg-gradient-to-br from-emerald-500 to-teal-600 text-white text-[10px] font-medium rounded-full flex items-center justify-center shadow-lg border border-white dark:border-slate-900">
                     {unreadCount > 9 ? "9+" : unreadCount}
                   </div>
                 )}
               </Button>
             </PopoverTrigger>
             <PopoverContent
-              className="w-96 p-0 rounded-3xl border-green-200/30 shadow-organic-xl glass-heavy overflow-hidden"
+              className="w-96 p-0 rounded-3xl border-green-200/30 dark:border-slate-800 shadow-organic-xl dark:shadow-black/45 glass-heavy overflow-hidden bg-white/95 dark:bg-slate-950/95"
               align="end"
             >
               {/* Header */}
-              <div className="p-6 border-b border-green-100/50 bg-gradient-to-r from-green-50/50 to-emerald-50/30">
-                <div className="flex items-center space-x-3">
-                  <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-emerald-600 rounded-full flex items-center justify-center shadow-md">
-                    <Icons.flower className="w-6 h-6 text-white" />
+              <div className="p-6 border-b border-green-100/50 dark:border-slate-800/50 bg-gradient-to-r from-green-50/50 to-emerald-50/30 dark:from-slate-900/50 dark:to-emerald-950/10">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-emerald-600 rounded-full flex items-center justify-center shadow-md">
+                      <Icons.flower className="w-6 h-6 text-white" />
+                    </div>
+                    <div>
+                      <h3 className="font-bold text-green-800 dark:text-emerald-400 text-lg">Garden Updates</h3>
+                      <p className="text-sm text-green-600 dark:text-emerald-500/80">{unreadCount} new growth notifications</p>
+                    </div>
                   </div>
-                  <div>
-                    <h3 className="font-bold text-green-800 text-lg">Garden Updates</h3>
-                    <p className="text-sm text-green-600">{unreadCount} new growth notifications</p>
-                  </div>
+                  {notifications.length > 0 && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="text-xs text-slate-400 hover:text-red-500 dark:hover:text-red-400 hover:bg-red-50/50 dark:hover:bg-red-950/20 rounded-full px-2.5 h-8 flex items-center gap-1 transition-all"
+                      onClick={() => clearNotifications()}
+                      title="Clear all notifications"
+                    >
+                      <Icons.trash className="w-3.5 h-3.5" />
+                      <span className="hidden sm:inline">Clear all</span>
+                    </Button>
+                  )}
                 </div>
               </div>
 
@@ -268,11 +296,11 @@ export function TopNav() {
               <ScrollArea className="h-80">
                 {notifications.length === 0 ? (
                   <div className="p-8 text-center">
-                    <div className="w-20 h-20 bg-gradient-to-br from-green-100 to-emerald-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                      <Icons.seedling className="w-10 h-10 text-green-500" />
+                    <div className="w-20 h-20 bg-gradient-to-br from-green-100 to-emerald-100 dark:from-emerald-950/30 dark:to-green-950/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <Icons.seedling className="w-10 h-10 text-green-500 dark:text-emerald-400" />
                     </div>
-                    <h4 className="font-semibold text-green-700 mb-2">Your garden is peaceful</h4>
-                    <p className="text-sm text-green-600">All tasks are growing beautifully 🌿</p>
+                    <h4 className="font-semibold text-green-700 dark:text-emerald-400 mb-2">Your garden is peaceful</h4>
+                    <p className="text-sm text-green-600 dark:text-emerald-500/80">All tasks are growing beautifully 🌿</p>
                   </div>
                 ) : (
                   <div className="p-4 space-y-3">
@@ -281,35 +309,79 @@ export function TopNav() {
                       return (
                         <div
                           key={notification.id}
-                          className={`p-4 rounded-3xl border ${getNotificationBg(notification.type || "info")} hover:shadow-organic transition-all duration-200 animate-grow-in ${isRead ? "opacity-60" : ""
+                          className={`p-4 rounded-2xl border ${getNotificationBg(notification.type || "info")} hover:shadow-md dark:hover:shadow-black/20 transition-all duration-200 animate-grow-in cursor-pointer relative group ${isRead ? "opacity-60 hover:opacity-90" : ""
                             }`}
-                          style={{ animationDelay: `${index * 0.1}s` }}
-                          onClick={() => markNotificationAsRead(notification.id)}
+                          style={{ animationDelay: `${index * 0.05}s` }}
+                          onClick={() => {
+                            markNotificationAsRead(notification.id)
+                            if (notification.path) {
+                              router.push(notification.path)
+                            }
+                          }}
                         >
-                          <div className="flex items-start space-x-3">
-                            <div className="flex-shrink-0 mt-1">{getNotificationIcon(notification.type || "info")}</div>
+                          {/* Unread status dot */}
+                          {!isRead && (
+                            <span className="absolute top-4 right-4 flex h-2 w-2">
+                              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                              <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                            </span>
+                          )}
+
+                          <div className="flex items-start space-x-3 pr-4">
+                            <div className="flex-shrink-0 mt-1 p-1.5 rounded-lg bg-white/85 dark:bg-slate-900/50 shadow-sm border border-slate-100 dark:border-slate-800">
+                              {getNotificationIcon(notification.type || "info")}
+                            </div>
                             <div className="flex-1 min-w-0">
-                              <div className="flex items-center justify-between mb-1">
-                                <p className="text-sm font-semibold text-gray-900">{notification.title}</p>
-                                <span className="text-xs text-gray-500 font-medium">
-                                  {formatNotificationTime(notification.time)}
-                                </span>
+                              <div className="flex items-center justify-between mb-0.5">
+                                <p className="text-sm font-semibold text-slate-850 dark:text-slate-100 truncate pr-2">
+                                  {notification.title}
+                                </p>
                               </div>
-                              <p className="text-sm text-gray-700 leading-relaxed">{notification.message}</p>
-                              {notification.priority && (
-                                <Badge
-                                  className={`mt-3 text-xs rounded-xl ${notification.priority === "high"
-                                    ? "bg-red-50 border-red-200 text-red-700"
-                                    : notification.priority === "medium"
-                                      ? "bg-yellow-50 border-yellow-200 text-yellow-700"
-                                      : "bg-green-50 border-green-200 text-green-700"
+                              <p className="text-[10px] text-slate-400 dark:text-slate-500 font-semibold mb-1.5">
+                                {formatNotificationTime(notification.time)}
+                              </p>
+                              <p className="text-sm text-slate-650 dark:text-slate-300 leading-relaxed font-normal">
+                                {notification.message}
+                              </p>
+                              <div className="flex items-center justify-between mt-3 flex-wrap gap-2">
+                                {notification.path ? (
+                                  <span className="text-xs font-semibold text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300 flex items-center gap-1 group/btn transition-colors duration-150">
+                                    {notification.type === "warning" ? "Go Resolve" : notification.type === "success" ? "View Insights" : "Get Started"}
+                                    <Icons.chevronRight className="w-3 h-3 transform group-hover/btn:translate-x-0.5 transition-transform" />
+                                  </span>
+                                ) : (
+                                  <span />
+                                )}
+                                {notification.priority && (
+                                  <Badge
+                                    className={`text-[9px] uppercase tracking-wider font-semibold rounded-lg px-2 py-0.5 border ${
+                                      notification.priority === "high"
+                                        ? "bg-red-505/10 border-red-500/20 text-red-600 dark:text-red-450"
+                                        : notification.priority === "medium"
+                                          ? "bg-amber-500/10 border-amber-500/20 text-amber-600 dark:text-amber-450"
+                                          : "bg-emerald-505/10 border-emerald-500/20 text-emerald-600 dark:text-emerald-400"
                                     }`}
-                                >
-                                  {notification.priority} priority
-                                </Badge>
-                              )}
+                                  >
+                                    {notification.priority} priority
+                                  </Badge>
+                                )}
+                              </div>
                             </div>
                           </div>
+
+                          {/* Dismiss button */}
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="absolute top-2 right-2 w-6 h-6 rounded-full opacity-0 group-hover:opacity-100 hover:bg-slate-200/50 dark:hover:bg-slate-800/50 text-slate-400 hover:text-slate-600 dark:hover:text-slate-350 transition-all duration-150"
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              removeNotification(notification.id)
+                            }}
+                            title="Dismiss notification"
+                          >
+                            <Icons.close className="w-3.5 h-3.5" />
+                          </Button>
                         </div>
                       )
                     })}
@@ -319,11 +391,11 @@ export function TopNav() {
 
               {/* Footer */}
               {notifications.length > 0 && (
-                <div className="p-4 border-t border-green-100/50 bg-gradient-to-r from-green-50/30 to-emerald-50/20 rounded-b-3xl">
+                <div className="p-4 border-t border-green-100/50 dark:border-slate-800/50 bg-gradient-to-r from-green-50/30 to-emerald-50/20 dark:from-slate-900/40 dark:to-emerald-950/10 rounded-b-3xl flex gap-2">
                   <Button
                     variant="ghost"
                     onClick={() => markAllNotificationsAsRead()}
-                    className="w-full text-sm text-green-600 hover:text-green-700 hover:bg-green-50/50 rounded-3xl font-medium py-3 transition-all duration-200"
+                    className="flex-1 text-xs text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300 hover:bg-emerald-50/50 dark:hover:bg-emerald-950/20 rounded-full font-semibold py-2.5 transition-all duration-200"
                   >
                     Mark all as read
                   </Button>

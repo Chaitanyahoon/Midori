@@ -1,6 +1,6 @@
 import { initializeApp, getApps } from "firebase/app"
 import { getAuth } from "firebase/auth"
-import { getFirestore } from "firebase/firestore"
+import { getFirestore, initializeFirestore } from "firebase/firestore"
 
 // Only initialize Firebase in the browser. This prevents server-side
 // initialization during SSR where env vars may be missing and causes a 500.
@@ -30,7 +30,13 @@ if (typeof window !== "undefined") {
     try {
         app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0]
         auth = getAuth(app)
-        db = getFirestore(app)
+        try {
+            db = initializeFirestore(app, {
+                experimentalForceLongPolling: true,
+            })
+        } catch (err) {
+            db = getFirestore(app)
+        }
         // Optional: expose for debugging in dev only
         if (process.env.NODE_ENV === "development") {
             // eslint-disable-next-line no-console

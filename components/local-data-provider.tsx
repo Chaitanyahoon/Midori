@@ -62,7 +62,9 @@ export interface SharedGardenPin {
   user: string
   timestamp: string
   color: string
+  reactions?: Record<string, number>
 }
+
 
 export interface SharedGarden {
   id: string
@@ -72,6 +74,7 @@ export interface SharedGarden {
   plants: any[]
   activityLog?: SharedGardenLogEntry[]
   pins?: SharedGardenPin[]
+  storage?: any[]
 }
 
 export interface UserSettings {
@@ -85,6 +88,7 @@ export interface UserSettings {
   sunlight: number
   waterdrops: number
   gardenPlants?: any[]
+  gardenStorage?: any[]
   activeSharedGardenId?: string | null
 }
 

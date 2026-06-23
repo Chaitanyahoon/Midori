@@ -21,9 +21,12 @@ interface ChatMessage {
 interface CoopSign {
     id: string
     text: string
-    userName: string
-    createdAt: string
+    user: string
+    timestamp: string
+    color: string
+    reactions?: Record<string, number>
 }
+
 
 const PLANT_NAMES: Record<string, string> = {
     sakura: "Sakura Tree",
@@ -199,6 +202,33 @@ export default function CoopPage() {
             toast.error("Failed to pin sign")
         }
     }
+
+    const handleReactToSign = async (signId: string, emoji: string) => {
+        if (!sharedGarden) return
+        const pins = sharedGarden.pins || []
+        const updatedPins = pins.map((p: any) => {
+            if (p.id === signId) {
+                const reactions = p.reactions || {}
+                const currentCount = reactions[emoji] || 0
+                return {
+                    ...p,
+                    reactions: {
+                        ...reactions,
+                        [emoji]: currentCount + 1
+                    }
+                }
+            }
+            return p
+        })
+
+        try {
+            await updateSharedGarden({ pins: updatedPins })
+        } catch (e) {
+            console.error("Reaction update error:", e)
+            toast.error("Failed to add reaction")
+        }
+    }
+
 
     // Cross-tab real-time sync for offline/mock messages
     useEffect(() => {
@@ -904,29 +934,50 @@ export default function CoopPage() {
                                     <p className="text-xs text-slate-400 italic">No signs pinned yet. Be the first to write a message!</p>
                                 ) : (
                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                        {pins.map(sign => (
-                                            <div
-                                                key={sign.id}
-                                                className={`border rounded-2xl shadow-md p-5 relative pt-7 flex flex-col justify-between hover:scale-[1.02] transition-transform duration-250 ${
-                                                    pinColors[sign.color] || pinColors.yellow
-                                                }`}
-                                            >
-                                                {/* Tack */}
-                                                <div className="w-2.5 h-2.5 bg-rose-600 rounded-full absolute top-2.5 left-1/2 -translate-x-1/2 border border-rose-800 shadow" />
-                                                
-                                                <p className="text-sm font-medium leading-relaxed italic">
-                                                    "{sign.text}"
-                                                </p>
-                                                
-                                                <div className="flex justify-between items-center mt-4 border-t border-slate-500/10 pt-2 text-[10px] opacity-75 font-bold">
-                                                    <span>By {sign.user}</span>
-                                                    <span>
-                                                        {new Date(sign.timestamp).toLocaleDateString([], { month: "short", day: "numeric" })}
-                                                    </span>
+                                        {pins.map(sign => {
+                                            const reactions = sign.reactions || {}
+                                            return (
+                                                <div
+                                                    key={sign.id}
+                                                    className={`border rounded-2xl shadow-md p-5 relative pt-7 flex flex-col justify-between hover:scale-[1.02] transition-transform duration-250 ${
+                                                        pinColors[sign.color] || pinColors.yellow
+                                                    }`}
+                                                >
+                                                    {/* Tack */}
+                                                    <div className="w-2.5 h-2.5 bg-rose-600 rounded-full absolute top-2.5 left-1/2 -translate-x-1/2 border border-rose-800 shadow" />
+                                                    
+                                                    <p className="text-sm font-medium leading-relaxed italic">
+                                                        "{sign.text}"
+                                                    </p>
+                                                    
+                                                    {/* Reactions buttons */}
+                                                    <div className="flex gap-1.5 flex-wrap mt-3.5">
+                                                        {["❤️", "👍", "🌟", "💧"].map(emoji => {
+                                                            const count = reactions[emoji] || 0
+                                                            return (
+                                                                <button
+                                                                    key={emoji}
+                                                                    onClick={() => handleReactToSign(sign.id, emoji)}
+                                                                    className="h-6 px-2 rounded-full bg-white/40 hover:bg-white/60 dark:bg-black/20 dark:hover:bg-black/35 border border-black/5 dark:border-white/5 flex items-center gap-1 text-[10px] font-bold transition-all active:scale-90"
+                                                                >
+                                                                    <span>{emoji}</span>
+                                                                    {count > 0 && <span>{count}</span>}
+                                                                </button>
+                                                            )
+                                                        })}
+                                                    </div>
+
+                                                    <div className="flex justify-between items-center mt-3 border-t border-slate-500/10 pt-2 text-[10px] opacity-75 font-bold">
+                                                        <span>By {sign.user}</span>
+                                                        <span>
+                                                            {new Date(sign.timestamp).toLocaleDateString([], { month: "short", day: "numeric" })}
+                                                        </span>
+                                                    </div>
                                                 </div>
-                                            </div>
-                                        ))}
+                                            )
+                                        })}
                                     </div>
+
                                 )
                             })()}
                         </div>

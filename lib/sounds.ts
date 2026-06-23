@@ -117,3 +117,24 @@ export function playPlanting() {
     /* silent fail */
   }
 }
+
+/** Hollow bamboo clack sound effect for Shishi-odoshi */
+export function playClack() {
+  try {
+    const ctx = getCtx();
+    const now = ctx.currentTime;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = "triangle";
+    osc.frequency.setValueAtTime(180, now);
+    osc.frequency.exponentialRampToValueAtTime(80, now + 0.08);
+    gain.gain.setValueAtTime(0.2, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.08);
+    osc.connect(gain).connect(ctx.destination);
+    osc.start(now);
+    osc.stop(now + 0.08);
+  } catch {
+    /* silent fail */
+  }
+}
+

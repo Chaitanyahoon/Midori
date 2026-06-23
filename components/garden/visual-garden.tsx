@@ -6,7 +6,7 @@ import { Icons } from "@/components/icons"
 import { useTheme } from "next-themes"
 import { useWeather } from "@/hooks/use-weather"
 import { toast } from "sonner"
-import { playWatering, playPlanting, playUnlock } from "@/lib/sounds"
+import { playWatering, playPlanting, playUnlock, playClack } from "@/lib/sounds"
 import { Dialog, DialogContent } from "@/components/ui/dialog"
 
 
@@ -145,6 +145,7 @@ export function VisualGarden({ onAddPlant }: { onAddPlant?: () => void }) {
     const [showStore, setShowStore] = useState(false)
     const [editMode, setEditMode] = useState(false)
     const [plantToPlace, setPlantToPlace] = useState<any>(null)
+    const [nurseryTab, setNurseryTab] = useState<"shop" | "storage">("shop")
     const [selectedPlantId, setSelectedPlantId] = useState<string | null>(null)
     const { theme } = useTheme()
     const { season, weather } = useWeather()
@@ -158,6 +159,15 @@ export function VisualGarden({ onAddPlant }: { onAddPlant?: () => void }) {
     const [lanternLit, setLanternLit] = useState(true)
     const mousePosRef = useRef({ x: 0.5, y: 0.5, isOver: false })
     const sparkleRef = useRef<{ x: number; y: number; vx: number; vy: number; life: number; color: string; size: number }[]>([])
+    const koiRef = useRef([
+        { x: 0.12, y: 0.83, angle: 0, targetX: 0.12, targetY: 0.83, speed: 0.0009, color: "#f97316" }, // Orange Koi
+        { x: 0.18, y: 0.86, angle: 2, targetX: 0.18, targetY: 0.86, speed: 0.0011, color: "#ef4444" }, // Red Koi
+        { x: 0.22, y: 0.84, angle: 4, targetX: 0.22, targetY: 0.84, speed: 0.0007, color: "#ffffff" }  // White/Tan Koi
+    ])
+    const foodRef = useRef<{ x: number; y: number; targetY: number; size: number }[]>([])
+    const windGustRef = useRef({ intensity: 0, duration: 0 })
+    const shishiFillRef = useRef(0)
+    const shishiAngleRef = useRef(0.25)
 
     const handleWaterPersonal = (plantId: string) => {
         const waterCost = 10
@@ -511,7 +521,7 @@ export function VisualGarden({ onAddPlant }: { onAddPlant?: () => void }) {
             np.push({
                 id: cp.id || `plant-${i}`,
                 x: cp.x, y: cp.y, type: cp.type as "flower" | "tree", subtype: cp.subtype,
-                color: "#A78BFA", scale: cp.scale || (cp.type === "tree" ? 0.75 : 0.5),
+                color: "#A78BFA", scale: cp.scale || (cp.type === "tree" ? 1.15 : 0.95),
                 growth: 0, delay: i * 50, swayOffset: sr(999 + i) * 10, swaySpeed: 0.015, seed: 999 + i,
                 targetGrowth
             })
@@ -548,6 +558,32 @@ export function VisualGarden({ onAddPlant }: { onAddPlant?: () => void }) {
             else { const h = new Date().getHours(); if (h >= 6 && h < 12) tod = "morning"; else if (h >= 12 && h < 17) tod = "afternoon"; else if (h >= 17 && h < 20) tod = "evening" }
             const night = tod === "night"; const eve = tod === "evening"; const morn = tod === "morning"; const aft = tod === "afternoon"
             const vs = mSeason; const dark = night || eve
+
+            // Wind gust updates
+            if (windGustRef.current.duration > 0) {
+                windGustRef.current.duration--
+                if (Math.random() < 0.15) {
+                    parts.current.push({
+                        x: -10,
+                        y: Math.random() * H * 0.7,
+                        vx: windGustRef.current.intensity * (1.2 + Math.random() * 1.5),
+                        vy: (Math.random() - 0.3) * 1.0,
+                        rot: Math.random() * Math.PI * 2,
+                        size: Math.random() * 4 + 2,
+                        color: vs === 'autumn' 
+                            ? ["#EA580C", "#F59E0B", "#DC2626", "#D97706"][Math.floor(Math.random() * 4)]
+                            : vs === 'spring'
+                            ? ["#FBCFE8", "#F9A8D4", "#E879F9", "#F472B6"][Math.floor(Math.random() * 4)]
+                            : ["#10B981", "#34D399", "#059669", "#0ea5e9"][Math.floor(Math.random() * 4)],
+                        op: 0.8,
+                        type: "leaf",
+                        life: 0
+                    })
+                }
+            } else {
+                windGustRef.current.intensity = 0
+            }
+
 
             // ── SKY ──
             const sg = ctx.createLinearGradient(0, 0, 0, H * 0.72)
@@ -902,6 +938,332 @@ export function VisualGarden({ onAddPlant }: { onAddPlant?: () => void }) {
             ctx.bezierCurveTo(W * 0.3, H * 0.85, W * 0.65, H * 0.89, W, H * 0.86)
             ctx.lineTo(W, H); ctx.closePath(); ctx.fill()
 
+            // ── KOI POND & SHISHI-ODOSHI ──
+            const pondX = 0.16 * W
+            const pondY = 0.86 * H
+            const pondRx = 0.11 * W
+            const pondRy = 0.055 * H
+
+            // Draw pond body
+            const pondGrad = ctx.createLinearGradient(0, pondY - pondRy, 0, pondY + pondRy)
+            pondGrad.addColorStop(0, dark ? "#0a192f" : "#1e3a8a")
+            pondGrad.addColorStop(0.5, dark ? "#0f2d59" : "#2563eb")
+            pondGrad.addColorStop(1, dark ? "#1e40af" : "#60a5fa")
+            ctx.fillStyle = pondGrad
+            ctx.beginPath()
+            ctx.ellipse(pondX, pondY, pondRx, pondRy, 0, 0, Math.PI * 2)
+            ctx.fill()
+
+            // Draw pond stone border (ring of stones)
+            ctx.save()
+            ctx.strokeStyle = dark ? "#27354a" : "#64748b"
+            ctx.lineWidth = 4
+            ctx.beginPath()
+            ctx.ellipse(pondX, pondY, pondRx, pondRy, 0, 0, Math.PI * 2)
+            ctx.stroke()
+            
+            // Draw slate details/stepping stones around the pond border
+            for (let i = 0; i < 12; i++) {
+                const angle = (i * Math.PI * 2) / 12
+                const sx = pondX + Math.cos(angle) * pondRx
+                const sy = pondY + Math.sin(angle) * pondRy
+                ctx.fillStyle = dark ? "#334155" : "#94a3b8"
+                ctx.beginPath()
+                ctx.arc(sx, sy, 3 + (i % 3) * 2, 0, Math.PI * 2)
+                ctx.fill()
+            }
+            ctx.restore()
+
+            // Water shine lines
+            ctx.save()
+            ctx.globalAlpha = 0.12
+            ctx.strokeStyle = "#ffffff"
+            ctx.lineWidth = 1
+            ctx.beginPath()
+            ctx.ellipse(pondX - 8, pondY - 4, pondRx * 0.72, pondRy * 0.65, 0.05, 0, Math.PI * 2)
+            ctx.stroke()
+            ctx.restore()
+
+            // Update & Draw Fish Food
+            ctx.save()
+            ctx.fillStyle = "#d97706"
+            ctx.strokeStyle = "#b45309"
+            ctx.lineWidth = 0.5
+            foodRef.current.forEach(f => {
+                if (f.y < f.targetY) {
+                    f.y += 0.002
+                }
+                ctx.beginPath()
+                ctx.arc(f.x * W, f.y * H, f.size, 0, Math.PI * 2)
+                ctx.fill()
+                ctx.stroke()
+            })
+            ctx.restore()
+
+            // Update & Draw Koi Fish swimming inside the pond
+            ctx.save()
+            const activeFood = foodRef.current
+            koiRef.current.forEach(koi => {
+                // If there's food, find the closest one
+                let targetX = koi.targetX
+                let targetY = koi.targetY
+                let targetFoodIndex = -1
+                let minFoodDist = 99999
+
+                if (activeFood.length > 0) {
+                    activeFood.forEach((food, idx) => {
+                        const dx = food.x - koi.x
+                        const dy = (food.y - koi.y) * 2 // stretch Y to compensate for ellipse flattening
+                        const dist = Math.sqrt(dx * dx + dy * dy)
+                        if (dist < minFoodDist) {
+                            minFoodDist = dist
+                            targetX = food.x
+                            targetY = food.y
+                            targetFoodIndex = idx
+                        }
+                    })
+                    // Swim faster to food
+                    koi.speed = 0.0016
+                } else {
+                    // Standard wander speed
+                    koi.speed = koi.color === "#f97316" ? 0.0009 : koi.color === "#ef4444" ? 0.0011 : 0.0007
+                }
+
+                // If close to wander target, pick a new random target within the pond ellipse
+                const dxWander = targetX - koi.x
+                const dyWander = (targetY - koi.y) * 2
+                if (Math.sqrt(dxWander * dxWander + dyWander * dyWander) < 0.015 && activeFood.length === 0) {
+                    const angle = Math.random() * Math.PI * 2
+                    const r = Math.sqrt(Math.random()) * 0.075
+                    koi.targetX = 0.16 + r * Math.cos(angle)
+                    koi.targetY = 0.86 + r * 0.5 * Math.sin(angle)
+                }
+
+                // Smoothly steer towards target
+                const dx = targetX - koi.x
+                const dy = targetY - koi.y
+                const targetAngle = Math.atan2(dy, dx)
+                let diff = targetAngle - koi.angle
+                while (diff < -Math.PI) diff += Math.PI * 2
+                while (diff > Math.PI) diff -= Math.PI * 2
+                koi.angle += diff * 0.08
+
+                // Move forward
+                koi.x += Math.cos(koi.angle) * koi.speed
+                koi.y += Math.sin(koi.angle) * koi.speed
+
+                // Keep inside pond boundaries
+                const dPondX = (koi.x - 0.16) / 0.11
+                const dPondY = (koi.y - 0.86) / 0.055
+                const pondDist = dPondX * dPondX + dPondY * dPondY
+                if (pondDist > 0.88) {
+                    // steer back towards center
+                    koi.targetX = 0.16 + (Math.random() - 0.5) * 0.05
+                    koi.targetY = 0.86 + (Math.random() - 0.5) * 0.02
+                }
+
+                // Eating food check
+                if (targetFoodIndex !== -1 && minFoodDist < 0.018) {
+                    // Consume food
+                    foodRef.current.splice(targetFoodIndex, 1)
+                    // Spawn water vapor bubbles
+                    for (let j = 0; j < 5; j++) {
+                        parts.current.push({
+                            x: koi.x * W,
+                            y: koi.y * H,
+                            vx: (Math.random() - 0.5) * 0.8,
+                            vy: -0.6 - Math.random() * 0.6,
+                            rot: 0,
+                            size: Math.random() * 2 + 1,
+                            color: "rgba(224, 242, 254, 0.6)",
+                            op: 0.85,
+                            type: "vapor",
+                            life: 0
+                        })
+                    }
+                }
+
+                // Draw Koi fish shape
+                ctx.save()
+                ctx.translate(koi.x * W, koi.y * H)
+                ctx.rotate(koi.angle)
+
+                const wiggle = Math.sin(t * 0.15 + (koi.speed * 8000)) * 0.28
+                ctx.fillStyle = koi.color
+                ctx.shadowColor = "rgba(0,0,0,0.15)"
+                ctx.shadowBlur = 4
+
+                // Body
+                ctx.beginPath()
+                ctx.ellipse(0, 0, 8, 3.2, 0, 0, Math.PI * 2)
+                ctx.fill()
+
+                // Spot overlay details
+                if (koi.color === "#ffffff") {
+                    ctx.fillStyle = "#f97316"
+                    ctx.beginPath()
+                    ctx.ellipse(1, -1, 3.2, 1.2, 0.4, 0, Math.PI * 2)
+                    ctx.fill()
+                    ctx.fillStyle = "#1e293b"
+                    ctx.beginPath()
+                    ctx.arc(-2, 1.2, 1.2, 0, Math.PI * 2)
+                    ctx.fill()
+                }
+
+                // Tail fin
+                ctx.fillStyle = koi.color
+                ctx.beginPath()
+                ctx.moveTo(-8, 0)
+                ctx.quadraticCurveTo(-11, -3.5 + wiggle * 4, -14, -5 + wiggle * 5)
+                ctx.lineTo(-12, 0)
+                ctx.lineTo(-14, 5 + wiggle * 5)
+                ctx.quadraticCurveTo(-11, 3.5 + wiggle * 4, -8, 0)
+                ctx.fill()
+
+                // Fins
+                ctx.beginPath()
+                ctx.ellipse(-1, -2.5, 2.5, 1.2, -Math.PI / 4, 0, Math.PI * 2)
+                ctx.ellipse(-1, 2.5, 2.5, 1.2, Math.PI / 4, 0, Math.PI * 2)
+                ctx.fill()
+
+                ctx.restore()
+            })
+            ctx.restore()
+
+            // Update & Draw Shishi-odoshi Bamboo Fountain
+            const shishiX = 0.28 * W
+            const shishiY = 0.82 * H
+            let shishiClacked = false
+            let shishiSpilling = false
+
+            // Update fountain state
+            if (shishiFillRef.current < 1 && shishiFillRef.current >= 0) {
+                // Fills over time
+                shishiFillRef.current += 0.0022 + Math.random() * 0.0008
+                shishiAngleRef.current = -0.15 + 0.1 * shishiFillRef.current
+            } else if (shishiFillRef.current >= 1) {
+                // Tilts forward and dumps
+                shishiAngleRef.current += 0.04
+                if (shishiAngleRef.current >= 0.4) {
+                    shishiAngleRef.current = 0.4
+                    shishiSpilling = true
+                    // Spill particles & ripples
+                    if (t % 3 === 0) {
+                        const sx = shishiX - 8
+                        const sy = shishiY + 2
+                        parts.current.push({
+                            x: sx,
+                            y: sy,
+                            vx: -1.2 - Math.random() * 1.5,
+                            vy: 2 + Math.random() * 1.5,
+                            rot: 0,
+                            size: 1.5 + Math.random() * 2,
+                            color: "rgba(186, 230, 253, 0.75)",
+                            op: 0.85,
+                            type: "vapor",
+                            life: 0
+                        })
+                        parts.current.push({
+                            x: sx - 16,
+                            y: sy + 15,
+                            vx: 0,
+                            vy: 0,
+                            rot: 0,
+                            size: 1.5,
+                            color: "rgba(186, 230, 253, 0.55)",
+                            op: 0.8,
+                            type: "ripple",
+                            life: 0
+                        })
+                    }
+                    if (Math.random() < 0.08) {
+                        shishiFillRef.current = -0.5 // Start return swing
+                    }
+                }
+            } else {
+                // Swing back to empty rest
+                shishiAngleRef.current -= 0.048
+                if (shishiAngleRef.current <= -0.15) {
+                    shishiAngleRef.current = -0.15
+                    shishiFillRef.current = 0
+                    shishiClacked = true
+                }
+            }
+
+            if (shishiClacked) {
+                playClack()
+                // spawn clack splash ripples
+                for (let j = 0; j < 6; j++) {
+                    parts.current.push({
+                        x: shishiX + 12,
+                        y: shishiY + 14,
+                        vx: (Math.random() - 0.5) * 1.2,
+                        vy: -1.2 - Math.random() * 1.2,
+                        rot: Math.random() * Math.PI,
+                        size: Math.random() * 2 + 1,
+                        color: dark ? "#334155" : "#94a3b8",
+                        op: 0.8,
+                        type: "soil",
+                        life: 0
+                    })
+                }
+            }
+
+            // Draw Stone base
+            ctx.fillStyle = dark ? "#334155" : "#64748b"
+            ctx.beginPath()
+            ctx.arc(shishiX + 12, shishiY + 14, 5, 0, Math.PI * 2)
+            ctx.fill()
+
+            // Draw Bamboo A-frame Stand
+            ctx.strokeStyle = dark ? "#14532d" : "#166534"
+            ctx.lineWidth = 3
+            ctx.beginPath()
+            ctx.moveTo(shishiX - 6, shishiY + 15)
+            ctx.lineTo(shishiX, shishiY)
+            ctx.lineTo(shishiX + 6, shishiY + 15)
+            ctx.stroke()
+
+            // Draw Pivoting bamboo tube
+            ctx.save()
+            ctx.translate(shishiX, shishiY)
+            ctx.rotate(shishiAngleRef.current)
+            
+            // Tube body
+            ctx.fillStyle = dark ? "#15803d" : "#22c55e"
+            ctx.strokeStyle = dark ? "#14532d" : "#15803d"
+            ctx.lineWidth = 1.2
+            ctx.beginPath()
+            ctx.rect(-18, -3, 32, 5.5)
+            ctx.fill()
+            ctx.stroke()
+
+            // Hollow opening at front
+            ctx.fillStyle = dark ? "#052e16" : "#14532d"
+            ctx.beginPath()
+            ctx.ellipse(-18, -0.25, 1.2, 2.7, 0, 0, Math.PI * 2)
+            ctx.fill()
+            ctx.restore()
+
+            // Draw Source pipe pouring water
+            ctx.strokeStyle = dark ? "#14532d" : "#166534"
+            ctx.lineWidth = 3
+            ctx.beginPath()
+            ctx.moveTo(shishiX + 18, shishiY - 24)
+            ctx.lineTo(shishiX + 4, shishiY - 16)
+            ctx.stroke()
+
+            // Water trickle pouring down into the pivot's catchment zone
+            if (shishiFillRef.current >= 0) {
+                ctx.strokeStyle = "rgba(186, 230, 253, 0.72)"
+                ctx.lineWidth = 1.2
+                ctx.beginPath()
+                ctx.moveTo(shishiX + 4, shishiY - 16)
+                ctx.quadraticCurveTo(shishiX + 2, shishiY - 8, shishiX, shishiY - 1)
+                ctx.stroke()
+            }
+
+
 
 
             // Grass blade tufts along front ground edge
@@ -965,7 +1327,10 @@ export function VisualGarden({ onAddPlant }: { onAddPlant?: () => void }) {
                 }
                 if (plant.growth <= 0) return
                 const px = plant.x * W, py = plant.y * H, s = plant.scale * plant.growth
-                const wind = Math.sin(t * 0.003) * 0.005 + Math.sin(t * (plant.swaySpeed * 0.4) + plant.swayOffset) * 0.008
+                const gustEffect = windGustRef.current.duration > 0 
+                    ? Math.sin(t * 0.08) * windGustRef.current.intensity * 0.006 + windGustRef.current.intensity * 0.005
+                    : 0
+                const wind = Math.sin(t * 0.003) * 0.005 + Math.sin(t * (plant.swaySpeed * 0.4) + plant.swayOffset) * 0.008 + gustEffect
                 ctx.save(); ctx.translate(px, py)
                 if (editMode && plant.id === selectedPlantId) {
                     ctx.shadowColor = '#10B981'; // Emerald glow for selection
@@ -1321,18 +1686,123 @@ export function VisualGarden({ onAddPlant }: { onAddPlant?: () => void }) {
         const lSize = 50
         const ldx = clickX - lx
         const ldy = clickY - (ly - lSize / 2)
-        const lDist = Math.sqrt(ldx * ldx + ldy * ldy)
-        if (lDist < lSize * 0.8) {
+        if (Math.sqrt(ldx * ldx + ldy * ldy) < lSize * 0.8) {
             setLanternLit(prev => !prev)
             toast.success(!lanternLit ? "Stone lantern lit. 🏮" : "Stone lantern extinguished.")
             return
         }
 
+        // Sky click check (for wind gusts)
+        if (y < 0.45 && !plantToPlace && !editMode) {
+            windGustRef.current = { intensity: 4.5, duration: 120 }
+            toast.success("A gentle breeze sweeps through the garden... 🍃")
+            
+            // Spawn initial burst of wind leaves/petals
+            for (let i = 0; i < 8; i++) {
+                parts.current.push({
+                    x: Math.random() * rect.width * 0.3,
+                    y: Math.random() * rect.height * 0.5,
+                    vx: 3 + Math.random() * 4,
+                    vy: (Math.random() - 0.3) * 1.5,
+                    rot: Math.random() * Math.PI * 2,
+                    size: Math.random() * 5 + 3,
+                    color: mSeason === 'autumn' 
+                        ? ["#EA580C", "#F59E0B", "#DC2626"][Math.floor(Math.random() * 3)]
+                        : mSeason === 'spring'
+                        ? ["#FBCFE8", "#F9A8D4", "#E879F9"][Math.floor(Math.random() * 3)]
+                        : ["#10B981", "#34D399", "#059669"][Math.floor(Math.random() * 3)],
+                    op: 0.85,
+                    type: "leaf",
+                    life: 0
+                })
+            }
+            return
+        }
+
+        // Koi Pond click check (to drop fish food)
+        if (!plantToPlace && !editMode) {
+            const dxPond = (x - 0.16) / 0.11
+            const dyPond = (y - 0.86) / 0.055
+            if (dxPond * dxPond + dyPond * dyPond <= 1) {
+                foodRef.current.push({
+                    x,
+                    y: y - 0.08, // drop slightly above click and let it sink
+                    targetY: y,
+                    size: 2.5 + Math.random() * 1.5
+                })
+                // Spawn ripple splash
+                parts.current.push({
+                    x: clickX,
+                    y: clickY,
+                    vx: 0,
+                    vy: 0,
+                    rot: 0,
+                    size: 2,
+                    color: "rgba(186, 230, 253, 0.75)",
+                    op: 0.95,
+                    type: "ripple",
+                    life: 0
+                })
+                toast.success("Fed the Koi fish! 🥣")
+                return
+            }
+        }
+
+
+
         if (plantToPlace) {
             // Constrain placement y to ground zone [0.48, 0.92]
             const constrainedY = Math.max(0.48, Math.min(0.92, y))
             
-            // Check affordability at placement time
+            // 1. Placement from storage
+            if (plantToPlace.isFromStorage) {
+                const newPlant = {
+                    id: plantToPlace.id || Date.now().toString(),
+                    type: plantToPlace.type,
+                    subtype: plantToPlace.subtype,
+                    x, y: constrainedY,
+                    scale: plantToPlace.scale || (plantToPlace.type === 'tree' ? 1.15 : 0.95),
+                    nurtureLevel: plantToPlace.nurtureLevel !== undefined ? plantToPlace.nurtureLevel : 20
+                }
+
+                if (gardenView === "shared") {
+                    const currentPlants = sharedGarden?.plants || []
+                    const currentStorage = sharedGarden?.storage || []
+                    const newStorage = currentStorage.filter((item: any) => item.id !== plantToPlace.id)
+                    
+                    const userName = settings?.userName || "Anonymous"
+                    const newLog = {
+                        id: Math.random().toString(36).substring(7),
+                        message: `placed stored ${PLANT_NAMES[plantToPlace.subtype] || plantToPlace.subtype} back in garden`,
+                        user: userName,
+                        timestamp: new Date().toISOString()
+                    }
+
+                    updateSharedGarden({
+                        plants: [...currentPlants, newPlant],
+                        storage: newStorage,
+                        activityLog: [newLog, ...(sharedGarden?.activityLog || [])].slice(0, 50)
+                    }).catch(() => {
+                        toast.error("Failed to place plant from storage")
+                    })
+                } else {
+                    const currentPlants = settings?.gardenPlants || []
+                    const currentStorage = settings?.gardenStorage || []
+                    const newStorage = currentStorage.filter((item: any) => item.id !== plantToPlace.id)
+
+                    updateSettings({
+                        gardenPlants: [...currentPlants, newPlant],
+                        gardenStorage: newStorage
+                    })
+                }
+                const name = PLANT_NAMES[plantToPlace.subtype] || plantToPlace.subtype
+                toast.success(`Placed ${name} from Storage bag!`)
+                setPlantToPlace(null)
+                playPlanting()
+                return
+            }
+
+            // 2. Standard shop purchase placement
             if (gardenView === "shared") {
                 const currentSun = sharedGarden?.sunlightPool || 0
                 const currentWater = sharedGarden?.waterPool || 0
@@ -1345,7 +1815,7 @@ export function VisualGarden({ onAddPlant }: { onAddPlant?: () => void }) {
                         type: plantToPlace.type,
                         subtype: plantToPlace.id,
                         x, y: constrainedY,
-                        scale: plantToPlace.type === 'tree' ? 0.75 : 0.5,
+                        scale: plantToPlace.type === 'tree' ? 1.15 : 0.95,
                         nurtureLevel: 20
                     }
                     const userName = settings?.userName || "Anonymous"
@@ -1383,7 +1853,7 @@ export function VisualGarden({ onAddPlant }: { onAddPlant?: () => void }) {
                         type: plantToPlace.type,
                         subtype: plantToPlace.id,
                         x, y: constrainedY,
-                        scale: plantToPlace.type === 'tree' ? 0.75 : 0.5,
+                        scale: plantToPlace.type === 'tree' ? 1.15 : 0.95,
                         nurtureLevel: 20
                     }
                     const currentPlants = settings?.gardenPlants || []
@@ -1516,14 +1986,45 @@ export function VisualGarden({ onAddPlant }: { onAddPlant?: () => void }) {
         if (!selectedPlantId) return
         if (gardenView === "shared") {
             const currentPlants = sharedGarden?.plants || []
-            updateSharedGarden({ plants: currentPlants.filter((p: any) => p.id !== selectedPlantId) }).catch(() => {})
+            const plantToStore = currentPlants.find((p: any) => p.id === selectedPlantId)
+            if (!plantToStore) return
+
+            const updatedPlants = currentPlants.filter((p: any) => p.id !== selectedPlantId)
+            const currentStorage = sharedGarden?.storage || []
+            const updatedStorage = [...currentStorage, plantToStore]
+
+            const userName = settings?.userName || "Anonymous"
+            const newLog = {
+                id: Math.random().toString(36).substring(7),
+                message: `dug up and stored the communal ${PLANT_NAMES[plantToStore.subtype] || plantToStore.subtype}`,
+                user: userName,
+                timestamp: new Date().toISOString()
+            }
+
+            updateSharedGarden({ 
+                plants: updatedPlants, 
+                storage: updatedStorage,
+                activityLog: [newLog, ...(sharedGarden?.activityLog || [])].slice(0, 50)
+            }).catch(() => {
+                toast.error("Failed to store plant")
+            })
             setSelectedPlantId(null)
-            toast.success("Plant removed from Co-op Garden.")
+            toast.success("Communal plant dug up and placed in Storage bag! 🎒")
         } else {
             const currentPlants = settings?.gardenPlants || []
-            updateSettings({ gardenPlants: currentPlants.filter((p: any) => p.id !== selectedPlantId) })
+            const plantToStore = currentPlants.find((p: any) => p.id === selectedPlantId)
+            if (!plantToStore) return
+
+            const updatedPlants = currentPlants.filter((p: any) => p.id !== selectedPlantId)
+            const currentStorage = settings?.gardenStorage || []
+            const updatedStorage = [...currentStorage, plantToStore]
+
+            updateSettings({ 
+                gardenPlants: updatedPlants, 
+                gardenStorage: updatedStorage 
+            })
             setSelectedPlantId(null)
-            toast.success("Plant removed from garden.")
+            toast.success("Plant dug up and placed in Storage bag! 🎒")
         }
     }
 
@@ -1664,43 +2165,131 @@ export function VisualGarden({ onAddPlant }: { onAddPlant?: () => void }) {
                         </div>
                     </div>
                     
+                    {/* Tab Switcher */}
+                    <div className="flex bg-slate-100 dark:bg-slate-800/80 p-1 rounded-xl mx-4 mt-4 mb-1 border border-slate-200/50 dark:border-slate-700/50 shadow-inner">
+                        <button
+                            onClick={() => setNurseryTab("shop")}
+                            className={`flex-1 py-1.5 rounded-lg text-xs font-bold transition-all ${nurseryTab === "shop" ? 'bg-white dark:bg-slate-700 shadow-sm text-slate-800 dark:text-white' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-350'}`}
+                        >
+                            🛍️ Seed Shop
+                        </button>
+                        {(() => {
+                            const currentStorage = gardenView === "shared"
+                                ? (sharedGarden?.storage || [])
+                                : (settings?.gardenStorage || [])
+                            return (
+                                <button
+                                    onClick={() => setNurseryTab("storage")}
+                                    className={`flex-1 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${nurseryTab === "storage" ? 'bg-white dark:bg-slate-700 shadow-sm text-slate-800 dark:text-white' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-350'}`}
+                                >
+                                    <span>🎒 Storage Bag</span>
+                                    {currentStorage.length > 0 && (
+                                        <span className="bg-emerald-500 text-white text-[9px] px-1.5 py-0.5 rounded-full font-black animate-pulse">
+                                            {currentStorage.length}
+                                        </span>
+                                    )}
+                                </button>
+                            )
+                        })()}
+                    </div>
+
                     <div className="p-4 overflow-y-auto custom-scrollbar flex-1">
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                            {NURSERY_ITEMS.map(item => {
-                                const canAfford = gardenView === "shared"
-                                    ? (sharedGarden?.sunlightPool || 0) >= item.costSunlight && (sharedGarden?.waterPool || 0) >= item.costWater
-                                    : (settings?.sunlight || 0) >= item.costSunlight && (settings?.waterdrops || 0) >= item.costWater
-                                return (
-                                    <div key={item.id} className={`flex flex-col p-3 rounded-2xl border transition-all duration-200 ${canAfford ? 'bg-white dark:bg-slate-800/60 border-slate-200 dark:border-slate-700 hover:border-emerald-300 dark:hover:border-emerald-700 shadow-sm hover:shadow' : 'bg-slate-50 dark:bg-slate-900/50 border-slate-100 dark:border-slate-800/80 opacity-70'}`}>
-                                        <div className="flex items-start justify-between mb-2">
-                                            <div className="flex items-center gap-2">
-                                                <span className="text-2xl">{item.icon}</span>
-                                                <div>
-                                                    <h4 className="font-bold text-sm text-slate-850 dark:text-slate-250">{item.name}</h4>
-                                                    <p className="text-[10px] text-slate-500 leading-normal">{item.desc}</p>
+                        {nurseryTab === "shop" ? (
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                {NURSERY_ITEMS.map(item => {
+                                    const canAfford = gardenView === "shared"
+                                        ? (sharedGarden?.sunlightPool || 0) >= item.costSunlight && (sharedGarden?.waterPool || 0) >= item.costWater
+                                        : (settings?.sunlight || 0) >= item.costSunlight && (settings?.waterdrops || 0) >= item.costWater
+                                    return (
+                                        <div key={item.id} className={`flex flex-col p-3 rounded-2xl border transition-all duration-200 ${canAfford ? 'bg-white dark:bg-slate-800/60 border-slate-200 dark:border-slate-700 hover:border-emerald-300 dark:hover:border-emerald-700 shadow-sm hover:shadow' : 'bg-slate-50 dark:bg-slate-900/50 border-slate-100 dark:border-slate-800/80 opacity-70'}`}>
+                                            <div className="flex items-start justify-between mb-2">
+                                                <div className="flex items-center gap-2">
+                                                    <span className="text-2xl">{item.icon}</span>
+                                                    <div>
+                                                        <h4 className="font-bold text-sm text-slate-850 dark:text-slate-250">{item.name}</h4>
+                                                        <p className="text-[10px] text-slate-500 leading-normal">{item.desc}</p>
+                                                    </div>
                                                 </div>
                                             </div>
-                                        </div>
-                                        <div className="mt-auto pt-3 flex items-center justify-between border-t border-slate-100 dark:border-slate-700/50">
-                                            <div className="flex flex-col gap-0.5">
-                                                <span className="text-[10px] font-bold text-amber-500 flex items-center gap-1"><Icons.sun className="w-3 h-3"/>{item.costSunlight}</span>
-                                                <span className="text-[10px] font-bold text-blue-500 flex items-center gap-1"><Icons.droplets className="w-3 h-3"/>{item.costWater}</span>
+                                            <div className="mt-auto pt-3 flex items-center justify-between border-t border-slate-100 dark:border-slate-700/50">
+                                                <div className="flex flex-col gap-0.5">
+                                                    <span className="text-[10px] font-bold text-amber-500 flex items-center gap-1"><Icons.sun className="w-3 h-3"/>{item.costSunlight}</span>
+                                                    <span className="text-[10px] font-bold text-blue-500 flex items-center gap-1"><Icons.droplets className="w-3 h-3"/>{item.costWater}</span>
+                                                </div>
+                                                <button 
+                                                    onClick={() => {
+                                                        setShowStore(false)
+                                                        startPlacement(item)
+                                                    }}
+                                                    disabled={!canAfford}
+                                                    className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${canAfford ? 'bg-emerald-500 hover:bg-emerald-600 text-white shadow-md hover:shadow-emerald-500/30 active:scale-95' : 'bg-slate-200 dark:bg-slate-800 text-slate-400 cursor-not-allowed'}`}
+                                                >
+                                                    Select
+                                                </button>
                                             </div>
-                                            <button 
-                                                onClick={() => {
-                                                    setShowStore(false)
-                                                    startPlacement(item)
-                                                }}
-                                                disabled={!canAfford}
-                                                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${canAfford ? 'bg-emerald-500 hover:bg-emerald-600 text-white shadow-md hover:shadow-emerald-500/30 active:scale-95' : 'bg-slate-200 dark:bg-slate-800 text-slate-400 cursor-not-allowed'}`}
-                                            >
-                                                Select
-                                            </button>
                                         </div>
+                                    )
+                                })}
+                            </div>
+                        ) : (
+                            /* Storage Bag List */
+                            (() => {
+                                const currentStorage = gardenView === "shared"
+                                    ? (sharedGarden?.storage || [])
+                                    : (settings?.gardenStorage || [])
+                                
+                                const plantIcons: Record<string, string> = {
+                                    sakura: "🌸", maple: "🍁", pine: "🌲", jacaranda: "🌳",
+                                    sunflower: "🌻", tulip: "🌷", orchid: "🌺", marigold: "🌼",
+                                    snowdrop: "❄️", lily: "🪷", chrysanthemum: "🏵️", snowflower: "💮"
+                                }
+
+                                return currentStorage.length === 0 ? (
+                                    <div className="text-center py-10 space-y-2">
+                                        <span className="text-4xl block">🎒</span>
+                                        <h4 className="font-bold text-sm text-slate-700 dark:text-slate-350">Storage Bag is Empty</h4>
+                                        <p className="text-xs text-slate-400 max-w-xs mx-auto">
+                                            Dug up plants from your garden will appear here. Re-plant them anytime for free!
+                                        </p>
+                                    </div>
+                                ) : (
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                        {currentStorage.map((item: any) => (
+                                            <div key={item.id} className="flex flex-col p-3 rounded-2xl border bg-white dark:bg-slate-800/60 border-slate-200 dark:border-slate-700 hover:border-emerald-300 dark:hover:border-emerald-700 shadow-sm hover:shadow transition-all duration-200 animate-in fade-in slide-in-from-bottom-2 duration-200">
+                                                <div className="flex items-start justify-between mb-2">
+                                                    <div className="flex items-center gap-2">
+                                                        <span className="text-2xl">{plantIcons[item.subtype] || "🌱"}</span>
+                                                        <div>
+                                                            <h4 className="font-bold text-sm text-slate-850 dark:text-slate-250">
+                                                                {PLANT_NAMES[item.subtype] || item.subtype}
+                                                            </h4>
+                                                            <p className="text-[10px] text-slate-500">
+                                                                Dug up at {Math.round((item.nurtureLevel !== undefined ? item.nurtureLevel : 100))}% Growth
+                                                            </p>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div className="mt-auto pt-3 flex items-center justify-between border-t border-slate-100 dark:border-slate-700/50">
+                                                    <span className="text-[10px] font-bold text-emerald-500 flex items-center gap-1">✨ Saved Stage</span>
+                                                    <button 
+                                                        onClick={() => {
+                                                            setShowStore(false)
+                                                            startPlacement({
+                                                                ...item,
+                                                                isFromStorage: true
+                                                            })
+                                                        }}
+                                                        className="px-3 py-1.5 rounded-lg text-xs font-bold bg-emerald-500 hover:bg-emerald-600 text-white shadow-md hover:shadow-emerald-500/30 active:scale-95 transition-all"
+                                                    >
+                                                        Plant (Free)
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        ))}
                                     </div>
                                 )
-                            })}
-                        </div>
+                            })()
+                        )}
                         
                         {/* Quick resource boost for testing */}
                         <button 

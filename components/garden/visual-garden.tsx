@@ -182,12 +182,6 @@ export function VisualGarden({ onAddPlant }: { onAddPlant?: () => void }) {
     const [lanternLit, setLanternLit] = useState(true)
     const mousePosRef = useRef({ x: 0.5, y: 0.5, isOver: false })
     const sparkleRef = useRef<{ x: number; y: number; vx: number; vy: number; life: number; color: string; size: number }[]>([])
-    const koiRef = useRef([
-        { x: 0.12, y: 0.83, angle: 0, targetX: 0.12, targetY: 0.83, speed: 0.0009, color: "#f97316" }, // Orange Koi
-        { x: 0.18, y: 0.86, angle: 2, targetX: 0.18, targetY: 0.86, speed: 0.0011, color: "#ef4444" }, // Red Koi
-        { x: 0.22, y: 0.84, angle: 4, targetX: 0.22, targetY: 0.84, speed: 0.0007, color: "#ffffff" }  // White/Tan Koi
-    ])
-    const foodRef = useRef<{ x: number; y: number; targetY: number; size: number }[]>([])
     const windGustRef = useRef({ intensity: 0, duration: 0 })
     const shishiFillRef = useRef(0)
     const shishiAngleRef = useRef(0.25)
@@ -955,32 +949,6 @@ export function VisualGarden({ onAddPlant }: { onAddPlant?: () => void }) {
             const lSize = 50
             drawStoneLantern(ctx, lx, ly, lSize, lanternLit, dark, t)
 
-            // ── STEPPING STONE PATH ──
-            ctx.save()
-            const pathStones = [
-                { x: 0.35, y: 0.87, rx: 15, ry: 7.5, rot: 0.2 },
-                { x: 0.44, y: 0.84, rx: 17, ry: 8.5, rot: -0.15 },
-                { x: 0.53, y: 0.86, rx: 14, ry: 7, rot: 0.3 },
-                { x: 0.62, y: 0.82, rx: 16, ry: 8, rot: -0.2 },
-                { x: 0.70, y: 0.84, rx: 18, ry: 9, rot: 0.1 },
-                { x: 0.75, y: 0.81, rx: 13, ry: 6.5, rot: -0.25 },
-            ]
-            pathStones.forEach((stone) => {
-                const sx = stone.x * W
-                const sy = stone.y * H
-                ctx.shadowColor = "rgba(0, 0, 0, 0.08)"
-                ctx.shadowBlur = 4
-                ctx.shadowOffsetY = 2
-                ctx.fillStyle = dark ? "#1e293b" : "#94a3b8"
-                ctx.strokeStyle = dark ? "#0f172a" : "#cbd5e1"
-                ctx.lineWidth = 1.5
-                ctx.beginPath()
-                ctx.ellipse(sx, sy, stone.rx, stone.ry, stone.rot, 0, Math.PI * 2)
-                ctx.fill()
-                ctx.stroke()
-            })
-            ctx.restore()
-
             // ── KOI POND & SHISHI-ODOSHI ──
             const pondX = 0.16 * W
             const pondY = 0.86 * H
@@ -1033,146 +1001,6 @@ export function VisualGarden({ onAddPlant }: { onAddPlant?: () => void }) {
             ctx.beginPath()
             ctx.ellipse(pondX - 8, pondY - 4, pondRx * 0.72, pondRy * 0.65, 0.05, 0, Math.PI * 2)
             ctx.stroke()
-            ctx.restore()
-
-            // Update & Draw Fish Food
-            ctx.save()
-            ctx.fillStyle = "#d97706"
-            ctx.strokeStyle = "#b45309"
-            ctx.lineWidth = 0.5
-            foodRef.current.forEach(f => {
-                if (f.y < f.targetY) {
-                    f.y += 0.002
-                }
-                ctx.beginPath()
-                ctx.arc(f.x * W, f.y * H, f.size, 0, Math.PI * 2)
-                ctx.fill()
-                ctx.stroke()
-            })
-            ctx.restore()
-
-            // Update & Draw Koi Fish swimming inside the pond
-            ctx.save()
-            const activeFood = foodRef.current
-            koiRef.current.forEach(koi => {
-                let targetX = koi.targetX
-                let targetY = koi.targetY
-                let targetFoodIndex = -1
-                let minFoodDist = 99999
-
-                if (activeFood.length > 0) {
-                    activeFood.forEach((food, idx) => {
-                        const dx = food.x - koi.x
-                        const dy = (food.y - koi.y) * 2 
-                        const dist = Math.sqrt(dx * dx + dy * dy)
-                        if (dist < minFoodDist) {
-                            minFoodDist = dist
-                            targetX = food.x
-                            targetY = food.y
-                            targetFoodIndex = idx
-                        }
-                    })
-                    koi.speed = 0.0016
-                } else {
-                    koi.speed = koi.color === "#f97316" ? 0.0009 : koi.color === "#ef4444" ? 0.0011 : 0.0007
-                }
-
-                const dxWander = targetX - koi.x
-                const dyWander = (targetY - koi.y) * 2
-                if (Math.sqrt(dxWander * dxWander + dyWander * dyWander) < 0.015 && activeFood.length === 0) {
-                    const angle = Math.random() * Math.PI * 2
-                    const r = Math.sqrt(Math.random()) * 0.075
-                    koi.targetX = 0.16 + r * Math.cos(angle)
-                    koi.targetY = 0.86 + r * 0.5 * Math.sin(angle)
-                }
-
-                const dx = targetX - koi.x
-                const dy = targetY - koi.y
-                const targetAngle = Math.atan2(dy, dx)
-                let diff = targetAngle - koi.angle
-                while (diff < -Math.PI) diff += Math.PI * 2
-                while (diff > Math.PI) diff -= Math.PI * 2
-                koi.angle += diff * 0.08
-
-                koi.x += Math.cos(koi.angle) * koi.speed
-                koi.y += Math.sin(koi.angle) * koi.speed
-
-                const dPondX = (koi.x - 0.16) / 0.11
-                const dPondY = (koi.y - 0.86) / 0.055
-                const pondDist = dPondX * dPondX + dPondY * dPondY
-                if (pondDist > 0.88) {
-                    koi.targetX = 0.16 + (Math.random() - 0.5) * 0.05
-                    koi.targetY = 0.86 + (Math.random() - 0.5) * 0.02
-                }
-
-                if (targetFoodIndex !== -1 && minFoodDist < 0.018) {
-                    foodRef.current.splice(targetFoodIndex, 1)
-                    for (let j = 0; j < 5; j++) {
-                        parts.current.push({
-                            x: koi.x * W,
-                            y: koi.y * H,
-                            vx: (Math.random() - 0.5) * 0.8,
-                            vy: -0.6 - Math.random() * 0.6,
-                            rot: 0,
-                            size: Math.random() * 2 + 1,
-                            color: "rgba(224, 242, 254, 0.6)",
-                            op: 0.85,
-                            type: "vapor",
-                            life: 0
-                        })
-                    }
-                }
-
-                // ── KOI DEPTH SHADOW ──
-                ctx.save()
-                ctx.translate(koi.x * W, koi.y * H + 6)
-                ctx.rotate(koi.angle)
-                ctx.fillStyle = "rgba(0, 0, 0, 0.25)"
-                ctx.beginPath()
-                ctx.ellipse(0, 0, 7.5, 3.0, 0, 0, Math.PI * 2)
-                ctx.fill()
-                ctx.restore()
-
-                // Draw Koi fish body
-                ctx.save()
-                ctx.translate(koi.x * W, koi.y * H)
-                ctx.rotate(koi.angle)
-
-                const wiggle = Math.sin(t * 0.15 + (koi.speed * 8000)) * 0.28
-                ctx.fillStyle = koi.color
-
-                // Body
-                ctx.beginPath()
-                ctx.ellipse(0, 0, 8, 3.2, 0, 0, Math.PI * 2)
-                ctx.fill()
-
-                if (koi.color === "#ffffff") {
-                    ctx.fillStyle = "#f97316"
-                    ctx.beginPath()
-                    ctx.ellipse(1, -1, 3.2, 1.2, 0.4, 0, Math.PI * 2)
-                    ctx.fill()
-                    ctx.fillStyle = "#1e293b"
-                    ctx.beginPath()
-                    ctx.arc(-2, 1.2, 1.2, 0, Math.PI * 2)
-                    ctx.fill()
-                }
-
-                ctx.fillStyle = koi.color
-                ctx.beginPath()
-                ctx.moveTo(-8, 0)
-                ctx.quadraticCurveTo(-11, -3.5 + wiggle * 4, -14, -5 + wiggle * 5)
-                ctx.lineTo(-12, 0)
-                ctx.lineTo(-14, 5 + wiggle * 5)
-                ctx.quadraticCurveTo(-11, 3.5 + wiggle * 4, -8, 0)
-                ctx.fill()
-
-                ctx.beginPath()
-                ctx.ellipse(-1, -2.5, 2.5, 1.2, -Math.PI / 4, 0, Math.PI * 2)
-                ctx.ellipse(-1, 2.5, 2.5, 1.2, Math.PI / 4, 0, Math.PI * 2)
-                ctx.fill()
-
-                ctx.restore()
-            })
             ctx.restore()
 
             // ── LILY PADS & LOTUS FLOWER ──
@@ -1845,34 +1673,7 @@ export function VisualGarden({ onAddPlant }: { onAddPlant?: () => void }) {
             return
         }
 
-        // Koi Pond click check (to drop fish food)
-        if (!plantToPlace && !editMode) {
-            const dxPond = (x - 0.16) / 0.11
-            const dyPond = (y - 0.86) / 0.055
-            if (dxPond * dxPond + dyPond * dyPond <= 1) {
-                foodRef.current.push({
-                    x,
-                    y: y - 0.08, // drop slightly above click and let it sink
-                    targetY: y,
-                    size: 2.5 + Math.random() * 1.5
-                })
-                // Spawn ripple splash
-                parts.current.push({
-                    x: clickX,
-                    y: clickY,
-                    vx: 0,
-                    vy: 0,
-                    rot: 0,
-                    size: 2,
-                    color: "rgba(186, 230, 253, 0.75)",
-                    op: 0.95,
-                    type: "ripple",
-                    life: 0
-                })
-                toast.success("Fed the Koi fish! 🥣")
-                return
-            }
-        }
+
 
 
 

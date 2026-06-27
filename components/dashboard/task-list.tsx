@@ -119,7 +119,7 @@ export function TaskList() {
         <Checkbox
           checked={task.completed}
           onCheckedChange={(checked) => toggleTask(task.id, checked as boolean)}
-          className="mt-1 rounded-md border-slate-350 dark:border-slate-650 data-[state=checked]:bg-emerald-500 data-[state=checked]:border-emerald-500 transition-all duration-300 active:scale-90"
+          className="mt-1 rounded-md border-slate-300 dark:border-slate-600 data-[state=checked]:bg-emerald-500 data-[state=checked]:border-emerald-500 transition-all duration-300 active:scale-90"
         />
         <div className="flex-1 min-w-0">
           <div className="flex items-start justify-between">

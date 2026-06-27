@@ -328,19 +328,19 @@ export function TopNav() {
                           )}
 
                           <div className="flex items-start space-x-3 pr-4">
-                            <div className="flex-shrink-0 mt-1 p-1.5 rounded-lg bg-white/85 dark:bg-slate-900/50 shadow-sm border border-slate-100 dark:border-slate-800">
+                            <div className="flex-shrink-0 mt-1 p-1.5 rounded-lg bg-white dark:bg-slate-800 shadow-sm border border-slate-200 dark:border-slate-700">
                               {getNotificationIcon(notification.type || "info")}
                             </div>
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center justify-between mb-0.5">
-                                <p className="text-sm font-semibold text-slate-850 dark:text-slate-100 truncate pr-2">
+                                <p className="text-sm font-semibold text-slate-800 dark:text-slate-100 truncate pr-2">
                                   {notification.title}
                                 </p>
                               </div>
                               <p className="text-[10px] text-slate-400 dark:text-slate-500 font-semibold mb-1.5">
                                 {formatNotificationTime(notification.time)}
                               </p>
-                              <p className="text-sm text-slate-650 dark:text-slate-300 leading-relaxed font-normal">
+                              <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed font-normal">
                                 {notification.message}
                               </p>
                               <div className="flex items-center justify-between mt-3 flex-wrap gap-2">
@@ -356,10 +356,10 @@ export function TopNav() {
                                   <Badge
                                     className={`text-[9px] uppercase tracking-wider font-semibold rounded-lg px-2 py-0.5 border ${
                                       notification.priority === "high"
-                                        ? "bg-red-505/10 border-red-500/20 text-red-600 dark:text-red-450"
+                                        ? "bg-red-500/10 border-red-500/20 text-red-600 dark:text-red-400"
                                         : notification.priority === "medium"
-                                          ? "bg-amber-500/10 border-amber-500/20 text-amber-600 dark:text-amber-450"
-                                          : "bg-emerald-505/10 border-emerald-500/20 text-emerald-600 dark:text-emerald-400"
+                                          ? "bg-amber-500/10 border-amber-500/20 text-amber-600 dark:text-amber-400"
+                                          : "bg-emerald-500/10 border-emerald-500/20 text-emerald-600 dark:text-emerald-400"
                                     }`}
                                   >
                                     {notification.priority} priority
@@ -373,7 +373,7 @@ export function TopNav() {
                           <Button
                             variant="ghost"
                             size="icon"
-                            className="absolute top-2 right-2 w-6 h-6 rounded-full opacity-0 group-hover:opacity-100 hover:bg-slate-200/50 dark:hover:bg-slate-800/50 text-slate-400 hover:text-slate-600 dark:hover:text-slate-350 transition-all duration-150"
+                            className="absolute top-2 right-2 w-6 h-6 rounded-full opacity-0 group-hover:opacity-100 hover:bg-slate-200/50 dark:hover:bg-slate-800/50 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-all duration-150"
                             onClick={(e) => {
                               e.stopPropagation()
                               removeNotification(notification.id)

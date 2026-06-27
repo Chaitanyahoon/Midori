@@ -24,7 +24,7 @@ const PLANT_NAMES: Record<string, string> = {
     snowdrop: "Snowdrop", lily: "Lily", chrysanthemum: "Chrysanthemum", snowflower: "Snow Flower",
 }
 
-const drawStoneLantern = (ctx: CanvasRenderingContext2D, lx: number, ly: number, size: number, isLit: boolean, isDark: boolean) => {
+const drawStoneLantern = (ctx: CanvasRenderingContext2D, lx: number, ly: number, size: number, isLit: boolean, isDark: boolean, t: number) => {
   ctx.save()
   ctx.translate(lx, ly)
   
@@ -122,8 +122,8 @@ const drawStoneLantern = (ctx: CanvasRenderingContext2D, lx: number, ly: number,
     ctx.save()
     ctx.translate(lx, ly)
     const cone = ctx.createLinearGradient(0, -size * 0.52, 0, size * 2.5)
-    cone.addColorStop(0, "rgba(254, 240, 138, 0.38)")
-    cone.addColorStop(0.3, "rgba(254, 240, 138, 0.14)")
+    cone.addColorStop(0, "rgba(254, 240, 138, 0.45)")
+    cone.addColorStop(0.3, "rgba(254, 240, 138, 0.18)")
     cone.addColorStop(1, "rgba(254, 240, 138, 0)")
     
     ctx.fillStyle = cone
@@ -133,6 +133,29 @@ const drawStoneLantern = (ctx: CanvasRenderingContext2D, lx: number, ly: number,
     ctx.lineTo(size * 1.5, size * 2.5)
     ctx.closePath()
     ctx.fill()
+
+    // Glowing warm dust motes floating inside light cone
+    ctx.save()
+    for (let i = 0; i < 15; i++) {
+        const progress = ((i * 17 + t * 0.35) % (size * 3.02))
+        const moteY = size * 2.5 - progress
+        
+        const factor = (moteY - (-size * 0.52)) / (size * 3.02)
+        const maxW = size * 1.5 * factor
+        
+        const swayPhase = t * 0.012 + i * 2.7
+        const moteX = Math.sin(swayPhase) * maxW * 0.85
+        
+        const sizeMultiplier = 1.0 + Math.sin(t * 0.05 + i) * 0.4
+        const moteSize = (0.8 + (i % 3) * 0.5) * sizeMultiplier
+        const opacity = Math.min(factor * 2, 1) * (0.25 + Math.sin(swayPhase) * 0.25)
+        
+        ctx.fillStyle = `rgba(254, 243, 199, ${opacity})`
+        ctx.beginPath()
+        ctx.arc(moteX, moteY, moteSize, 0, Math.PI * 2)
+        ctx.fill()
+    }
+    ctx.restore()
   }
   
   ctx.restore()
@@ -930,13 +953,33 @@ export function VisualGarden({ onAddPlant }: { onAddPlant?: () => void }) {
             const lx = 0.78 * W
             const ly = 0.74 * H
             const lSize = 50
-            drawStoneLantern(ctx, lx, ly, lSize, lanternLit, dark)
+            drawStoneLantern(ctx, lx, ly, lSize, lanternLit, dark, t)
 
-            // Front garden ground
-            ctx.fillStyle = gp[2]
-            ctx.beginPath(); ctx.moveTo(0, H); ctx.lineTo(0, H * 0.87)
-            ctx.bezierCurveTo(W * 0.3, H * 0.85, W * 0.65, H * 0.89, W, H * 0.86)
-            ctx.lineTo(W, H); ctx.closePath(); ctx.fill()
+            // ── STEPPING STONE PATH ──
+            ctx.save()
+            const pathStones = [
+                { x: 0.35, y: 0.87, rx: 15, ry: 7.5, rot: 0.2 },
+                { x: 0.44, y: 0.84, rx: 17, ry: 8.5, rot: -0.15 },
+                { x: 0.53, y: 0.86, rx: 14, ry: 7, rot: 0.3 },
+                { x: 0.62, y: 0.82, rx: 16, ry: 8, rot: -0.2 },
+                { x: 0.70, y: 0.84, rx: 18, ry: 9, rot: 0.1 },
+                { x: 0.75, y: 0.81, rx: 13, ry: 6.5, rot: -0.25 },
+            ]
+            pathStones.forEach((stone) => {
+                const sx = stone.x * W
+                const sy = stone.y * H
+                ctx.shadowColor = "rgba(0, 0, 0, 0.08)"
+                ctx.shadowBlur = 4
+                ctx.shadowOffsetY = 2
+                ctx.fillStyle = dark ? "#1e293b" : "#94a3b8"
+                ctx.strokeStyle = dark ? "#0f172a" : "#cbd5e1"
+                ctx.lineWidth = 1.5
+                ctx.beginPath()
+                ctx.ellipse(sx, sy, stone.rx, stone.ry, stone.rot, 0, Math.PI * 2)
+                ctx.fill()
+                ctx.stroke()
+            })
+            ctx.restore()
 
             // ── KOI POND & SHISHI-ODOSHI ──
             const pondX = 0.16 * W
@@ -954,31 +997,39 @@ export function VisualGarden({ onAddPlant }: { onAddPlant?: () => void }) {
             ctx.ellipse(pondX, pondY, pondRx, pondRy, 0, 0, Math.PI * 2)
             ctx.fill()
 
-            // Draw pond stone border (ring of stones)
+            // Organic pebbles around the pond border
             ctx.save()
-            ctx.strokeStyle = dark ? "#27354a" : "#64748b"
-            ctx.lineWidth = 4
-            ctx.beginPath()
-            ctx.ellipse(pondX, pondY, pondRx, pondRy, 0, 0, Math.PI * 2)
-            ctx.stroke()
-            
-            // Draw slate details/stepping stones around the pond border
-            for (let i = 0; i < 12; i++) {
-                const angle = (i * Math.PI * 2) / 12
-                const sx = pondX + Math.cos(angle) * pondRx
-                const sy = pondY + Math.sin(angle) * pondRy
-                ctx.fillStyle = dark ? "#334155" : "#94a3b8"
+            const pebbleCount = 18
+            for (let i = 0; i < pebbleCount; i++) {
+                const angle = (i * Math.PI * 2) / pebbleCount
+                const offsetRadiusX = pondRx + 4 + Math.sin(i * 2.3) * 3
+                const offsetRadiusY = pondRy + 2 + Math.cos(i * 1.9) * 2
+                const sx = pondX + Math.cos(angle) * offsetRadiusX
+                const sy = pondY + Math.sin(angle) * offsetRadiusY
+                
+                const pebbleRx = 6 + (i % 3) * 3.5
+                const pebbleRy = pebbleRx * (0.6 + Math.sin(i) * 0.15)
+                const pebbleRot = angle + (i % 2 === 0 ? 0.25 : -0.25)
+
+                ctx.shadowColor = "rgba(0, 0, 0, 0.12)"
+                ctx.shadowBlur = 3
+                ctx.shadowOffsetY = 1.5
+                
+                ctx.fillStyle = dark ? "#334155" : "#64748b"
+                ctx.strokeStyle = dark ? "#1e293b" : "#475569"
+                ctx.lineWidth = 1.2
                 ctx.beginPath()
-                ctx.arc(sx, sy, 3 + (i % 3) * 2, 0, Math.PI * 2)
+                ctx.ellipse(sx, sy, pebbleRx, pebbleRy, pebbleRot, 0, Math.PI * 2)
                 ctx.fill()
+                ctx.stroke()
             }
             ctx.restore()
 
             // Water shine lines
             ctx.save()
-            ctx.globalAlpha = 0.12
+            ctx.globalAlpha = 0.15
             ctx.strokeStyle = "#ffffff"
-            ctx.lineWidth = 1
+            ctx.lineWidth = 1.2
             ctx.beginPath()
             ctx.ellipse(pondX - 8, pondY - 4, pondRx * 0.72, pondRy * 0.65, 0.05, 0, Math.PI * 2)
             ctx.stroke()
@@ -1004,7 +1055,6 @@ export function VisualGarden({ onAddPlant }: { onAddPlant?: () => void }) {
             ctx.save()
             const activeFood = foodRef.current
             koiRef.current.forEach(koi => {
-                // If there's food, find the closest one
                 let targetX = koi.targetX
                 let targetY = koi.targetY
                 let targetFoodIndex = -1
@@ -1013,7 +1063,7 @@ export function VisualGarden({ onAddPlant }: { onAddPlant?: () => void }) {
                 if (activeFood.length > 0) {
                     activeFood.forEach((food, idx) => {
                         const dx = food.x - koi.x
-                        const dy = (food.y - koi.y) * 2 // stretch Y to compensate for ellipse flattening
+                        const dy = (food.y - koi.y) * 2 
                         const dist = Math.sqrt(dx * dx + dy * dy)
                         if (dist < minFoodDist) {
                             minFoodDist = dist
@@ -1022,14 +1072,11 @@ export function VisualGarden({ onAddPlant }: { onAddPlant?: () => void }) {
                             targetFoodIndex = idx
                         }
                     })
-                    // Swim faster to food
                     koi.speed = 0.0016
                 } else {
-                    // Standard wander speed
                     koi.speed = koi.color === "#f97316" ? 0.0009 : koi.color === "#ef4444" ? 0.0011 : 0.0007
                 }
 
-                // If close to wander target, pick a new random target within the pond ellipse
                 const dxWander = targetX - koi.x
                 const dyWander = (targetY - koi.y) * 2
                 if (Math.sqrt(dxWander * dxWander + dyWander * dyWander) < 0.015 && activeFood.length === 0) {
@@ -1039,7 +1086,6 @@ export function VisualGarden({ onAddPlant }: { onAddPlant?: () => void }) {
                     koi.targetY = 0.86 + r * 0.5 * Math.sin(angle)
                 }
 
-                // Smoothly steer towards target
                 const dx = targetX - koi.x
                 const dy = targetY - koi.y
                 const targetAngle = Math.atan2(dy, dx)
@@ -1048,25 +1094,19 @@ export function VisualGarden({ onAddPlant }: { onAddPlant?: () => void }) {
                 while (diff > Math.PI) diff -= Math.PI * 2
                 koi.angle += diff * 0.08
 
-                // Move forward
                 koi.x += Math.cos(koi.angle) * koi.speed
                 koi.y += Math.sin(koi.angle) * koi.speed
 
-                // Keep inside pond boundaries
                 const dPondX = (koi.x - 0.16) / 0.11
                 const dPondY = (koi.y - 0.86) / 0.055
                 const pondDist = dPondX * dPondX + dPondY * dPondY
                 if (pondDist > 0.88) {
-                    // steer back towards center
                     koi.targetX = 0.16 + (Math.random() - 0.5) * 0.05
                     koi.targetY = 0.86 + (Math.random() - 0.5) * 0.02
                 }
 
-                // Eating food check
                 if (targetFoodIndex !== -1 && minFoodDist < 0.018) {
-                    // Consume food
                     foodRef.current.splice(targetFoodIndex, 1)
-                    // Spawn water vapor bubbles
                     for (let j = 0; j < 5; j++) {
                         parts.current.push({
                             x: koi.x * W,
@@ -1083,22 +1123,29 @@ export function VisualGarden({ onAddPlant }: { onAddPlant?: () => void }) {
                     }
                 }
 
-                // Draw Koi fish shape
+                // ── KOI DEPTH SHADOW ──
+                ctx.save()
+                ctx.translate(koi.x * W, koi.y * H + 6)
+                ctx.rotate(koi.angle)
+                ctx.fillStyle = "rgba(0, 0, 0, 0.25)"
+                ctx.beginPath()
+                ctx.ellipse(0, 0, 7.5, 3.0, 0, 0, Math.PI * 2)
+                ctx.fill()
+                ctx.restore()
+
+                // Draw Koi fish body
                 ctx.save()
                 ctx.translate(koi.x * W, koi.y * H)
                 ctx.rotate(koi.angle)
 
                 const wiggle = Math.sin(t * 0.15 + (koi.speed * 8000)) * 0.28
                 ctx.fillStyle = koi.color
-                ctx.shadowColor = "rgba(0,0,0,0.15)"
-                ctx.shadowBlur = 4
 
                 // Body
                 ctx.beginPath()
                 ctx.ellipse(0, 0, 8, 3.2, 0, 0, Math.PI * 2)
                 ctx.fill()
 
-                // Spot overlay details
                 if (koi.color === "#ffffff") {
                     ctx.fillStyle = "#f97316"
                     ctx.beginPath()
@@ -1110,7 +1157,6 @@ export function VisualGarden({ onAddPlant }: { onAddPlant?: () => void }) {
                     ctx.fill()
                 }
 
-                // Tail fin
                 ctx.fillStyle = koi.color
                 ctx.beginPath()
                 ctx.moveTo(-8, 0)
@@ -1120,7 +1166,6 @@ export function VisualGarden({ onAddPlant }: { onAddPlant?: () => void }) {
                 ctx.quadraticCurveTo(-11, 3.5 + wiggle * 4, -8, 0)
                 ctx.fill()
 
-                // Fins
                 ctx.beginPath()
                 ctx.ellipse(-1, -2.5, 2.5, 1.2, -Math.PI / 4, 0, Math.PI * 2)
                 ctx.ellipse(-1, 2.5, 2.5, 1.2, Math.PI / 4, 0, Math.PI * 2)
@@ -1130,58 +1175,98 @@ export function VisualGarden({ onAddPlant }: { onAddPlant?: () => void }) {
             })
             ctx.restore()
 
-            // Update & Draw Shishi-odoshi Bamboo Fountain
+            // ── LILY PADS & LOTUS FLOWER ──
+            ctx.save()
+            const drawLilyPad = (x: number, y: number, r: number, rotation: number) => {
+                ctx.save()
+                ctx.translate(x, y)
+                ctx.rotate(rotation)
+                ctx.fillStyle = dark ? "#14532d" : "#166534"
+                ctx.strokeStyle = dark ? "#052e16" : "#14532d"
+                ctx.lineWidth = 1
+                ctx.beginPath()
+                ctx.arc(0, 0, r, 0.25, Math.PI * 1.85)
+                ctx.lineTo(0, 0)
+                ctx.closePath()
+                ctx.fill()
+                ctx.stroke()
+                ctx.restore()
+            }
+            
+            drawLilyPad(pondX - pondRx * 0.4, pondY - pondRy * 0.3, 10, -0.4)
+            drawLilyPad(pondX + pondRx * 0.3, pondY + pondRy * 0.4, 12, 1.2)
+            drawLilyPad(pondX + pondRx * 0.5, pondY - pondRy * 0.2, 8, 2.5)
+
+            // Lotus sitting on the top-left lily pad
+            const lfx = pondX - pondRx * 0.4
+            const lfy = pondY - pondRy * 0.3
+            const lfSize = 7
+            ctx.save()
+            ctx.translate(lfx, lfy)
+            ctx.fillStyle = "#f472b6" 
+            ctx.strokeStyle = "#db2777"
+            ctx.lineWidth = 0.5
+            for (let p = 0; p < 6; p++) {
+                const angle = (p * Math.PI * 2) / 6
+                ctx.beginPath()
+                ctx.ellipse(Math.cos(angle) * lfSize * 0.5, Math.sin(angle) * lfSize * 0.5, lfSize * 0.8, lfSize * 0.4, angle, 0, Math.PI * 2)
+                ctx.fill()
+                ctx.stroke()
+            }
+            ctx.fillStyle = "#fbbf24"
+            ctx.beginPath()
+            ctx.arc(0, 0, lfSize * 0.3, 0, Math.PI * 2)
+            ctx.fill()
+            ctx.restore()
+            ctx.restore()
+
+            // ── SHISHI-ODOSHI BAMBOO FOUNTAIN (2.5x SCALE UP) ──
             const shishiX = 0.28 * W
-            const shishiY = 0.82 * H
+            const shishiY = 0.81 * H
             let shishiClacked = false
             let shishiSpilling = false
 
-            // Update fountain state
             if (shishiFillRef.current < 1 && shishiFillRef.current >= 0) {
-                // Fills over time
                 shishiFillRef.current += 0.0022 + Math.random() * 0.0008
                 shishiAngleRef.current = -0.15 + 0.1 * shishiFillRef.current
             } else if (shishiFillRef.current >= 1) {
-                // Tilts forward and dumps
                 shishiAngleRef.current += 0.04
                 if (shishiAngleRef.current >= 0.4) {
                     shishiAngleRef.current = 0.4
                     shishiSpilling = true
-                    // Spill particles & ripples
                     if (t % 3 === 0) {
-                        const sx = shishiX - 8
-                        const sy = shishiY + 2
+                        const tipX = shishiX + Math.cos(shishiAngleRef.current) * (-42)
+                        const tipY = shishiY + Math.sin(shishiAngleRef.current) * (-42)
                         parts.current.push({
-                            x: sx,
-                            y: sy,
-                            vx: -1.2 - Math.random() * 1.5,
-                            vy: 2 + Math.random() * 1.5,
+                            x: tipX,
+                            y: tipY,
+                            vx: -1.5 - Math.random() * 2.0,
+                            vy: 2.5 + Math.random() * 2.0,
                             rot: 0,
-                            size: 1.5 + Math.random() * 2,
-                            color: "rgba(186, 230, 253, 0.75)",
-                            op: 0.85,
+                            size: 2 + Math.random() * 2.5,
+                            color: "rgba(186, 230, 253, 0.8)",
+                            op: 0.9,
                             type: "vapor",
                             life: 0
                         })
                         parts.current.push({
-                            x: sx - 16,
-                            y: sy + 15,
+                            x: tipX - 18,
+                            y: tipY + 22,
                             vx: 0,
                             vy: 0,
                             rot: 0,
-                            size: 1.5,
-                            color: "rgba(186, 230, 253, 0.55)",
-                            op: 0.8,
+                            size: 2.2,
+                            color: "rgba(186, 230, 253, 0.65)",
+                            op: 0.85,
                             type: "ripple",
                             life: 0
                         })
                     }
                     if (Math.random() < 0.08) {
-                        shishiFillRef.current = -0.5 // Start return swing
+                        shishiFillRef.current = -0.5 
                     }
                 }
             } else {
-                // Swing back to empty rest
                 shishiAngleRef.current -= 0.048
                 if (shishiAngleRef.current <= -0.15) {
                     shishiAngleRef.current = -0.15
@@ -1192,74 +1277,101 @@ export function VisualGarden({ onAddPlant }: { onAddPlant?: () => void }) {
 
             if (shishiClacked) {
                 playClack()
-                // spawn clack splash ripples
+                const backX = shishiX + Math.cos(shishiAngleRef.current) * 33
+                const backY = shishiY + Math.sin(shishiAngleRef.current) * 33
                 for (let j = 0; j < 6; j++) {
                     parts.current.push({
-                        x: shishiX + 12,
-                        y: shishiY + 14,
-                        vx: (Math.random() - 0.5) * 1.2,
-                        vy: -1.2 - Math.random() * 1.2,
+                        x: backX,
+                        y: backY,
+                        vx: (Math.random() - 0.5) * 1.5,
+                        vy: -1.5 - Math.random() * 1.5,
                         rot: Math.random() * Math.PI,
-                        size: Math.random() * 2 + 1,
+                        size: Math.random() * 3 + 1.5,
                         color: dark ? "#334155" : "#94a3b8",
-                        op: 0.8,
+                        op: 0.85,
                         type: "soil",
                         life: 0
                     })
                 }
             }
 
-            // Draw Stone base
+            // Clacking stone
             ctx.fillStyle = dark ? "#334155" : "#64748b"
+            ctx.strokeStyle = dark ? "#1e293b" : "#475569"
+            ctx.lineWidth = 1.5
             ctx.beginPath()
-            ctx.arc(shishiX + 12, shishiY + 14, 5, 0, Math.PI * 2)
+            ctx.arc(shishiX + 32, shishiY + 36, 12, 0, Math.PI * 2)
             ctx.fill()
-
-            // Draw Bamboo A-frame Stand
-            ctx.strokeStyle = dark ? "#14532d" : "#166534"
-            ctx.lineWidth = 3
-            ctx.beginPath()
-            ctx.moveTo(shishiX - 6, shishiY + 15)
-            ctx.lineTo(shishiX, shishiY)
-            ctx.lineTo(shishiX + 6, shishiY + 15)
             ctx.stroke()
 
-            // Draw Pivoting bamboo tube
+            // Bamboo A-frame Stand
+            ctx.strokeStyle = dark ? "#0f4020" : "#1e4d2b"
+            ctx.lineWidth = 6
+            ctx.beginPath()
+            ctx.moveTo(shishiX - 16, shishiY + 38)
+            ctx.lineTo(shishiX, shishiY)
+            ctx.lineTo(shishiX + 16, shishiY + 38)
+            ctx.stroke()
+            
+            // Crossbar support
+            ctx.strokeStyle = dark ? "#0a2e16" : "#143a1e"
+            ctx.lineWidth = 4
+            ctx.beginPath()
+            ctx.moveTo(shishiX - 11, shishiY + 26)
+            ctx.lineTo(shishiX + 11, shishiY + 26)
+            ctx.stroke()
+
+            // Pivoting bamboo tube (rendered on top of stand)
             ctx.save()
             ctx.translate(shishiX, shishiY)
             ctx.rotate(shishiAngleRef.current)
             
-            // Tube body
             ctx.fillStyle = dark ? "#15803d" : "#22c55e"
-            ctx.strokeStyle = dark ? "#14532d" : "#15803d"
-            ctx.lineWidth = 1.2
+            ctx.strokeStyle = dark ? "#0f4020" : "#14532d"
+            ctx.lineWidth = 2.5
             ctx.beginPath()
-            ctx.rect(-18, -3, 32, 5.5)
+            ctx.rect(-42, -7.5, 75, 15)
             ctx.fill()
             ctx.stroke()
 
-            // Hollow opening at front
-            ctx.fillStyle = dark ? "#052e16" : "#14532d"
+            // Bamboo stalk joint knot
+            ctx.strokeStyle = dark ? "#0a2e16" : "#1b4d2c"
+            ctx.lineWidth = 2.5
             ctx.beginPath()
-            ctx.ellipse(-18, -0.25, 1.2, 2.7, 0, 0, Math.PI * 2)
+            ctx.moveTo(12, -7.5)
+            ctx.lineTo(12, 7.5)
+            ctx.stroke()
+
+            // Hollow slanted cut opening
+            ctx.fillStyle = dark ? "#022c22" : "#134e4a"
+            ctx.beginPath()
+            ctx.ellipse(-42, 0, 3, 7.2, 0, 0, Math.PI * 2)
             ctx.fill()
             ctx.restore()
 
-            // Draw Source pipe pouring water
-            ctx.strokeStyle = dark ? "#14532d" : "#166534"
-            ctx.lineWidth = 3
+            // Source spout bamboo pipe
+            ctx.strokeStyle = dark ? "#0f4020" : "#1b4d2c"
+            ctx.lineWidth = 6
             ctx.beginPath()
-            ctx.moveTo(shishiX + 18, shishiY - 24)
-            ctx.lineTo(shishiX + 4, shishiY - 16)
+            ctx.moveTo(shishiX + 38, shishiY - 45)
+            ctx.lineTo(shishiX + 10, shishiY - 32)
             ctx.stroke()
 
-            // Water trickle pouring down into the pivot's catchment zone
+            // Bamboo knot on source spout
+            ctx.strokeStyle = dark ? "#052e16" : "#0f301b"
+            ctx.lineWidth = 2
+            ctx.beginPath()
+            ctx.moveTo(shishiX + 24, shishiY - 38)
+            ctx.lineTo(shishiX + 26, shishiY - 34)
+            ctx.stroke()
+
+            // Trickle water
             if (shishiFillRef.current >= 0) {
-                ctx.strokeStyle = "rgba(186, 230, 253, 0.72)"
-                ctx.lineWidth = 1.2
+                ctx.strokeStyle = "rgba(186, 230, 253, 0.78)"
+                ctx.lineWidth = 2.5
                 ctx.beginPath()
-                ctx.moveTo(shishiX + 4, shishiY - 16)
-                ctx.quadraticCurveTo(shishiX + 2, shishiY - 8, shishiX, shishiY - 1)
+                ctx.moveTo(shishiX + 10, shishiY - 32)
+                ctx.quadraticCurveTo(shishiX + 7, shishiY - 16, shishiX + 4, shishiY - 1)
                 ctx.stroke()
             }
 
@@ -1327,11 +1439,42 @@ export function VisualGarden({ onAddPlant }: { onAddPlant?: () => void }) {
                 }
                 if (plant.growth <= 0) return
                 const px = plant.x * W, py = plant.y * H, s = plant.scale * plant.growth
+                
+                // Interactive Proximity Swaying
+                let hoverSway = 0
+                if (mousePosRef.current.isOver) {
+                    const mx = mousePosRef.current.x * W
+                    const my = mousePosRef.current.y * H
+                    const plantCenterX = px
+                    const plantCenterY = py - (plant.type === 'tree' ? 80 : 30) * s
+                    const dx = mx - plantCenterX
+                    const dy = my - plantCenterY
+                    const dist = Math.sqrt(dx * dx + dy * dy)
+                    const activeDist = plant.type === 'tree' ? 90 : 50
+                    if (dist < activeDist) {
+                        const intensity = (1 - dist / activeDist)
+                        hoverSway = Math.sin(t * 0.15 + plant.seed) * intensity * 0.08
+                    }
+                }
+
                 const gustEffect = windGustRef.current.duration > 0 
                     ? Math.sin(t * 0.08) * windGustRef.current.intensity * 0.006 + windGustRef.current.intensity * 0.005
                     : 0
-                const wind = Math.sin(t * 0.003) * 0.005 + Math.sin(t * (plant.swaySpeed * 0.4) + plant.swayOffset) * 0.008 + gustEffect
-                ctx.save(); ctx.translate(px, py)
+                const wind = Math.sin(t * 0.003) * 0.005 + Math.sin(t * (plant.swaySpeed * 0.4) + plant.swayOffset) * 0.008 + gustEffect + hoverSway
+                
+                ctx.save()
+                ctx.translate(px, py)
+
+                // Soft grounding shadow
+                ctx.save()
+                ctx.fillStyle = dark ? "rgba(2, 44, 22, 0.45)" : "rgba(15, 23, 42, 0.16)"
+                ctx.beginPath()
+                const shadowRx = plant.type === 'tree' ? 24 * s : 12 * s
+                const shadowRy = shadowRx * 0.35
+                ctx.ellipse(0, -1, shadowRx, shadowRy, 0, 0, Math.PI * 2)
+                ctx.fill()
+                ctx.restore()
+
                 if (editMode && plant.id === selectedPlantId) {
                     ctx.shadowColor = '#10B981'; // Emerald glow for selection
                     ctx.shadowBlur = 20;
@@ -2169,7 +2312,7 @@ export function VisualGarden({ onAddPlant }: { onAddPlant?: () => void }) {
                     <div className="flex bg-slate-100 dark:bg-slate-800/80 p-1 rounded-xl mx-4 mt-4 mb-1 border border-slate-200/50 dark:border-slate-700/50 shadow-inner">
                         <button
                             onClick={() => setNurseryTab("shop")}
-                            className={`flex-1 py-1.5 rounded-lg text-xs font-bold transition-all ${nurseryTab === "shop" ? 'bg-white dark:bg-slate-700 shadow-sm text-slate-800 dark:text-white' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-350'}`}
+                            className={`flex-1 py-1.5 rounded-lg text-xs font-bold transition-all ${nurseryTab === "shop" ? 'bg-white dark:bg-slate-700 shadow-sm text-slate-800 dark:text-white' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}
                         >
                             🛍️ Seed Shop
                         </button>
@@ -2180,7 +2323,7 @@ export function VisualGarden({ onAddPlant }: { onAddPlant?: () => void }) {
                             return (
                                 <button
                                     onClick={() => setNurseryTab("storage")}
-                                    className={`flex-1 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${nurseryTab === "storage" ? 'bg-white dark:bg-slate-700 shadow-sm text-slate-800 dark:text-white' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-350'}`}
+                                    className={`flex-1 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${nurseryTab === "storage" ? 'bg-white dark:bg-slate-700 shadow-sm text-slate-800 dark:text-white' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}
                                 >
                                     <span>🎒 Storage Bag</span>
                                     {currentStorage.length > 0 && (
@@ -2206,7 +2349,7 @@ export function VisualGarden({ onAddPlant }: { onAddPlant?: () => void }) {
                                                 <div className="flex items-center gap-2">
                                                     <span className="text-2xl">{item.icon}</span>
                                                     <div>
-                                                        <h4 className="font-bold text-sm text-slate-850 dark:text-slate-250">{item.name}</h4>
+                                                        <h4 className="font-bold text-sm text-slate-800 dark:text-slate-200">{item.name}</h4>
                                                         <p className="text-[10px] text-slate-500 leading-normal">{item.desc}</p>
                                                     </div>
                                                 </div>
@@ -2247,7 +2390,7 @@ export function VisualGarden({ onAddPlant }: { onAddPlant?: () => void }) {
                                 return currentStorage.length === 0 ? (
                                     <div className="text-center py-10 space-y-2">
                                         <span className="text-4xl block">🎒</span>
-                                        <h4 className="font-bold text-sm text-slate-700 dark:text-slate-350">Storage Bag is Empty</h4>
+                                        <h4 className="font-bold text-sm text-slate-700 dark:text-slate-300">Storage Bag is Empty</h4>
                                         <p className="text-xs text-slate-400 max-w-xs mx-auto">
                                             Dug up plants from your garden will appear here. Re-plant them anytime for free!
                                         </p>
@@ -2260,7 +2403,7 @@ export function VisualGarden({ onAddPlant }: { onAddPlant?: () => void }) {
                                                     <div className="flex items-center gap-2">
                                                         <span className="text-2xl">{plantIcons[item.subtype] || "🌱"}</span>
                                                         <div>
-                                                            <h4 className="font-bold text-sm text-slate-850 dark:text-slate-250">
+                                                            <h4 className="font-bold text-sm text-slate-800 dark:text-slate-200">
                                                                 {PLANT_NAMES[item.subtype] || item.subtype}
                                                             </h4>
                                                             <p className="text-[10px] text-slate-500">
@@ -2305,7 +2448,7 @@ export function VisualGarden({ onAddPlant }: { onAddPlant?: () => void }) {
                                     toast.success("Added +500 ☀️ and +100 💧!")
                                 }
                             }}
-                            className="w-full mt-4 p-2.5 bg-gradient-to-r from-amber-50 to-blue-50 dark:from-amber-950/20 dark:to-blue-950/20 hover:from-amber-100 hover:to-blue-100 dark:hover:from-amber-950/40 dark:hover:to-blue-950/40 text-xs font-semibold rounded-xl border border-amber-200/50 dark:border-amber-800/30 text-slate-600 dark:text-slate-350 transition-colors"
+                            className="w-full mt-4 p-2.5 bg-gradient-to-r from-amber-50 to-blue-50 dark:from-amber-950/20 dark:to-blue-950/20 hover:from-amber-100 hover:to-blue-100 dark:hover:from-amber-950/40 dark:hover:to-blue-950/40 text-xs font-semibold rounded-xl border border-amber-200/50 dark:border-amber-800/30 text-slate-600 dark:text-slate-300 transition-colors"
                         >
                             🎁 Bonus: +500 ☀️  +100 💧 {gardenView === "shared" && "(Co-op)"}
                         </button>

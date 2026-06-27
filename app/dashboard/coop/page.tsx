@@ -877,7 +877,7 @@ export default function CoopPage() {
                                 ]
                                 .sort((a, b) => (b.sun + b.water) - (a.sun + a.water))
                                 .map((member, idx) => (
-                                    <div key={member.name} className="flex items-center justify-between p-4 hover:bg-slate-50/50 dark:hover:bg-slate-850/50 transition-colors">
+                                    <div key={member.name} className="flex items-center justify-between p-4 hover:bg-slate-50/50 dark:hover:bg-slate-800/50 transition-colors">
                                         <div className="flex items-center gap-3">
                                             <span className="text-xl font-bold w-6 text-center">{idx + 1 === 1 ? "🥇" : idx + 1 === 2 ? "🥈" : idx + 1 === 3 ? "🥉" : "🌿"}</span>
                                             <div>
@@ -1015,7 +1015,7 @@ export default function CoopPage() {
                                                      {new Date(log.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                                                  </span>
                                              </div>
-                                             <p className="text-xs text-slate-700 dark:text-slate-350 font-medium">
+                                             <p className="text-xs text-slate-700 dark:text-slate-300 font-medium">
                                                  {log.message}
                                              </p>
                                          </div>

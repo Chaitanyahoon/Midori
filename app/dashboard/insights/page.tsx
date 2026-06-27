@@ -287,7 +287,7 @@ export default function InsightsPage() {
                       ☀️
                     </div>
                     <div>
-                      <p className="text-[10px] uppercase font-bold text-slate-450 dark:text-slate-505 tracking-wider">Peak Hour Range</p>
+                      <p className="text-[10px] uppercase font-bold text-slate-500 dark:text-slate-400 tracking-wider">Peak Hour Range</p>
                       <p className="text-lg font-black text-slate-800 dark:text-slate-200">
                         {analytics.peakHourRange}
                       </p>
@@ -299,7 +299,7 @@ export default function InsightsPage() {
                       📅
                     </div>
                     <div>
-                      <p className="text-[10px] uppercase font-bold text-slate-450 dark:text-slate-505 tracking-wider">Peak Day of Week</p>
+                      <p className="text-[10px] uppercase font-bold text-slate-500 dark:text-slate-400 tracking-wider">Peak Day of Week</p>
                       <p className="text-lg font-black text-slate-800 dark:text-slate-200">
                         {analytics.peakDay}
                       </p>
@@ -351,13 +351,25 @@ export default function InsightsPage() {
                       {/* Right: Info & Progress */}
                       <div className="flex-grow min-w-0 space-y-1.5">
                         <div className="flex items-center justify-between gap-2">
-                          <h4 className="text-sm font-bold text-slate-800 dark:text-slate-250 truncate">{badge.name}</h4>
-                          <span className="text-[10px] font-black text-slate-450 dark:text-slate-500 shrink-0">
+                          <h4 className={`text-sm font-bold truncate transition-colors ${
+                            badge.unlocked
+                              ? "text-slate-800 dark:text-slate-100"
+                              : "text-slate-500 dark:text-slate-400"
+                          }`}>{badge.name}</h4>
+                          <span className={`text-[10px] font-black shrink-0 transition-colors ${
+                            badge.unlocked
+                              ? "text-slate-700 dark:text-slate-300"
+                              : "text-slate-400 dark:text-slate-500"
+                          }`}>
                             {badge.current} / {badge.target}
                           </span>
                         </div>
                         
-                        <p className="text-[10px] text-slate-500 dark:text-slate-400 leading-tight line-clamp-1">{badge.desc}</p>
+                        <p className={`text-[10px] leading-tight line-clamp-1 transition-colors ${
+                          badge.unlocked
+                            ? "text-slate-500 dark:text-slate-300"
+                            : "text-slate-400 dark:text-slate-500"
+                        }`}>{badge.desc}</p>
                         
                         {/* Progress Bar */}
                         <div className="h-1 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
@@ -371,7 +383,7 @@ export default function InsightsPage() {
                   ))}
                 </div>
 
-                <div className="pt-6 border-t border-slate-100 dark:border-slate-800/80 text-[11px] text-slate-505 mt-6 leading-relaxed">
+                <div className="pt-6 border-t border-slate-100 dark:border-slate-800/80 text-[11px] text-slate-500 dark:text-slate-400 mt-6 leading-relaxed">
                   🏆 Unlocking badges represents your continuous mental cultivation. Continue completing tasks and focus sessions to unlock all rewards!
                 </div>
               </Card>

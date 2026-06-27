@@ -12,6 +12,7 @@ import { useData } from "@/components/local-data-provider"
 import { useToast } from "@/hooks/use-toast"
 import { useMusicStore, type MusicTrack } from "@/lib/store"
 import { ambientGenerator } from "@/lib/ambient-generator"
+import { Switch } from "@/components/ui/switch"
 
 // Extract video ID from YouTube URL
 const extractVideoId = (url: string): string | null => {
@@ -360,7 +361,17 @@ export function FocusMusicPlayer({
     ambientVolume,
     setAmbientVolume,
     activeAmbients,
+    toggleAmbient,
+    setAmbientVolumeSingle,
   } = useMusicStore()
+
+  const [syncWithTimer, setSyncWithTimer] = useState(() => {
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem("midori_sync_audio_timer")
+      return saved ? saved === "true" : true
+    }
+    return true
+  })
 
   const playerRef = useRef<any>(null)
   const apiReadyRef = useRef(false)
@@ -411,20 +422,43 @@ export function FocusMusicPlayer({
     })
   }
 
-  // Auto-play music based on timer state
+  // Auto-play & sync music based on timer state
   useEffect(() => {
-    if (isActive && !isBreak && !isPlaying) {
-      const focusMusic = MUSIC_OPTIONS.find((m) => m.category === "focus")
-      if (focusMusic) {
-        handlePlayMusic(focusMusic)
+    if (isActive) {
+      // Timer is running
+      if (!isPlaying) {
+        if (syncWithTimer) {
+          // If synced, resume current or play default
+          if (currentTrack) {
+            handlePlayMusic(currentTrack)
+          } else {
+            const defaultTrack = MUSIC_OPTIONS.find((m) => m.category === (isBreak ? "relax" : "focus"))
+            if (defaultTrack) handlePlayMusic(defaultTrack)
+          }
+        } else {
+          // Normal autoplay on start
+          if (!isBreak) {
+            const focusMusic = MUSIC_OPTIONS.find((m) => m.category === "focus")
+            if (focusMusic) handlePlayMusic(focusMusic)
+          }
+        }
+      } else {
+        // Music is playing. Handle focus/break transitions
+        if (isBreak && currentTrack?.category === "focus") {
+          const relaxMusic = MUSIC_OPTIONS.find((m) => m.category === "relax")
+          if (relaxMusic) handlePlayMusic(relaxMusic)
+        } else if (!isBreak && currentTrack?.category === "relax") {
+          const focusMusic = MUSIC_OPTIONS.find((m) => m.category === "focus")
+          if (focusMusic) handlePlayMusic(focusMusic)
+        }
       }
-    } else if (isBreak && isPlaying && currentTrack?.category === "focus") {
-      const relaxMusic = MUSIC_OPTIONS.find((m) => m.category === "relax")
-      if (relaxMusic) {
-        handlePlayMusic(relaxMusic)
+    } else {
+      // Timer is paused or inactive
+      if (syncWithTimer && isPlaying) {
+        handlePause()
       }
     }
-  }, [isActive, isBreak])
+  }, [isActive, isBreak, syncWithTimer])
 
   // Load YouTube IFrame API on-demand when a YouTube track starts playing
   useEffect(() => {
@@ -766,27 +800,41 @@ export function FocusMusicPlayer({
                 </div>
               </div>
 
-              {/* Equalizer bars when playing */}
-              {isPlaying && (
-                <div className="flex items-end gap-0.5 h-5 mr-1">
-                  {[3, 5, 4, 6, 3].map((h, i) => (
-                    <div
-                      key={i}
-                      className="w-1 bg-emerald-500 rounded-full"
-                      style={{
-                        height: `${h * 3}px`,
-                        animation: `equalizer ${0.6 + i * 0.1}s ease-in-out infinite alternate`,
-                      }}
-                    />
-                  ))}
-                  <style>{`
-                    @keyframes equalizer {
-                      from { transform: scaleY(0.4); }
-                      to   { transform: scaleY(1);   }
-                    }
-                  `}</style>
+              {/* Sync Timer Switch & Equalizer */}
+              <div className="flex items-center gap-3.5">
+                <div className="flex items-center gap-1.5 text-[10px] font-bold text-slate-400 dark:text-slate-500">
+                  <span>Sync Timer</span>
+                  <Switch
+                    checked={syncWithTimer}
+                    onCheckedChange={(checked) => {
+                      setSyncWithTimer(checked)
+                      localStorage.setItem("midori_sync_audio_timer", String(checked))
+                    }}
+                    className="scale-75 origin-right"
+                  />
                 </div>
-              )}
+
+                {isPlaying && (
+                  <div className="flex items-end gap-0.5 h-5 mr-1">
+                    {[3, 5, 4, 6, 3].map((h, i) => (
+                      <div
+                        key={i}
+                        className="w-1 bg-emerald-500 rounded-full"
+                        style={{
+                          height: `${h * 3}px`,
+                          animation: `equalizer ${0.6 + i * 0.1}s ease-in-out infinite alternate`,
+                        }}
+                      />
+                    ))}
+                    <style>{`
+                      @keyframes equalizer {
+                        from { transform: scaleY(0.4); }
+                        to   { transform: scaleY(1);   }
+                      }
+                    `}</style>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
 
@@ -795,12 +843,13 @@ export function FocusMusicPlayer({
             <Tabs value={activeCategory} onValueChange={(v) => setActiveCategory(v as MusicTrack["category"] | "custom")}>
               <div className="overflow-x-auto scrollbar-hide -mx-1 px-1 mb-3">
                 <TabsList className="flex items-center gap-1 h-auto p-1 bg-slate-100/60 dark:bg-slate-800/50 rounded-xl min-w-max">
-                  {(["focus", "zen", "relax", "energy", "instrumental"] as const).map((cat) => {
+                  {(["focus", "zen", "relax", "energy", "nature", "instrumental"] as const).map((cat) => {
                     const colors: Record<string, string> = {
                       focus: "data-[state=active]:text-emerald-600 dark:data-[state=active]:text-emerald-400",
                       zen: "data-[state=active]:text-teal-600 dark:data-[state=active]:text-teal-400",
                       relax: "data-[state=active]:text-blue-600 dark:data-[state=active]:text-blue-400",
                       energy: "data-[state=active]:text-orange-600 dark:data-[state=active]:text-orange-400",
+                      nature: "data-[state=active]:text-emerald-600 dark:data-[state=active]:text-emerald-400",
                       instrumental: "data-[state=active]:text-purple-600 dark:data-[state=active]:text-purple-400",
                     }
                     return (
@@ -830,7 +879,7 @@ export function FocusMusicPlayer({
                 </TabsList>
               </div>
 
-              {(["focus", "zen", "relax", "energy", "instrumental"] as const).map((cat) => (
+              {(["focus", "zen", "relax", "energy", "nature", "instrumental"] as const).map((cat) => (
                 <TabsContent key={cat} value={cat} className="mt-3 focus-visible:outline-none">
                   <div className="grid grid-cols-1 min-[375px]:grid-cols-2 sm:grid-cols-3 gap-2 max-h-[220px] overflow-y-auto pr-1">
                     {filteredMusic.map((music) => {
@@ -918,12 +967,6 @@ export function FocusMusicPlayer({
                 <h4 className="text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500 flex items-center gap-1.5">
                   <Icons.leaf className="w-3 h-3" /> Nature Mixer
                 </h4>
-                {isAmbientPlaying && ambientTrack && (
-                  <div className="flex items-center gap-2">
-                    <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold">{ambientTrack.name}</span>
-                    <Slider value={ambientVolume} onValueChange={setAmbientVolume} max={100} step={1} className="w-16" />
-                  </div>
-                )}
               </div>
               <div className="flex gap-2">
                 {[
@@ -932,14 +975,12 @@ export function FocusMusicPlayer({
                   { name: "Ocean Waves", icon: <Icons.droplets className="w-4 h-4" />, label: "Ocean" },
                   { name: "Fireplace Sounds", icon: <Icons.sun className="w-4 h-4" />, label: "Fire" }
                 ].map((scape) => {
-                  const track = MUSIC_OPTIONS.find(t => t.name === scape.name)
-                  const active = isAmbientPlaying && ambientTrack?.name === scape.name
-                  if (!track) return null
+                  const active = activeAmbients[scape.name] !== undefined
 
                   return (
                     <button
                       key={scape.name}
-                      onClick={() => handlePlayAmbient(track)}
+                      onClick={() => toggleAmbient(scape.name)}
                       title={scape.name}
                       className={`flex-1 flex flex-col items-center justify-center py-2 rounded-xl transition-all min-h-[54px] border ${active
                           ? "bg-emerald-100 dark:bg-emerald-900/50 border-emerald-400 text-emerald-600 dark:text-emerald-400 shadow-sm"
@@ -952,6 +993,42 @@ export function FocusMusicPlayer({
                   )
                 })}
               </div>
+
+              {/* Multi-sound individual sliders */}
+              {Object.keys(activeAmbients).length > 0 && (
+                <div className="mt-3 space-y-2 border-t border-slate-100 dark:border-slate-800/50 pt-3 animate-in fade-in slide-in-from-top-2 duration-200">
+                  {Object.keys(activeAmbients).map((name) => {
+                    const vol = activeAmbients[name]
+                    const scape = [
+                      { name: "Rain Sounds", label: "Rain" },
+                      { name: "Forest Sounds", label: "Forest" },
+                      { name: "Ocean Waves", label: "Ocean" },
+                      { name: "Fireplace Sounds", label: "Fire" }
+                    ].find(s => s.name === name)
+                    if (!scape) return null
+                    return (
+                      <div key={name} className="flex items-center justify-between gap-3 text-xs bg-white/50 dark:bg-slate-800/20 p-2 rounded-xl border border-slate-200/30 dark:border-slate-700/30">
+                        <span className="font-semibold text-slate-600 dark:text-slate-350 text-[10px]">{scape.label}</span>
+                        <div className="flex items-center gap-2 flex-1 max-w-[120px]">
+                          <Slider
+                            value={[vol]}
+                            onValueChange={(val) => setAmbientVolumeSingle(name, val[0])}
+                            max={100}
+                            className="flex-1"
+                          />
+                          <span className="text-[9px] font-mono text-slate-400 w-6 text-right">{vol}%</span>
+                        </div>
+                        <button
+                          onClick={() => toggleAmbient(name)}
+                          className="text-red-500 hover:text-red-400 text-[10px] font-bold px-1"
+                        >
+                          ✕
+                        </button>
+                      </div>
+                    )
+                  })}
+                </div>
+              )}
             </div>
 
             {/* Now Playing floating bar  */}

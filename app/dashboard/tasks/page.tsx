@@ -18,7 +18,7 @@ import { fireTaskConfetti } from "@/lib/confetti"
 import { playTaskComplete } from "@/lib/sounds"
 
 export default function TasksPage() {
-  const { tasks, addTask, updateTask, deleteTask, settings } = useData()
+  const { tasks, addTask, updateTask, deleteTask, settings, updateSettings } = useData()
   const { userName, userTone } = settings
   const { toast } = useToast()
   const [filter, setFilter] = useState<"all" | "pending" | "completed">("all")
@@ -150,15 +150,30 @@ export default function TasksPage() {
     })
   }
 
-  const handleToggleTask = (taskId: string, completed: boolean) => {
+  const handleToggleTask = async (taskId: string, completed: boolean) => {
     updateTask(taskId, { completed })
     const task = tasks.find((t) => t.id === taskId)
     if (completed && task) {
       fireTaskConfetti()
       playTaskComplete()
+
+      // Calculate passive rewards based on priority
+      const earnedSun = task.priority === "high" ? 8 : task.priority === "medium" ? 5 : 3
+      const earnedWater = task.priority === "high" ? 5 : task.priority === "medium" ? 3 : 2
+      
+      const currentSun = settings?.sunlight ?? 0
+      const currentWater = settings?.waterdrops ?? 0
+
+      try {
+        await updateSettings({
+          sunlight: currentSun + earnedSun,
+          waterdrops: currentWater + earnedWater
+        })
+      } catch (e) {}
+
       const app = getAppreciation(task.title, { userName, tone: (userTone as any) || 'balanced' })
       toast({
-        title: app.title,
+        title: `${app.title} (+${earnedSun}☀️, +${earnedWater}💧)`,
         description: app.message,
       })
     } else {
@@ -607,7 +622,7 @@ export default function TasksPage() {
                             e.dataTransfer.setData("text/plain", task.id)
                             e.dataTransfer.effectAllowed = "move"
                           }}
-                          className={`card-zen p-4 border cursor-grab active:cursor-grabbing hover:scale-[1.02] transition-all bg-white/90 dark:bg-slate-850/85 border-slate-200/80 dark:border-slate-800/60 shadow-sm ${
+                          className={`card-zen p-4 border cursor-grab active:cursor-grabbing hover:scale-[1.02] transition-all bg-white/90 dark:bg-slate-800/85 border-slate-200/80 dark:border-slate-800/60 shadow-sm ${
                             task.completed ? "opacity-60" : ""
                           }`}
                         >
@@ -615,7 +630,7 @@ export default function TasksPage() {
                             <Checkbox
                               checked={task.completed}
                               onCheckedChange={(checked) => handleToggleTask(task.id, checked as boolean)}
-                              className="w-4.5 h-4.5 rounded-full border-slate-350 data-[state=checked]:bg-emerald-500 data-[state=checked]:border-emerald-500"
+                              className="w-4.5 h-4.5 rounded-full border-slate-300 data-[state=checked]:bg-emerald-500 data-[state=checked]:border-emerald-500"
                             />
                             <div className="flex-1 min-w-0">
                               <h4 className={`text-sm font-bold truncate leading-tight ${task.completed ? "line-through text-slate-400" : "text-slate-800 dark:text-slate-100"}`}>
@@ -793,7 +808,7 @@ export default function TasksPage() {
                                               onCheckedChange={(checked) =>
                                                 handleToggleSubTask(task.id, sub.id, checked as boolean)
                                               }
-                                              className="w-4 h-4 rounded-full border border-slate-350 data-[state=checked]:bg-emerald-500 data-[state=checked]:border-emerald-500 transition-all scale-90"
+                                              className="w-4 h-4 rounded-full border border-slate-300 data-[state=checked]:bg-emerald-500 data-[state=checked]:border-emerald-500 transition-all scale-90"
                                             />
                                             <span
                                               className={`text-sm font-medium ${

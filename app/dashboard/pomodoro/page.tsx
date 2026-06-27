@@ -54,7 +54,7 @@ export default function PomodoroPage() {
     formatTime,
   } = usePomodoro()
 
-  const { tasks, pomodoros, updateTask, addTask } = useData()
+  const { tasks, pomodoros, updateTask, addTask, settings: userSettings, updateSettings } = useData()
 
   const [isZenMode, setIsZenMode] = useState(false)
   const [isHistoryOpen, setIsHistoryOpen] = useState(false)
@@ -124,10 +124,24 @@ export default function PomodoroPage() {
     if (completedSessionsToday > prevCompletedCount) {
       setPrevCompletedCount(completedSessionsToday)
       setShowHarvestModal(true)
+      
+      // Award actual resources
+      const earnedSun = 15
+      const earnedWater = 10
+      const currentSun = userSettings?.sunlight ?? 0
+      const currentWater = userSettings?.waterdrops ?? 0
+      updateSettings({
+        sunlight: currentSun + earnedSun,
+        waterdrops: currentWater + earnedWater
+      }).then(() => {
+        toast.success("Garden resources harvested! 🌿", {
+          description: `Received +${earnedSun} Sunlight and +${earnedWater} Waterdrops for your focus!`
+        })
+      }).catch(() => {})
     } else {
       setPrevCompletedCount(completedSessionsToday)
     }
-  }, [completedSessionsToday])
+  }, [completedSessionsToday, userSettings, updateSettings])
 
   // Breathing pacer effect
   useEffect(() => {
@@ -661,7 +675,7 @@ export default function PomodoroPage() {
                         className={`flex flex-col items-center justify-center p-3 rounded-2xl border transition-all duration-300 text-center ${
                           active
                             ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-600 dark:text-emerald-400 font-semibold shadow-md animate-[pulse_3s_infinite]"
-                            : "bg-white/5 border-slate-250/50 dark:border-slate-800/30 text-slate-400 dark:text-slate-500"
+                            : "bg-white/5 border-slate-200/50 dark:border-slate-800/30 text-slate-400 dark:text-slate-500"
                         }`}
                       >
                         <span className={`text-base mb-1 transition-transform duration-500 ${active ? 'scale-110 rotate-3' : 'scale-100 opacity-60'}`}>
@@ -1254,7 +1268,7 @@ export default function PomodoroPage() {
                       <TabsContent value="tracks" className="flex-1 flex flex-col min-h-0 focus-visible:outline-none">
                         {/* Music Category filter */}
                         <div className="flex gap-1.5 overflow-x-auto scrollbar-hide pb-2 mb-3 border-b border-white/5">
-                          {(["focus", "zen", "relax", "energy", "instrumental"] as const).map((cat) => {
+                          {(["focus", "zen", "relax", "energy", "nature", "instrumental"] as const).map((cat) => {
                             const active = musicCat === cat
                             return (
                               <button
@@ -1528,17 +1542,17 @@ export default function PomodoroPage() {
               <div className="card-zen p-4 bg-amber-500/5 dark:bg-amber-500/10 border-amber-500/20 flex flex-col items-center">
                 <Icons.sun className="w-5 h-5 text-amber-500 mb-1" />
                 <span className="text-[10px] uppercase font-bold text-slate-400">Sunlight</span>
-                <span className="text-lg font-black text-amber-700 dark:text-amber-300">+0</span>
+                <span className="text-lg font-black text-amber-700 dark:text-amber-300">+15</span>
               </div>
               <div className="card-zen p-4 bg-blue-500/5 dark:bg-blue-500/10 border-blue-500/20 flex flex-col items-center">
                 <Icons.droplets className="w-5 h-5 text-blue-500 mb-1" />
                 <span className="text-[10px] uppercase font-bold text-slate-400">Water</span>
-                <span className="text-lg font-black text-blue-700 dark:text-blue-300">+1</span>
+                <span className="text-lg font-black text-blue-700 dark:text-blue-300">+10</span>
               </div>
             </div>
 
             {/* Wisdom Quote */}
-            <div className="p-4 bg-slate-50/50 dark:bg-slate-800/40 rounded-2xl border border-slate-100 dark:border-slate-800 italic text-xs text-slate-600 dark:text-slate-350 leading-relaxed font-serif-luxury max-w-sm mx-auto">
+            <div className="p-4 bg-slate-50/50 dark:bg-slate-800/40 rounded-2xl border border-slate-100 dark:border-slate-800 italic text-xs text-slate-600 dark:text-slate-300 leading-relaxed font-serif-luxury max-w-sm mx-auto">
               "Patience and persistence turn the smallest seeds into the mightiest trees."
             </div>
 
@@ -1552,7 +1566,7 @@ export default function PomodoroPage() {
                 placeholder="How did this session go? Any insights or breakthroughs?"
                 value={reflectionText}
                 onChange={(e) => setReflectionText(e.target.value)}
-                className="bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-750 text-xs rounded-xl resize-none text-slate-850 dark:text-slate-200"
+                className="bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-xs rounded-xl resize-none text-slate-800 dark:text-slate-200"
                 rows={2}
               />
             </div>

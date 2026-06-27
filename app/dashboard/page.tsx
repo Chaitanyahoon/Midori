@@ -94,10 +94,19 @@ export default function DashboardPage() {
 
   const todayStr = new Date().toISOString().split("T")[0]
   const todayCompletedTasksList = tasks.filter(t => t.completed && t.completedAt?.startsWith(todayStr))
-  const todaySunlightEarned = todayCompletedTasksList.length * 10
-
   const todayCompletedPomodorosList = pomodoros.filter(p => p.completed && p.startTime?.startsWith(todayStr))
-  const todayWaterdropsEarned = todayCompletedPomodorosList.reduce((acc, p) => acc + (Math.floor(p.duration / 60) || 1), 0)
+
+  // Tasks give +3/5/8 Sun; Pomodoros give +15 Sun
+  const todaySunlightEarned = todayCompletedTasksList.reduce((acc, t) => {
+    const earned = t.priority === "high" ? 8 : t.priority === "medium" ? 5 : 3
+    return acc + earned
+  }, 0) + (todayCompletedPomodorosList.length * 15)
+
+  // Tasks give +2/3/5 Drops; Pomodoros give +10 Drops
+  const todayWaterdropsEarned = todayCompletedTasksList.reduce((acc, t) => {
+    const earned = t.priority === "high" ? 5 : t.priority === "medium" ? 3 : 2
+    return acc + earned
+  }, 0) + (todayCompletedPomodorosList.length * 10)
 
   return (
     <div className="w-full h-full ambient-bg">
@@ -170,14 +179,24 @@ export default function DashboardPage() {
                       <span>Today&apos;s Earnings:</span>
                       <span className="text-amber-600 dark:text-amber-400">+{todaySunlightEarned} Sun</span>
                     </div>
-                    {todayCompletedTasksList.length > 0 ? (
-                      <ul className="max-h-24 overflow-y-auto space-y-1 pl-2 border-l border-amber-500/20 mt-1 scrollbar-thin">
+                    {(todayCompletedTasksList.length > 0 || todayCompletedPomodorosList.length > 0) ? (
+                      <ul className="max-h-28 overflow-y-auto space-y-1 pl-2 border-l border-amber-500/20 mt-1 scrollbar-thin">
                         {todayCompletedTasksList.map(t => (
                           <li key={t.id} className="flex justify-between items-center text-[10px] text-slate-500 dark:text-slate-400">
                             <span className="truncate max-w-[150px]">{t.title}</span>
-                            <span className="font-medium text-amber-500/80">+10 Sun</span>
+                            <span className="font-medium text-amber-500/80">+{t.priority === "high" ? 8 : t.priority === "medium" ? 5 : 3} Sun</span>
                           </li>
                         ))}
+                        {todayCompletedPomodorosList.map((p, idx) => {
+                          const associatedTask = tasks.find(t => t.id === p.taskId)
+                          const displayName = associatedTask ? `Focus: ${associatedTask.title}` : 'Focus Session'
+                          return (
+                            <li key={p.id || idx} className="flex justify-between items-center text-[10px] text-slate-500 dark:text-slate-400">
+                              <span className="truncate max-w-[150px]">{displayName}</span>
+                              <span className="font-medium text-amber-500/80">+15 Sun</span>
+                            </li>
+                          )
+                        })}
                       </ul>
                     ) : (
                       <p className="text-[10px] text-slate-400 italic">No tasks completed yet today.</p>
@@ -187,7 +206,7 @@ export default function DashboardPage() {
                   <div className="border-t border-slate-500/10 pt-2 space-y-1 text-[11px] text-slate-500 dark:text-slate-400">
                     <div className="flex items-start gap-1.5">
                       <span className="text-amber-500">☀️</span>
-                      <span><strong>Earn:</strong> Complete tasks to gain <strong>+10 Sunlight</strong>.</span>
+                      <span><strong>Earn:</strong> Complete tasks (+3/5/8 Sun) or Pomodoros (+15 Sun).</span>
                     </div>
                     <div className="flex items-start gap-1.5">
                       <span className="text-emerald-500">🌱</span>
@@ -232,28 +251,34 @@ export default function DashboardPage() {
                       <span>Today&apos;s Focus:</span>
                       <span className="text-sky-600 dark:text-sky-400">+{todayWaterdropsEarned} Drops</span>
                     </div>
-                    {todayCompletedPomodorosList.length > 0 ? (
-                      <ul className="max-h-24 overflow-y-auto space-y-1 pl-2 border-l border-sky-500/20 mt-1 scrollbar-thin">
+                    {(todayCompletedPomodorosList.length > 0 || todayCompletedTasksList.length > 0) ? (
+                      <ul className="max-h-28 overflow-y-auto space-y-1 pl-2 border-l border-sky-500/20 mt-1 scrollbar-thin">
                         {todayCompletedPomodorosList.map((p, idx) => {
                           const associatedTask = tasks.find(t => t.id === p.taskId)
                           const displayName = associatedTask ? `Focus: ${associatedTask.title}` : 'Focus Session'
                           return (
                             <li key={p.id || idx} className="flex justify-between items-center text-[10px] text-slate-500 dark:text-slate-400">
                               <span className="truncate max-w-[150px]">{displayName}</span>
-                              <span className="font-medium text-sky-500/80">+{Math.floor(p.duration / 60) || 1} Drops</span>
+                              <span className="font-medium text-sky-500/80">+10 Drops</span>
                             </li>
                           )
                         })}
+                        {todayCompletedTasksList.map(t => (
+                          <li key={t.id} className="flex justify-between items-center text-[10px] text-slate-500 dark:text-slate-400">
+                            <span className="truncate max-w-[150px]">{t.title}</span>
+                            <span className="font-medium text-sky-500/80">+{t.priority === "high" ? 5 : t.priority === "medium" ? 3 : 2} Drops</span>
+                          </li>
+                        ))}
                       </ul>
                     ) : (
-                      <p className="text-[10px] text-slate-400 italic">No focus sessions completed today.</p>
+                      <p className="text-[10px] text-slate-400 italic">No water drops earned today.</p>
                     )}
                   </div>
 
                   <div className="border-t border-slate-500/10 pt-2 space-y-1 text-[11px] text-slate-500 dark:text-slate-400">
                     <div className="flex items-start gap-1.5">
                       <span className="text-sky-500">💧</span>
-                      <span><strong>Earn:</strong> Complete focus sessions (<strong>1 Drop/min</strong>).</span>
+                      <span><strong>Earn:</strong> Complete focus sessions (+10) or tasks (+2/3/5).</span>
                     </div>
                     <div className="flex items-start gap-1.5">
                       <span className="text-emerald-500">🚿</span>

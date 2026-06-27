@@ -153,13 +153,13 @@ export function MotivationalQuote() {
 
   return (
     <div 
-      className={`relative pt-7 pb-2 transition-all duration-700 ${
+      className={`relative pt-7 pb-2 transition-all duration-700 max-w-3xl mx-auto ${
         isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-2"
       }`}
     >
       {/* Hanging String */}
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-28 h-7 pointer-events-none z-10">
-        <svg className="w-full h-full text-amber-800/50 dark:text-emerald-700/40" viewBox="0 0 100 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+        <svg className="w-full h-full text-[#8B5A2B]/45 dark:text-emerald-700/40" viewBox="0 0 100 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
           <path d="M50,3 L15,24 M50,3 L85,24" />
           <circle cx="50" cy="3" r="2.5" fill="currentColor" />
         </svg>
@@ -167,7 +167,7 @@ export function MotivationalQuote() {
 
       {/* Scroll Container */}
       <div
-        className="kakemono-scroll relative overflow-hidden mx-auto mt-2 px-6 sm:px-10 py-8 bg-[#fdfaf2] dark:bg-[#121c15] border-l-2 border-r-2 border-[#ebdcb9] dark:border-emerald-800/20 shadow-xl transition-all duration-500 rounded-sm"
+        className="kakemono-scroll relative overflow-hidden mx-auto mt-2 px-6 sm:px-12 py-9 bg-[#fdfaf2] dark:bg-[#121c15] border-l border-r border-[#ebdcb9]/60 dark:border-emerald-800/10 shadow-xl transition-all duration-500 rounded-sm"
         style={{
           backgroundImage: `
             radial-gradient(rgba(139, 90, 43, 0.02) 1px, transparent 0),
@@ -177,55 +177,58 @@ export function MotivationalQuote() {
           backgroundPosition: '0 0, 6px 6px',
         }}
       >
-        {/* Sway animation styling */}
         <style dangerouslySetInnerHTML={{ __html: `
           @keyframes kakemono-sway {
             0% { transform: rotate(0deg); }
-            25% { transform: rotate(0.5deg); }
-            75% { transform: rotate(-0.5deg); }
+            25% { transform: rotate(0.4deg); }
+            75% { transform: rotate(-0.4deg); }
             100% { transform: rotate(0deg); }
           }
           .kakemono-scroll {
             transform-origin: top center;
           }
           .kakemono-scroll:hover {
-            animation: kakemono-sway 4s ease-in-out infinite;
+            animation: kakemono-sway 4.5s ease-in-out infinite;
           }
         `}} />
 
-        {/* Top Roller Bar */}
-        <div className="absolute top-0 left-2 right-2 h-3.5 bg-gradient-to-r from-[#5c4033] via-[#8B5A2B] to-[#5c4033] dark:from-[#0f1911] dark:via-[#26442e] dark:to-[#0f1911] rounded-sm shadow-md z-20 flex justify-between items-center px-1">
-          <div className="w-2.5 h-5 -ml-2 bg-[#3d2b1f] dark:bg-[#070d09] rounded-sm shadow-inner" />
-          <div className="w-2.5 h-5 -mr-2 bg-[#3d2b1f] dark:bg-[#070d09] rounded-sm shadow-inner" />
+        {/* Washi Paper Edges (Vertical accents simulating traditional mounting structure) */}
+        <div className="absolute top-0 bottom-0 left-4 w-[2px] bg-[#ebdcb9]/30 dark:bg-emerald-800/5 pointer-events-none" />
+        <div className="absolute top-0 bottom-0 right-4 w-[2px] bg-[#ebdcb9]/30 dark:bg-emerald-800/5 pointer-events-none" />
+
+        {/* Top Roller Bar with traditional circular ends */}
+        <div className="absolute top-0 left-4 right-4 h-3 bg-gradient-to-r from-[#4a3329] via-[#8B5A2B] to-[#4a3329] dark:from-[#080f0a] dark:via-[#1e3424] dark:to-[#080f0a] rounded-sm shadow-sm z-20 flex justify-between items-center">
+          <div className="w-3.5 h-5 -ml-3.5 bg-[#2d1f18] dark:bg-[#040805] rounded-l-md shadow-md border-r border-[#1a110c]" />
+          <div className="w-3.5 h-5 -mr-3.5 bg-[#2d1f18] dark:bg-[#040805] rounded-r-md shadow-md border-l border-[#1a110c]" />
         </div>
 
-        {/* Bottom Roller Bar */}
-        <div className="absolute bottom-0 left-2 right-2 h-3.5 bg-gradient-to-r from-[#5c4033] via-[#8B5A2B] to-[#5c4033] dark:from-[#0f1911] dark:via-[#26442e] dark:to-[#0f1911] rounded-sm shadow-md z-20 flex justify-between items-center px-1">
-          <div className="w-2.5 h-5 -ml-2 bg-[#3d2b1f] dark:bg-[#070d09] rounded-sm shadow-inner" />
-          <div className="w-2.5 h-5 -mr-2 bg-[#3d2b1f] dark:bg-[#070d09] rounded-sm shadow-inner" />
+        {/* Bottom Roller Bar with traditional circular ends */}
+        <div className="absolute bottom-0 left-4 right-4 h-3 bg-gradient-to-r from-[#4a3329] via-[#8B5A2B] to-[#4a3329] dark:from-[#080f0a] dark:via-[#1e3424] dark:to-[#080f0a] rounded-sm shadow-sm z-20 flex justify-between items-center">
+          <div className="w-3.5 h-5 -ml-3.5 bg-[#2d1f18] dark:bg-[#040805] rounded-l-md shadow-md border-r border-[#1a110c]" />
+          <div className="w-3.5 h-5 -mr-3.5 bg-[#2d1f18] dark:bg-[#040805] rounded-r-md shadow-md border-l border-[#1a110c]" />
         </div>
 
-        {/* Gradient overlay */}
-        <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/[0.02] via-transparent to-amber-500/[0.02] dark:from-emerald-500/[0.04] dark:via-transparent dark:to-amber-500/[0.02] pointer-events-none" />
+        {/* Gradient overlay for authentic soft texture */}
+        <div className="absolute inset-0 bg-gradient-to-r from-[#8b5a2b]/[0.015] via-transparent to-[#ebdcb9]/[0.015] dark:from-emerald-500/[0.02] dark:via-transparent dark:to-transparent pointer-events-none" />
 
-        {/* Decorative kanji */}
+        {/* Center-aligned decorative kanji waterstamp */}
         <div
-          className={`absolute -right-2 -bottom-4 text-[7rem] sm:text-[9rem] font-black leading-none select-none pointer-events-none text-emerald-500/[0.03] dark:text-emerald-400/[0.05] font-serif-luxury transition-all duration-300 ${
-            isFading ? "opacity-0 scale-75" : "opacity-100 scale-100"
+          className={`absolute inset-0 flex items-center justify-center text-[7.5rem] sm:text-[9.5rem] font-black leading-none select-none pointer-events-none text-[#8b5a2b]/[0.022] dark:text-emerald-400/[0.035] font-serif transition-all duration-500 z-0 ${
+            isFading ? "opacity-0 scale-90" : "opacity-100 scale-100"
           }`}
           aria-hidden="true"
         >
           {currentQuote.kanji}
         </div>
 
-        {/* Action Buttons */}
-        <div className="absolute top-5 right-5 z-20 flex items-center gap-1">
+        {/* Action Buttons styled subtly as stamps */}
+        <div className="absolute top-4 right-5 z-20 flex items-center gap-1">
           {/* Mood Selector Popover */}
           <Popover>
             <PopoverTrigger asChild>
               <button
                 disabled={isLoadingMood}
-                className="p-1.5 text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 rounded-full hover:bg-slate-200/50 dark:hover:bg-slate-800/50 transition-all duration-300 focus:outline-none disabled:opacity-50"
+                className="p-1.5 text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 rounded-full hover:bg-slate-200/40 dark:hover:bg-slate-800/40 transition-all duration-300 focus:outline-none disabled:opacity-50"
                 title="How are you feeling?"
               >
                 {isLoadingMood ? (
@@ -275,7 +278,7 @@ export function MotivationalQuote() {
           {/* Refresh Button */}
           <button
             onClick={handleRefresh}
-            className="p-1.5 text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 rounded-full hover:bg-slate-200/50 dark:hover:bg-slate-800/50 transition-all duration-300 focus:outline-none"
+            className="p-1.5 text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 rounded-full hover:bg-slate-200/40 dark:hover:bg-slate-800/40 transition-all duration-300 focus:outline-none"
             title="Refresh Quote"
           >
             <Icons.reset
@@ -286,22 +289,20 @@ export function MotivationalQuote() {
           </button>
         </div>
 
-        {/* Content */}
-        <div className="relative z-10 flex items-start gap-4 sm:gap-5 pr-8 mt-1.5">
-          {/* Decorative accent line */}
-          <div className="hidden sm:block w-0.5 self-stretch rounded-full bg-gradient-to-b from-[#8B5A2B]/40 via-emerald-500/20 to-transparent flex-shrink-0" />
-
-          <div className={`flex-1 min-w-0 transition-all duration-300 ${
-            isFading ? "opacity-0 translate-x-1" : "opacity-100 translate-x-0"
+        {/* Centered Typography Content */}
+        <div className="relative z-10 flex flex-col items-center justify-center text-center px-4 sm:px-8 mt-2.5">
+          <div className={`transition-all duration-300 max-w-2xl ${
+            isFading ? "opacity-0 scale-95" : "opacity-100 scale-100"
           }`}>
-            <blockquote className="font-serif-luxury text-base sm:text-lg lg:text-xl text-[#3d2b1f]/90 dark:text-slate-200 leading-relaxed tracking-wide italic">
+            <blockquote className="font-serif-luxury text-base sm:text-lg lg:text-xl text-[#3d2b1f]/95 dark:text-slate-200 leading-relaxed tracking-wide italic">
               &ldquo;{currentQuote.text}&rdquo;
             </blockquote>
-            <div className="mt-3 flex items-center gap-3">
-              <div className="w-6 h-px bg-gradient-to-r from-[#8B5A2B]/40 to-transparent" />
-              <cite className="text-xs sm:text-sm font-semibold text-[#8B5A2B]/75 dark:text-emerald-500/80 not-italic tracking-wide uppercase">
+            <div className="mt-3.5 flex items-center justify-center gap-3.5">
+              <div className="w-8 h-px bg-gradient-to-r from-transparent via-[#8B5A2B]/40 to-transparent" />
+              <cite className="text-[10px] sm:text-xs font-bold text-[#8B5A2B] dark:text-emerald-400/80 not-italic tracking-widest uppercase">
                 {currentQuote.author}
               </cite>
+              <div className="w-8 h-px bg-gradient-to-r from-transparent via-[#8B5A2B]/40 to-transparent" />
             </div>
           </div>
         </div>
@@ -309,5 +310,3 @@ export function MotivationalQuote() {
     </div>
   )
 }
-
-

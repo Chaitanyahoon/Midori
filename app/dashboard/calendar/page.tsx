@@ -705,7 +705,7 @@ export default function CalendarPage() {
                   key={task.id}
                   className={`p-3 rounded-xl border flex items-center gap-3 transition-all ${
                     task.completed
-                      ? "bg-slate-50/50 dark:bg-slate-800/20 border-slate-100 dark:border-slate-850 opacity-60"
+                      ? "bg-slate-50/50 dark:bg-slate-800/20 border-slate-100 dark:border-slate-800 opacity-60"
                       : "bg-white/60 dark:bg-slate-900/40 border-slate-200/50 dark:border-slate-800/80 shadow-sm hover:border-emerald-200 hover:translate-x-0.5"
                   }`}
                 >
@@ -718,10 +718,10 @@ export default function CalendarPage() {
                         description: !task.completed ? "Great job!" : "Task marked as pending.",
                       })
                     }}
-                    className="h-4 w-4 border-slate-350 dark:border-slate-650 data-[state=checked]:bg-emerald-500 data-[state=checked]:border-emerald-500"
+                    className="h-4 w-4 border-slate-300 dark:border-slate-600 data-[state=checked]:bg-emerald-500 data-[state=checked]:border-emerald-500"
                   />
                   <div className="flex-1 min-w-0">
-                    <p className={`text-xs sm:text-sm font-semibold truncate ${task.completed ? "text-slate-555 line-through" : "text-slate-800 dark:text-slate-200"}`}>
+                    <p className={`text-xs sm:text-sm font-semibold truncate ${task.completed ? "text-slate-400 dark:text-slate-500 line-through" : "text-slate-800 dark:text-slate-200"}`}>
                       {task.title}
                     </p>
                     {task.description && (

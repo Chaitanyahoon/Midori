@@ -1220,9 +1220,9 @@ export function VisualGarden({ onAddPlant }: { onAddPlant?: () => void }) {
             ctx.restore()
             ctx.restore()
 
-            // ── SHISHI-ODOSHI BAMBOO FOUNTAIN (2.5x SCALE UP) ──
+            // ── SHISHI-ODOSHI BAMBOO FOUNTAIN (RESTORED PROPORTIONS) ──
             const shishiX = 0.28 * W
-            const shishiY = 0.81 * H
+            const shishiY = 0.82 * H
             let shishiClacked = false
             let shishiSpilling = false
 
@@ -1235,29 +1235,29 @@ export function VisualGarden({ onAddPlant }: { onAddPlant?: () => void }) {
                     shishiAngleRef.current = 0.4
                     shishiSpilling = true
                     if (t % 3 === 0) {
-                        const tipX = shishiX + Math.cos(shishiAngleRef.current) * (-42)
-                        const tipY = shishiY + Math.sin(shishiAngleRef.current) * (-42)
+                        const sx = shishiX - 8
+                        const sy = shishiY + 2
                         parts.current.push({
-                            x: tipX,
-                            y: tipY,
-                            vx: -1.5 - Math.random() * 2.0,
-                            vy: 2.5 + Math.random() * 2.0,
+                            x: sx,
+                            y: sy,
+                            vx: -1.2 - Math.random() * 1.5,
+                            vy: 2.0 + Math.random() * 1.5,
                             rot: 0,
-                            size: 2 + Math.random() * 2.5,
-                            color: "rgba(186, 230, 253, 0.8)",
-                            op: 0.9,
+                            size: 1.5 + Math.random() * 2,
+                            color: "rgba(186, 230, 253, 0.75)",
+                            op: 0.85,
                             type: "vapor",
                             life: 0
                         })
                         parts.current.push({
-                            x: tipX - 18,
-                            y: tipY + 22,
+                            x: sx - 16,
+                            y: sy + 15,
                             vx: 0,
                             vy: 0,
                             rot: 0,
-                            size: 2.2,
-                            color: "rgba(186, 230, 253, 0.65)",
-                            op: 0.85,
+                            size: 1.5,
+                            color: "rgba(186, 230, 253, 0.55)",
+                            op: 0.8,
                             type: "ripple",
                             life: 0
                         })
@@ -1277,101 +1277,84 @@ export function VisualGarden({ onAddPlant }: { onAddPlant?: () => void }) {
 
             if (shishiClacked) {
                 playClack()
-                const backX = shishiX + Math.cos(shishiAngleRef.current) * 33
-                const backY = shishiY + Math.sin(shishiAngleRef.current) * 33
                 for (let j = 0; j < 6; j++) {
                     parts.current.push({
-                        x: backX,
-                        y: backY,
-                        vx: (Math.random() - 0.5) * 1.5,
-                        vy: -1.5 - Math.random() * 1.5,
+                        x: shishiX + 12,
+                        y: shishiY + 14,
+                        vx: (Math.random() - 0.5) * 1.2,
+                        vy: -1.2 - Math.random() * 1.2,
                         rot: Math.random() * Math.PI,
-                        size: Math.random() * 3 + 1.5,
+                        size: Math.random() * 2 + 1,
                         color: dark ? "#334155" : "#94a3b8",
-                        op: 0.85,
+                        op: 0.8,
                         type: "soil",
                         life: 0
                     })
                 }
             }
 
-            // Clacking stone
+            // Draw Stone base
             ctx.fillStyle = dark ? "#334155" : "#64748b"
             ctx.strokeStyle = dark ? "#1e293b" : "#475569"
-            ctx.lineWidth = 1.5
+            ctx.lineWidth = 1
             ctx.beginPath()
-            ctx.arc(shishiX + 32, shishiY + 36, 12, 0, Math.PI * 2)
+            ctx.arc(shishiX + 12, shishiY + 14, 5, 0, Math.PI * 2)
             ctx.fill()
             ctx.stroke()
 
-            // Bamboo A-frame Stand
-            ctx.strokeStyle = dark ? "#0f4020" : "#1e4d2b"
-            ctx.lineWidth = 6
+            // Draw Bamboo A-frame Stand
+            ctx.strokeStyle = dark ? "#14532d" : "#166534"
+            ctx.lineWidth = 3
             ctx.beginPath()
-            ctx.moveTo(shishiX - 16, shishiY + 38)
+            ctx.moveTo(shishiX - 6, shishiY + 15)
             ctx.lineTo(shishiX, shishiY)
-            ctx.lineTo(shishiX + 16, shishiY + 38)
-            ctx.stroke()
-            
-            // Crossbar support
-            ctx.strokeStyle = dark ? "#0a2e16" : "#143a1e"
-            ctx.lineWidth = 4
-            ctx.beginPath()
-            ctx.moveTo(shishiX - 11, shishiY + 26)
-            ctx.lineTo(shishiX + 11, shishiY + 26)
+            ctx.lineTo(shishiX + 6, shishiY + 15)
             ctx.stroke()
 
-            // Pivoting bamboo tube (rendered on top of stand)
+            // Draw Pivoting bamboo tube
             ctx.save()
             ctx.translate(shishiX, shishiY)
             ctx.rotate(shishiAngleRef.current)
             
+            // Tube body
             ctx.fillStyle = dark ? "#15803d" : "#22c55e"
-            ctx.strokeStyle = dark ? "#0f4020" : "#14532d"
-            ctx.lineWidth = 2.5
+            ctx.strokeStyle = dark ? "#14532d" : "#15803d"
+            ctx.lineWidth = 1.2
             ctx.beginPath()
-            ctx.rect(-42, -7.5, 75, 15)
+            ctx.rect(-18, -3, 32, 5.5)
             ctx.fill()
             ctx.stroke()
 
-            // Bamboo stalk joint knot
-            ctx.strokeStyle = dark ? "#0a2e16" : "#1b4d2c"
-            ctx.lineWidth = 2.5
+            // Bamboo joint details (on the pivot stalk, scaled down)
+            ctx.strokeStyle = dark ? "#14532d" : "#15803d"
+            ctx.lineWidth = 1
             ctx.beginPath()
-            ctx.moveTo(12, -7.5)
-            ctx.lineTo(12, 7.5)
+            ctx.moveTo(4, -3)
+            ctx.lineTo(4, 2.5)
             ctx.stroke()
 
-            // Hollow slanted cut opening
-            ctx.fillStyle = dark ? "#022c22" : "#134e4a"
+            // Hollow slanted cut opening at front
+            ctx.fillStyle = dark ? "#052e16" : "#14532d"
             ctx.beginPath()
-            ctx.ellipse(-42, 0, 3, 7.2, 0, 0, Math.PI * 2)
+            ctx.ellipse(-18, -0.25, 1.2, 2.7, 0, 0, Math.PI * 2)
             ctx.fill()
             ctx.restore()
 
-            // Source spout bamboo pipe
-            ctx.strokeStyle = dark ? "#0f4020" : "#1b4d2c"
-            ctx.lineWidth = 6
+            // Draw Source pipe pouring water
+            ctx.strokeStyle = dark ? "#14532d" : "#166534"
+            ctx.lineWidth = 3
             ctx.beginPath()
-            ctx.moveTo(shishiX + 38, shishiY - 45)
-            ctx.lineTo(shishiX + 10, shishiY - 32)
+            ctx.moveTo(shishiX + 18, shishiY - 24)
+            ctx.lineTo(shishiX + 4, shishiY - 16)
             ctx.stroke()
 
-            // Bamboo knot on source spout
-            ctx.strokeStyle = dark ? "#052e16" : "#0f301b"
-            ctx.lineWidth = 2
-            ctx.beginPath()
-            ctx.moveTo(shishiX + 24, shishiY - 38)
-            ctx.lineTo(shishiX + 26, shishiY - 34)
-            ctx.stroke()
-
-            // Trickle water
+            // Water trickle pouring down into the pivot's catchment zone
             if (shishiFillRef.current >= 0) {
-                ctx.strokeStyle = "rgba(186, 230, 253, 0.78)"
-                ctx.lineWidth = 2.5
+                ctx.strokeStyle = "rgba(186, 230, 253, 0.72)"
+                ctx.lineWidth = 1.2
                 ctx.beginPath()
-                ctx.moveTo(shishiX + 10, shishiY - 32)
-                ctx.quadraticCurveTo(shishiX + 7, shishiY - 16, shishiX + 4, shishiY - 1)
+                ctx.moveTo(shishiX + 4, shishiY - 16)
+                ctx.quadraticCurveTo(shishiX + 2, shishiY - 8, shishiX, shishiY - 1)
                 ctx.stroke()
             }
 
@@ -1491,7 +1474,7 @@ export function VisualGarden({ onAddPlant }: { onAddPlant?: () => void }) {
                 const img = assets.current[plant.subtype] || assets.current['sakura']
                 if (img) {
                     if (plant.type === 'tree') {
-                        ctx.rotate(wind * 0.8); const sz = 180 * s; 
+                        ctx.rotate(wind * 0.8); const sz = 220 * s; 
                         if (!editMode || plant.id !== selectedPlantId) {
                             ctx.shadowColor = night ? 'rgba(255, 255, 255, 0.1)' : 'rgba(255, 255, 255, 0.5)';
                             ctx.shadowBlur = 20;
@@ -1500,7 +1483,7 @@ export function VisualGarden({ onAddPlant }: { onAddPlant?: () => void }) {
                         ctx.shadowBlur = 0;
                     } else {
                         ctx.rotate(wind * 2.5); const p2 = 1 + Math.sin(t * 0.03 + plant.seed) * 0.02; ctx.scale(p2, p2)
-                        ctx.translate(0, Math.sin(t * 0.05 + plant.seed) * 1); const sz = 85 * s
+                        ctx.translate(0, Math.sin(t * 0.05 + plant.seed) * 1); const sz = 125 * s
                         
                         if (!editMode || plant.id !== selectedPlantId) {
                             ctx.shadowColor = night ? 'rgba(255, 255, 255, 0.2)' : 'rgba(255, 255, 255, 0.6)';
@@ -1682,7 +1665,7 @@ export function VisualGarden({ onAddPlant }: { onAddPlant?: () => void }) {
                     if (!p.id) continue
                     const px = p.x * W
                     const py = p.y * H
-                    const size = p.type === 'tree' ? 180 : 85
+                    const size = p.type === 'tree' ? 220 : 125
                     const scale = p.scale * p.growth
                     const sz = size * scale
                     const centerX = px
@@ -1701,7 +1684,7 @@ export function VisualGarden({ onAddPlant }: { onAddPlant?: () => void }) {
             if (hoveredPlant) {
                 const px = hoveredPlant.x * W
                 const py = hoveredPlant.y * H
-                const size = hoveredPlant.type === 'tree' ? 180 : 85
+                const size = hoveredPlant.type === 'tree' ? 220 : 125
                 const scale = hoveredPlant.scale * hoveredPlant.growth
                 const sz = size * scale
                 
@@ -2024,7 +2007,7 @@ export function VisualGarden({ onAddPlant }: { onAddPlant?: () => void }) {
                 
                 const px = p.x * W
                 const py = p.y * H
-                const size = p.type === 'tree' ? 180 : 85
+                const size = p.type === 'tree' ? 220 : 125
                 const scale = p.scale * p.growth
                 const sz = size * scale
                 
@@ -2057,7 +2040,7 @@ export function VisualGarden({ onAddPlant }: { onAddPlant?: () => void }) {
                 const p = plants[i]
                 if (!p.id) continue
                 const px = p.x * W, py = p.y * H
-                const size = p.type === 'tree' ? 180 : 85
+                const size = p.type === 'tree' ? 220 : 125
                 const scale = p.scale * p.growth
                 const sz = size * scale
                 const centerX = px, centerY = py - sz / 2

@@ -183,8 +183,6 @@ export function VisualGarden({ onAddPlant }: { onAddPlant?: () => void }) {
     const mousePosRef = useRef({ x: 0.5, y: 0.5, isOver: false })
     const sparkleRef = useRef<{ x: number; y: number; vx: number; vy: number; life: number; color: string; size: number }[]>([])
     const windGustRef = useRef({ intensity: 0, duration: 0 })
-    const shishiFillRef = useRef(0)
-    const shishiAngleRef = useRef(0.25)
 
     const handleWaterPersonal = (plantId: string) => {
         const waterCost = 10
@@ -887,11 +885,34 @@ export function VisualGarden({ onAddPlant }: { onAddPlant?: () => void }) {
             ctx.beginPath()
             ctx.moveTo(-50, H * 0.72)
             ctx.lineTo(-50, H * 0.45)
-            ctx.bezierCurveTo(W * 0.25, H * 0.33, W * 0.5, H * 0.52, W * 0.7, H * 0.42)
-            ctx.bezierCurveTo(W * 0.88, H * 0.35, W * 1.0, H * 0.48, W + 50, H * 0.42)
+            ctx.quadraticCurveTo(W * 0.15, H * 0.34, W * 0.28, H * 0.38)
+            ctx.quadraticCurveTo(W * 0.42, H * 0.46, W * 0.55, H * 0.32)
+            ctx.quadraticCurveTo(W * 0.70, H * 0.44, W * 0.82, H * 0.36)
+            ctx.quadraticCurveTo(W * 0.92, H * 0.45, W + 50, H * 0.40)
             ctx.lineTo(W + 50, H * 0.72)
             ctx.closePath()
             ctx.fill()
+            ctx.restore()
+
+            // ── HORIZON VALLEY MIST LAYER ──
+            ctx.save()
+            ctx.translate(mouseXOffset * 24, 0)
+            const mistGrad = ctx.createLinearGradient(0, H * 0.42, 0, H * 0.58)
+            if (dark) {
+                mistGrad.addColorStop(0, "rgba(15, 23, 42, 0)")
+                mistGrad.addColorStop(0.5, "rgba(30, 41, 59, 0.22)")
+                mistGrad.addColorStop(1, "rgba(15, 23, 42, 0)")
+            } else if (eve) {
+                mistGrad.addColorStop(0, "rgba(253, 244, 245, 0)")
+                mistGrad.addColorStop(0.5, "rgba(251, 146, 60, 0.15)")
+                mistGrad.addColorStop(1, "rgba(253, 244, 245, 0)")
+            } else {
+                mistGrad.addColorStop(0, "rgba(255, 255, 255, 0)")
+                mistGrad.addColorStop(0.5, "rgba(239, 246, 255, 0.35)")
+                mistGrad.addColorStop(1, "rgba(255, 255, 255, 0)")
+            }
+            ctx.fillStyle = mistGrad
+            ctx.fillRect(-50, H * 0.38, W + 100, H * 0.22)
             ctx.restore()
 
             // Mid Mountain Layer (shifts more)
@@ -912,8 +933,10 @@ export function VisualGarden({ onAddPlant }: { onAddPlant?: () => void }) {
             ctx.beginPath()
             ctx.moveTo(-50, H * 0.72)
             ctx.lineTo(-50, H * 0.52)
-            ctx.bezierCurveTo(W * 0.2, H * 0.42, W * 0.45, H * 0.58, W * 0.65, H * 0.46)
-            ctx.bezierCurveTo(W * 0.8, H * 0.38, W * 1.0, H * 0.54, W + 50, H * 0.5)
+            ctx.quadraticCurveTo(W * 0.12, H * 0.46, W * 0.25, H * 0.50)
+            ctx.quadraticCurveTo(W * 0.40, H * 0.42, W * 0.52, H * 0.54)
+            ctx.quadraticCurveTo(W * 0.70, H * 0.45, W * 0.85, H * 0.51)
+            ctx.quadraticCurveTo(W * 0.95, H * 0.48, W + 50, H * 0.52)
             ctx.lineTo(W + 50, H * 0.72)
             ctx.closePath()
             ctx.fill()
@@ -949,245 +972,6 @@ export function VisualGarden({ onAddPlant }: { onAddPlant?: () => void }) {
             const lSize = 50
             drawStoneLantern(ctx, lx, ly, lSize, lanternLit, dark, t)
 
-            // ── KOI POND & SHISHI-ODOSHI ──
-            const pondX = 0.16 * W
-            const pondY = 0.86 * H
-            const pondRx = 0.11 * W
-            const pondRy = 0.055 * H
-
-            // Draw pond body
-            const pondGrad = ctx.createLinearGradient(0, pondY - pondRy, 0, pondY + pondRy)
-            pondGrad.addColorStop(0, dark ? "#0a192f" : "#1e3a8a")
-            pondGrad.addColorStop(0.5, dark ? "#0f2d59" : "#2563eb")
-            pondGrad.addColorStop(1, dark ? "#1e40af" : "#60a5fa")
-            ctx.fillStyle = pondGrad
-            ctx.beginPath()
-            ctx.ellipse(pondX, pondY, pondRx, pondRy, 0, 0, Math.PI * 2)
-            ctx.fill()
-
-            // Organic pebbles around the pond border
-            ctx.save()
-            const pebbleCount = 18
-            for (let i = 0; i < pebbleCount; i++) {
-                const angle = (i * Math.PI * 2) / pebbleCount
-                const offsetRadiusX = pondRx + 4 + Math.sin(i * 2.3) * 3
-                const offsetRadiusY = pondRy + 2 + Math.cos(i * 1.9) * 2
-                const sx = pondX + Math.cos(angle) * offsetRadiusX
-                const sy = pondY + Math.sin(angle) * offsetRadiusY
-                
-                const pebbleRx = 6 + (i % 3) * 3.5
-                const pebbleRy = pebbleRx * (0.6 + Math.sin(i) * 0.15)
-                const pebbleRot = angle + (i % 2 === 0 ? 0.25 : -0.25)
-
-                ctx.shadowColor = "rgba(0, 0, 0, 0.12)"
-                ctx.shadowBlur = 3
-                ctx.shadowOffsetY = 1.5
-                
-                ctx.fillStyle = dark ? "#334155" : "#64748b"
-                ctx.strokeStyle = dark ? "#1e293b" : "#475569"
-                ctx.lineWidth = 1.2
-                ctx.beginPath()
-                ctx.ellipse(sx, sy, pebbleRx, pebbleRy, pebbleRot, 0, Math.PI * 2)
-                ctx.fill()
-                ctx.stroke()
-            }
-            ctx.restore()
-
-            // Water shine lines
-            ctx.save()
-            ctx.globalAlpha = 0.15
-            ctx.strokeStyle = "#ffffff"
-            ctx.lineWidth = 1.2
-            ctx.beginPath()
-            ctx.ellipse(pondX - 8, pondY - 4, pondRx * 0.72, pondRy * 0.65, 0.05, 0, Math.PI * 2)
-            ctx.stroke()
-            ctx.restore()
-
-            // ── LILY PADS & LOTUS FLOWER ──
-            ctx.save()
-            const drawLilyPad = (x: number, y: number, r: number, rotation: number) => {
-                ctx.save()
-                ctx.translate(x, y)
-                ctx.rotate(rotation)
-                ctx.fillStyle = dark ? "#14532d" : "#166534"
-                ctx.strokeStyle = dark ? "#052e16" : "#14532d"
-                ctx.lineWidth = 1
-                ctx.beginPath()
-                ctx.arc(0, 0, r, 0.25, Math.PI * 1.85)
-                ctx.lineTo(0, 0)
-                ctx.closePath()
-                ctx.fill()
-                ctx.stroke()
-                ctx.restore()
-            }
-            
-            drawLilyPad(pondX - pondRx * 0.4, pondY - pondRy * 0.3, 10, -0.4)
-            drawLilyPad(pondX + pondRx * 0.3, pondY + pondRy * 0.4, 12, 1.2)
-            drawLilyPad(pondX + pondRx * 0.5, pondY - pondRy * 0.2, 8, 2.5)
-
-            // Lotus sitting on the top-left lily pad
-            const lfx = pondX - pondRx * 0.4
-            const lfy = pondY - pondRy * 0.3
-            const lfSize = 7
-            ctx.save()
-            ctx.translate(lfx, lfy)
-            ctx.fillStyle = "#f472b6" 
-            ctx.strokeStyle = "#db2777"
-            ctx.lineWidth = 0.5
-            for (let p = 0; p < 6; p++) {
-                const angle = (p * Math.PI * 2) / 6
-                ctx.beginPath()
-                ctx.ellipse(Math.cos(angle) * lfSize * 0.5, Math.sin(angle) * lfSize * 0.5, lfSize * 0.8, lfSize * 0.4, angle, 0, Math.PI * 2)
-                ctx.fill()
-                ctx.stroke()
-            }
-            ctx.fillStyle = "#fbbf24"
-            ctx.beginPath()
-            ctx.arc(0, 0, lfSize * 0.3, 0, Math.PI * 2)
-            ctx.fill()
-            ctx.restore()
-            ctx.restore()
-
-            // ── SHISHI-ODOSHI BAMBOO FOUNTAIN (RESTORED PROPORTIONS) ──
-            const shishiX = 0.28 * W
-            const shishiY = 0.82 * H
-            let shishiClacked = false
-            let shishiSpilling = false
-
-            if (shishiFillRef.current < 1 && shishiFillRef.current >= 0) {
-                shishiFillRef.current += 0.0022 + Math.random() * 0.0008
-                shishiAngleRef.current = -0.15 + 0.1 * shishiFillRef.current
-            } else if (shishiFillRef.current >= 1) {
-                shishiAngleRef.current += 0.04
-                if (shishiAngleRef.current >= 0.4) {
-                    shishiAngleRef.current = 0.4
-                    shishiSpilling = true
-                    if (t % 3 === 0) {
-                        const sx = shishiX - 8
-                        const sy = shishiY + 2
-                        parts.current.push({
-                            x: sx,
-                            y: sy,
-                            vx: -1.2 - Math.random() * 1.5,
-                            vy: 2.0 + Math.random() * 1.5,
-                            rot: 0,
-                            size: 1.5 + Math.random() * 2,
-                            color: "rgba(186, 230, 253, 0.75)",
-                            op: 0.85,
-                            type: "vapor",
-                            life: 0
-                        })
-                        parts.current.push({
-                            x: sx - 16,
-                            y: sy + 15,
-                            vx: 0,
-                            vy: 0,
-                            rot: 0,
-                            size: 1.5,
-                            color: "rgba(186, 230, 253, 0.55)",
-                            op: 0.8,
-                            type: "ripple",
-                            life: 0
-                        })
-                    }
-                    if (Math.random() < 0.08) {
-                        shishiFillRef.current = -0.5 
-                    }
-                }
-            } else {
-                shishiAngleRef.current -= 0.048
-                if (shishiAngleRef.current <= -0.15) {
-                    shishiAngleRef.current = -0.15
-                    shishiFillRef.current = 0
-                    shishiClacked = true
-                }
-            }
-
-            if (shishiClacked) {
-                playClack()
-                for (let j = 0; j < 6; j++) {
-                    parts.current.push({
-                        x: shishiX + 12,
-                        y: shishiY + 14,
-                        vx: (Math.random() - 0.5) * 1.2,
-                        vy: -1.2 - Math.random() * 1.2,
-                        rot: Math.random() * Math.PI,
-                        size: Math.random() * 2 + 1,
-                        color: dark ? "#334155" : "#94a3b8",
-                        op: 0.8,
-                        type: "soil",
-                        life: 0
-                    })
-                }
-            }
-
-            // Draw Stone base
-            ctx.fillStyle = dark ? "#334155" : "#64748b"
-            ctx.strokeStyle = dark ? "#1e293b" : "#475569"
-            ctx.lineWidth = 1
-            ctx.beginPath()
-            ctx.arc(shishiX + 12, shishiY + 14, 5, 0, Math.PI * 2)
-            ctx.fill()
-            ctx.stroke()
-
-            // Draw Bamboo A-frame Stand
-            ctx.strokeStyle = dark ? "#14532d" : "#166534"
-            ctx.lineWidth = 3
-            ctx.beginPath()
-            ctx.moveTo(shishiX - 6, shishiY + 15)
-            ctx.lineTo(shishiX, shishiY)
-            ctx.lineTo(shishiX + 6, shishiY + 15)
-            ctx.stroke()
-
-            // Draw Pivoting bamboo tube
-            ctx.save()
-            ctx.translate(shishiX, shishiY)
-            ctx.rotate(shishiAngleRef.current)
-            
-            // Tube body
-            ctx.fillStyle = dark ? "#15803d" : "#22c55e"
-            ctx.strokeStyle = dark ? "#14532d" : "#15803d"
-            ctx.lineWidth = 1.2
-            ctx.beginPath()
-            ctx.rect(-18, -3, 32, 5.5)
-            ctx.fill()
-            ctx.stroke()
-
-            // Bamboo joint details (on the pivot stalk, scaled down)
-            ctx.strokeStyle = dark ? "#14532d" : "#15803d"
-            ctx.lineWidth = 1
-            ctx.beginPath()
-            ctx.moveTo(4, -3)
-            ctx.lineTo(4, 2.5)
-            ctx.stroke()
-
-            // Hollow slanted cut opening at front
-            ctx.fillStyle = dark ? "#052e16" : "#14532d"
-            ctx.beginPath()
-            ctx.ellipse(-18, -0.25, 1.2, 2.7, 0, 0, Math.PI * 2)
-            ctx.fill()
-            ctx.restore()
-
-            // Draw Source pipe pouring water
-            ctx.strokeStyle = dark ? "#14532d" : "#166534"
-            ctx.lineWidth = 3
-            ctx.beginPath()
-            ctx.moveTo(shishiX + 18, shishiY - 24)
-            ctx.lineTo(shishiX + 4, shishiY - 16)
-            ctx.stroke()
-
-            // Water trickle pouring down into the pivot's catchment zone
-            if (shishiFillRef.current >= 0) {
-                ctx.strokeStyle = "rgba(186, 230, 253, 0.72)"
-                ctx.lineWidth = 1.2
-                ctx.beginPath()
-                ctx.moveTo(shishiX + 4, shishiY - 16)
-                ctx.quadraticCurveTo(shishiX + 2, shishiY - 8, shishiX, shishiY - 1)
-                ctx.stroke()
-            }
-
-
-
 
             // Grass blade tufts along front ground edge
             const bladeCol = dark ? gp[2] + "99" : gp[2]
@@ -1201,6 +985,48 @@ export function VisualGarden({ onAddPlant }: { onAddPlant?: () => void }) {
                 ctx.beginPath(); ctx.moveTo(gx + 5, gy); ctx.quadraticCurveTo(gx + 5 + sway * 0.5, gy - 8, gx + 5 + sway, gy - 14); ctx.stroke()
                 ctx.restore()
             }
+
+            // ── SCATTERED SWAYING GRASS TUFTS FOR DEPTH ──
+            ctx.save()
+            const grassTufts = [
+                { x: 0.08, y: 0.77, scale: 0.7 },
+                { x: 0.16, y: 0.85, scale: 1.1 },
+                { x: 0.23, y: 0.81, scale: 1.0 },
+                { x: 0.35, y: 0.75, scale: 0.65 },
+                { x: 0.42, y: 0.84, scale: 1.15 },
+                { x: 0.55, y: 0.78, scale: 0.8 },
+                { x: 0.68, y: 0.82, scale: 1.05 },
+                { x: 0.74, y: 0.76, scale: 0.6 },
+                { x: 0.85, y: 0.81, scale: 0.95 },
+                { x: 0.92, y: 0.85, scale: 1.2 },
+            ]
+            
+            const grassCol = dark ? gp[2] + "77" : gp[2] + "bb"
+            ctx.strokeStyle = grassCol
+            ctx.lineWidth = 1.2
+            
+            grassTufts.forEach(gt => {
+                const gx = gt.x * W
+                const gy = gt.y * H
+                const s = gt.scale
+                const sway = Math.sin(t * 0.015 + gx * 0.05) * 3
+                
+                ctx.save()
+                ctx.beginPath()
+                // Left blade
+                ctx.moveTo(gx, gy)
+                ctx.quadraticCurveTo(gx - 2 * s + sway, gy - 6 * s, gx - 4 * s + sway * 1.2, gy - 12 * s)
+                // Center blade
+                ctx.moveTo(gx, gy)
+                ctx.quadraticCurveTo(gx + sway, gy - 8 * s, gx + sway * 1.5, gy - 16 * s)
+                // Right blade
+                ctx.moveTo(gx, gy)
+                ctx.quadraticCurveTo(gx + 2 * s + sway, gy - 5 * s, gx + 4 * s + sway * 0.8, gy - 10 * s)
+                ctx.stroke()
+                ctx.restore()
+            })
+            ctx.restore()
+
 
 
             // Winter snow drift on ground
@@ -2247,7 +2073,7 @@ export function VisualGarden({ onAddPlant }: { onAddPlant?: () => void }) {
                     onPointerMove={handlePointerMoveCanvas}
                     onPointerUp={handlePointerLeaveCanvas}
                     onPointerLeave={handlePointerLeaveCanvas}
-                    className={`min-w-[800px] w-full h-72 sm:h-96 relative ${plantToPlace ? 'cursor-crosshair' : editMode ? 'cursor-move' : ''}`}
+                    className={`min-w-[800px] w-full h-[350px] sm:h-[480px] relative ${plantToPlace ? 'cursor-crosshair' : editMode ? 'cursor-move' : ''}`}
                 >
                     <canvas ref={cvs} className="w-full h-full block" />
 

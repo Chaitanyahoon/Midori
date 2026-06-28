@@ -189,20 +189,18 @@ export function PlantAIAssistant({ onCloseAction }: PlantAIAssistantProps) {
             
             // Award rewards
             updateSettings({
-              sunlight: (settings.sunlight || 0) + 15,
-              waterdrops: (settings.waterdrops || 0) + 15,
+              sunlight: (settings.sunlight || 0) + 30,
             })
             
             if (settings.activeSharedGardenId) {
               updateSharedGarden({
-                sunlightPool: (sharedGarden?.sunlightPool || 0) + 15,
-                waterPool: (sharedGarden?.waterPool || 0) + 15,
+                sunlightPool: (sharedGarden?.sunlightPool || 0) + 30,
               })
             }
             
             toast({
               title: "Breathing Complete! 🌸",
-              description: "You completed a mindfulness breather and earned +15 Sunlight and +15 Water drops.",
+              description: "You completed a mindfulness breather and earned +30 Sunlight.",
             })
             return 60
           }

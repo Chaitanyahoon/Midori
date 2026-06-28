@@ -431,28 +431,6 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
         try { localStorage.setItem(`midori_pomodoros_${uid}`, JSON.stringify(next)) } catch (e) {}
         return next
       })
-      if (pomodoroData.completed) {
-        setSettings(prev => {
-          const earned = Math.floor(pomodoroData.duration / 60) || 1
-          const newWaterdrops = (prev.waterdrops || 0) + earned
-          const nextSettings = { ...prev, waterdrops: newWaterdrops }
-          try { localStorage.setItem(`midori_settings_${uid}`, JSON.stringify(nextSettings)) } catch (e) {}
-          
-          if (prev.activeSharedGardenId) {
-            try {
-              const storedG = localStorage.getItem(`midori_shared_garden_${prev.activeSharedGardenId}`)
-              const gData = storedG ? JSON.parse(storedG) : { sunlightPool: 0, waterPool: 0, plants: [] }
-              const nextG = {
-                ...gData,
-                waterPool: (gData.waterPool || 0) + earned
-              }
-              localStorage.setItem(`midori_shared_garden_${prev.activeSharedGardenId}`, JSON.stringify(nextG))
-              setSharedGarden(prevG => prevG && prevG.id === prev.activeSharedGardenId ? nextG : prevG)
-            } catch (e) {}
-          }
-          return nextSettings
-        })
-      }
     }
     if (!db) {
       applyLocalAdd()
@@ -460,31 +438,6 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     }
     try {
       await addDoc(collection(db, "users", uid, "pomodoros"), pomodoroData)
-      
-      // Award waterdrops if completed
-      if (pomodoroData.completed) {
-        setSettings(prev => {
-          const earned = Math.floor(pomodoroData.duration / 60) || 1
-          const newWaterdrops = (prev.waterdrops || 0) + earned
-          updateDoc(doc(db, "users", uid, "meta", "settings"), { waterdrops: newWaterdrops }).catch(() => {})
-          
-          // Pool water for shared garden
-          if (prev.activeSharedGardenId) {
-              getDoc(doc(db, "shared_gardens", prev.activeSharedGardenId)).then(snap => {
-                if (snap.exists()) {
-                  const gData = snap.data()
-                  updateDoc(doc(db, "shared_gardens", prev.activeSharedGardenId!), {
-                    waterPool: (gData.waterPool || 0) + earned
-                  })
-                }
-              })
-          }
-           
-          const nextSettings = { ...prev, waterdrops: newWaterdrops }
-          try { localStorage.setItem(`midori_settings_${uid}`, JSON.stringify(nextSettings)) } catch (e) {}
-          return nextSettings
-        })
-      }
     } catch (e) {
       console.error("Failed to add pomodoro:", e)
       applyLocalAdd()

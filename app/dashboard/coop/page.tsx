@@ -864,18 +864,17 @@ export default function CoopPage() {
                             </div>
                             <div className="card-zen p-0 overflow-hidden divide-y divide-slate-100 dark:divide-slate-800/80">
                                 {[
-                                    { rank: "🥇", name: "ZenMaster", sun: 310, water: 240, role: "Master Gardener" },
-                                    { rank: "🥈", name: "Hana", sun: 220, water: 180, role: "Active Sprouts" },
-                                    { rank: "🥉", name: "Sora", sun: 150, water: 120, role: "Sprout Helper" },
+                                    { rank: "🥇", name: "ZenMaster", sun: 550, role: "Master Gardener" },
+                                    { rank: "🥈", name: "Hana", sun: 400, role: "Active Sprouts" },
+                                    { rank: "🥉", name: "Sora", sun: 270, role: "Sprout Helper" },
                                     {
                                         rank: "🌿",
                                         name: settings.userName || user?.displayName || user?.email?.split("@")[0] || "You",
                                         sun: settings.sunlight || 0,
-                                        water: settings.waterdrops || 0,
                                         role: "Member (You)"
                                     }
                                 ]
-                                .sort((a, b) => (b.sun + b.water) - (a.sun + a.water))
+                                .sort((a, b) => b.sun - a.sun)
                                 .map((member, idx) => (
                                     <div key={member.name} className="flex items-center justify-between p-4 hover:bg-slate-50/50 dark:hover:bg-slate-800/50 transition-colors">
                                         <div className="flex items-center gap-3">
@@ -886,8 +885,7 @@ export default function CoopPage() {
                                             </div>
                                         </div>
                                         <div className="flex items-center gap-4 text-xs font-bold">
-                                            <span className="text-amber-600 dark:text-amber-400">☀️ {member.sun}</span>
-                                            <span className="text-blue-600 dark:text-blue-400">💧 {member.water}</span>
+                                            <span className="text-amber-600 dark:text-amber-400">☀️ {member.sun} Sun</span>
                                         </div>
                                     </div>
                                 ))}

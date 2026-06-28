@@ -158,22 +158,19 @@ export default function TasksPage() {
       playTaskComplete()
 
       // Calculate passive rewards based on priority
-      const earnedSun = task.priority === "high" ? 8 : task.priority === "medium" ? 5 : 3
-      const earnedWater = task.priority === "high" ? 5 : task.priority === "medium" ? 3 : 2
+      const earnedSun = task.priority === "high" ? 15 : task.priority === "medium" ? 10 : 5
       
       const currentSun = settings?.sunlight ?? 0
-      const currentWater = settings?.waterdrops ?? 0
 
       try {
         await updateSettings({
-          sunlight: currentSun + earnedSun,
-          waterdrops: currentWater + earnedWater
+          sunlight: currentSun + earnedSun
         })
       } catch (e) {}
 
       const app = getAppreciation(task.title, { userName, tone: (userTone as any) || 'balanced' })
       toast({
-        title: `${app.title} (+${earnedSun}☀️, +${earnedWater}💧)`,
+        title: `${app.title} (+${earnedSun}☀️)`,
         description: app.message,
       })
     } else {

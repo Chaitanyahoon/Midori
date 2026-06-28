@@ -189,15 +189,15 @@ export default function InsightsPage() {
         unit: "Sun"
       },
       {
-        id: "water_saver",
-        name: "Water Saver 💧",
-        desc: "Accumulate 100 Waterdrops",
-        unlocked: currentWater >= 100,
-        color: "from-sky-400 to-blue-500",
-        icon: "💧",
-        current: currentWater,
-        target: 100,
-        unit: "Drops"
+        id: "sun_seeker",
+        name: "Sun Seeker 🌻",
+        desc: "Accumulate 500 Sunlight points",
+        unlocked: currentSun >= 500,
+        color: "from-yellow-500 to-orange-600",
+        icon: "🌻",
+        current: currentSun,
+        target: 500,
+        unit: "Sun"
       },
       {
         id: "communal_spirit",

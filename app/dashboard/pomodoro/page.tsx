@@ -126,16 +126,13 @@ export default function PomodoroPage() {
       setShowHarvestModal(true)
       
       // Award actual resources
-      const earnedSun = 15
-      const earnedWater = 10
+      const earnedSun = 25
       const currentSun = userSettings?.sunlight ?? 0
-      const currentWater = userSettings?.waterdrops ?? 0
       updateSettings({
-        sunlight: currentSun + earnedSun,
-        waterdrops: currentWater + earnedWater
+        sunlight: currentSun + earnedSun
       }).then(() => {
         toast.success("Garden resources harvested! 🌿", {
-          description: `Received +${earnedSun} Sunlight and +${earnedWater} Waterdrops for your focus!`
+          description: `Received +${earnedSun} Sunlight for your focus!`
         })
       }).catch(() => {})
     } else {

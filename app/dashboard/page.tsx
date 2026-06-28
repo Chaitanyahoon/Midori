@@ -96,17 +96,11 @@ export default function DashboardPage() {
   const todayCompletedTasksList = tasks.filter(t => t.completed && t.completedAt?.startsWith(todayStr))
   const todayCompletedPomodorosList = pomodoros.filter(p => p.completed && p.startTime?.startsWith(todayStr))
 
-  // Tasks give +3/5/8 Sun; Pomodoros give +15 Sun
+  // Tasks give +5/10/15 Sun; Pomodoros give +25 Sun
   const todaySunlightEarned = todayCompletedTasksList.reduce((acc, t) => {
-    const earned = t.priority === "high" ? 8 : t.priority === "medium" ? 5 : 3
+    const earned = t.priority === "high" ? 15 : t.priority === "medium" ? 10 : 5
     return acc + earned
-  }, 0) + (todayCompletedPomodorosList.length * 15)
-
-  // Tasks give +2/3/5 Drops; Pomodoros give +10 Drops
-  const todayWaterdropsEarned = todayCompletedTasksList.reduce((acc, t) => {
-    const earned = t.priority === "high" ? 5 : t.priority === "medium" ? 3 : 2
-    return acc + earned
-  }, 0) + (todayCompletedPomodorosList.length * 10)
+  }, 0) + (todayCompletedPomodorosList.length * 25)
 
   return (
     <div className="w-full h-full ambient-bg">
@@ -184,7 +178,7 @@ export default function DashboardPage() {
                         {todayCompletedTasksList.map(t => (
                           <li key={t.id} className="flex justify-between items-center text-[10px] text-slate-500 dark:text-slate-400">
                             <span className="truncate max-w-[150px]">{t.title}</span>
-                            <span className="font-medium text-amber-500/80">+{t.priority === "high" ? 8 : t.priority === "medium" ? 5 : 3} Sun</span>
+                            <span className="font-medium text-amber-500/80">+{t.priority === "high" ? 15 : t.priority === "medium" ? 10 : 5} Sun</span>
                           </li>
                         ))}
                         {todayCompletedPomodorosList.map((p, idx) => {
@@ -193,7 +187,7 @@ export default function DashboardPage() {
                           return (
                             <li key={p.id || idx} className="flex justify-between items-center text-[10px] text-slate-500 dark:text-slate-400">
                               <span className="truncate max-w-[150px]">{displayName}</span>
-                              <span className="font-medium text-amber-500/80">+15 Sun</span>
+                              <span className="font-medium text-amber-500/80">+25 Sun</span>
                             </li>
                           )
                         })}
@@ -206,7 +200,7 @@ export default function DashboardPage() {
                   <div className="border-t border-slate-500/10 pt-2 space-y-1 text-[11px] text-slate-500 dark:text-slate-400">
                     <div className="flex items-start gap-1.5">
                       <span className="text-amber-500">☀️</span>
-                      <span><strong>Earn:</strong> Complete tasks (+3/5/8 Sun) or Pomodoros (+15 Sun).</span>
+                      <span><strong>Earn:</strong> Complete tasks (+5/10/15 Sun) or Pomodoros (+25 Sun).</span>
                     </div>
                     <div className="flex items-start gap-1.5">
                       <span className="text-emerald-500">🌱</span>
@@ -217,77 +211,6 @@ export default function DashboardPage() {
               </PopoverContent>
             </Popover>
 
-            {/* Water drops pill */}
-            <Popover>
-              <PopoverTrigger asChild>
-                <button className="flex items-center gap-3 bg-gradient-to-r from-sky-400/20 to-blue-400/20 text-sky-700 dark:text-sky-300 pl-2 pr-4 py-1.5 rounded-2xl border border-sky-400/30 text-sm font-bold shadow-md hover:shadow-lg backdrop-blur-md transition-all duration-300 hover:scale-105 active:scale-95 group cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-sky-500/50">
-                  <div className="relative w-6 h-9 border-2 border-sky-400/40 rounded-b-xl rounded-t-sm overflow-hidden bg-sky-950/10 flex items-end">
-                    <div 
-                      className="w-full bg-gradient-to-t from-sky-500/80 to-sky-400/80 transition-all duration-1000 ease-out" 
-                      style={{ height: `${Math.min(100, Math.max(10, ((settings?.waterdrops ?? 0) / 100) * 100))}%` }}
-                    >
-                      <div className="absolute top-0 left-0 right-0 h-1 bg-sky-300/50 animate-pulse rounded-full" />
-                    </div>
-                    <div className="absolute inset-0 flex justify-around items-end pb-1 pointer-events-none opacity-40">
-                      <span className="w-0.5 h-0.5 bg-white rounded-full animate-bounce" style={{ animationDelay: '100ms' }} />
-                      <span className="w-1 h-1 bg-white rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
-                    </div>
-                  </div>
-                  <div className="flex flex-col items-start leading-none">
-                    <span className="text-xs uppercase font-bold tracking-wider opacity-60">Water</span>
-                    <span className="text-base mt-0.5">{settings?.waterdrops ?? 0}</span>
-                  </div>
-                </button>
-              </PopoverTrigger>
-              <PopoverContent className="w-80 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-sky-500/20 rounded-2xl shadow-xl p-4 animate-in fade-in zoom-in-95 duration-200">
-                <div className="space-y-3">
-                  <div className="flex items-center gap-2 border-b border-sky-500/10 pb-2">
-                    <Icons.droplets className="w-5 h-5 text-sky-500 animate-[pulse_2s_ease-in-out_infinite]" />
-                    <h4 className="font-bold text-slate-800 dark:text-slate-100">Water Ledger</h4>
-                  </div>
-
-                  <div className="space-y-1.5 text-xs text-slate-600 dark:text-slate-400">
-                    <div className="flex justify-between font-semibold text-slate-700 dark:text-slate-300">
-                      <span>Today&apos;s Focus:</span>
-                      <span className="text-sky-600 dark:text-sky-400">+{todayWaterdropsEarned} Drops</span>
-                    </div>
-                    {(todayCompletedPomodorosList.length > 0 || todayCompletedTasksList.length > 0) ? (
-                      <ul className="max-h-28 overflow-y-auto space-y-1 pl-2 border-l border-sky-500/20 mt-1 scrollbar-thin">
-                        {todayCompletedPomodorosList.map((p, idx) => {
-                          const associatedTask = tasks.find(t => t.id === p.taskId)
-                          const displayName = associatedTask ? `Focus: ${associatedTask.title}` : 'Focus Session'
-                          return (
-                            <li key={p.id || idx} className="flex justify-between items-center text-[10px] text-slate-500 dark:text-slate-400">
-                              <span className="truncate max-w-[150px]">{displayName}</span>
-                              <span className="font-medium text-sky-500/80">+10 Drops</span>
-                            </li>
-                          )
-                        })}
-                        {todayCompletedTasksList.map(t => (
-                          <li key={t.id} className="flex justify-between items-center text-[10px] text-slate-500 dark:text-slate-400">
-                            <span className="truncate max-w-[150px]">{t.title}</span>
-                            <span className="font-medium text-sky-500/80">+{t.priority === "high" ? 5 : t.priority === "medium" ? 3 : 2} Drops</span>
-                          </li>
-                        ))}
-                      </ul>
-                    ) : (
-                      <p className="text-[10px] text-slate-400 italic">No water drops earned today.</p>
-                    )}
-                  </div>
-
-                  <div className="border-t border-slate-500/10 pt-2 space-y-1 text-[11px] text-slate-500 dark:text-slate-400">
-                    <div className="flex items-start gap-1.5">
-                      <span className="text-sky-500">💧</span>
-                      <span><strong>Earn:</strong> Complete focus sessions (+10) or tasks (+2/3/5).</span>
-                    </div>
-                    <div className="flex items-start gap-1.5">
-                      <span className="text-emerald-500">🚿</span>
-                      <span><strong>Spend:</strong> Water your personal garden plants (+20% growth).</span>
-                    </div>
-                  </div>
-                </div>
-              </PopoverContent>
-            </Popover>
           </div>
         </div>
       </div>

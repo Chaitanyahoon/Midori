@@ -184,219 +184,7 @@ export function VisualGarden({ onAddPlant }: { onAddPlant?: () => void }) {
     const sparkleRef = useRef<{ x: number; y: number; vx: number; vy: number; life: number; color: string; size: number }[]>([])
     const windGustRef = useRef({ intensity: 0, duration: 0 })
 
-    const handleWaterPersonal = (plantId: string) => {
-        const waterCost = 10
-        const currentWater = settings?.waterdrops || 0
-        if (currentWater < waterCost) {
-            toast.error("Not enough water drops! Focus to earn more.")
-            return
-        }
 
-        const originalPlants = settings?.gardenPlants || []
-        let updatedNurture = 100
-        const updatedPlants = originalPlants.map((p: any) => {
-            if (p.id === plantId) {
-                const currentNurture = p.nurtureLevel !== undefined ? p.nurtureLevel : 100
-                updatedNurture = Math.min(currentNurture + 20, 100)
-                return { ...p, nurtureLevel: updatedNurture }
-            }
-            return p
-        })
-
-        updateSettings({
-            waterdrops: currentWater - waterCost,
-            gardenPlants: updatedPlants
-        })
-
-        toast.success("Splashed with water! Growth increased! 💧")
-        playWatering()
-
-        if (cvs.current && cont.current) {
-            const rect = cont.current.getBoundingClientRect()
-            const W = rect.width
-            const H = rect.height
-            const targetPlant = plants.find(p => p.id === plantId)
-            if (targetPlant) {
-                const px = targetPlant.x * W
-                const py = targetPlant.y * H
-                const size = targetPlant.type === 'tree' ? 180 : 85
-                const scale = targetPlant.scale * targetPlant.growth
-                const sz = size * scale
-
-                const colors = ['#38bdf8', '#0ea5e9', '#0284c7', '#7dd3fc', '#bae6fd']
-                for (let j = 0; j < 16; j++) {
-                    const angle = (Math.PI * 2 * j) / 16
-                    sparkleRef.current.push({
-                        x: px, y: py - sz / 2,
-                        vx: Math.cos(angle) * (1.2 + Math.random() * 2),
-                        vy: Math.sin(angle) * (1.2 + Math.random()) - 1.5,
-                        life: 1, color: colors[j % colors.length],
-                        size: 2.5 + Math.random() * 3.5,
-                    })
-                }
-
-                // Soil sprays (brown particles shooting up from the base py)
-                const soilColors = ['#5c4033', '#8B5A2B', '#3d2b1f', '#4a3728']
-                for (let j = 0; j < 8; j++) {
-                    parts.current.push({
-                        x: px + (Math.random() - 0.5) * 20,
-                        y: py,
-                        vx: (Math.random() - 0.5) * 1.5,
-                        vy: -Math.random() * 2 - 1,
-                        rot: Math.random() * Math.PI,
-                        size: Math.random() * 2.5 + 1.5,
-                        color: soilColors[j % soilColors.length],
-                        op: 0.9,
-                        type: 'soil',
-                        life: 0
-                    })
-                }
-
-                // Vapor mist (rising white/blue cloudlets)
-                for (let j = 0; j < 6; j++) {
-                    parts.current.push({
-                        x: px + (Math.random() - 0.5) * 30,
-                        y: py - Math.random() * 20,
-                        vx: (Math.random() - 0.5) * 0.5,
-                        vy: -0.4 - Math.random() * 0.4,
-                        rot: Math.random() * Math.PI,
-                        size: Math.random() * 12 + 8,
-                        color: 'rgba(224, 242, 254, 0.35)',
-                        op: 0.35,
-                        type: 'vapor',
-                        life: 0
-                    })
-                }
-
-                setClickedPlant(prev => {
-                    if (!prev) return null
-                    return {
-                        ...prev,
-                        plant: {
-                            ...prev.plant,
-                            targetGrowth: updatedNurture / 100
-                        }
-                    }
-                })
-            }
-        }
-    }
-
-    const handleWaterShared = async (plantId: string) => {
-        if (!sharedGarden) return
-        const costSun = 20
-        const costWater = 20
-        
-        if (sharedGarden.sunlightPool < costSun || sharedGarden.waterPool < costWater) {
-            toast.error("Not enough communal resources! Need 20 Sun and 20 Water.")
-            return
-        }
-
-        let updatedNurture = 100
-        const updatedPlants = (sharedGarden.plants || []).map((p: any) => {
-            if (p.id === plantId) {
-                const currentNurture = p.nurtureLevel ?? 0
-                updatedNurture = Math.min(currentNurture + 20, 100)
-                return { ...p, nurtureLevel: updatedNurture }
-            }
-            return p
-        })
-
-        const targetPlantObj = (sharedGarden.plants || []).find((p: any) => p.id === plantId)
-        const plantSubtype = targetPlantObj?.subtype || ""
-        const plantName = PLANT_NAMES[plantSubtype] || plantSubtype || "Unknown Plant"
-        const userName = settings?.userName || "Anonymous"
-        const newLog = {
-            id: Math.random().toString(36).substring(7),
-            message: `watered the communal ${plantName} (+20% Nurture)`,
-            user: userName,
-            timestamp: new Date().toISOString()
-        }
-
-        try {
-            await updateSharedGarden({
-                sunlightPool: sharedGarden.sunlightPool - costSun,
-                waterPool: sharedGarden.waterPool - costWater,
-                plants: updatedPlants,
-                activityLog: [newLog, ...(sharedGarden.activityLog || [])].slice(0, 50)
-            })
-            toast.success("Communal plant watered! 💧☀️")
-            playWatering()
-
-            if (cvs.current && cont.current) {
-                const rect = cont.current.getBoundingClientRect()
-                const W = rect.width
-                const H = rect.height
-                const targetPlant = plants.find(p => p.id === plantId)
-                if (targetPlant) {
-                    const px = targetPlant.x * W
-                    const py = targetPlant.y * H
-                    const size = targetPlant.type === 'tree' ? 180 : 85
-                    const scale = targetPlant.scale * targetPlant.growth
-                    const sz = size * scale
-
-                    const colors = ['#38bdf8', '#f59e0b', '#0ea5e9', '#34d399', '#7dd3fc']
-                    for (let j = 0; j < 16; j++) {
-                        const angle = (Math.PI * 2 * j) / 16
-                        sparkleRef.current.push({
-                            x: px, y: py - sz / 2,
-                            vx: Math.cos(angle) * (1.2 + Math.random() * 2),
-                            vy: Math.sin(angle) * (1.2 + Math.random()) - 1.5,
-                            life: 1, color: colors[j % colors.length],
-                            size: 2.5 + Math.random() * 3.5,
-                        })
-                    }
-
-                    // Soil sprays (brown particles shooting up from the base py)
-                    const soilColors = ['#5c4033', '#8B5A2B', '#3d2b1f', '#4a3728']
-                    for (let j = 0; j < 8; j++) {
-                        parts.current.push({
-                            x: px + (Math.random() - 0.5) * 20,
-                            y: py,
-                            vx: (Math.random() - 0.5) * 1.5,
-                            vy: -Math.random() * 2 - 1,
-                            rot: Math.random() * Math.PI,
-                            size: Math.random() * 2.5 + 1.5,
-                            color: soilColors[j % soilColors.length],
-                            op: 0.9,
-                            type: 'soil',
-                            life: 0
-                        })
-                    }
-
-                    // Vapor mist (rising white/blue cloudlets)
-                    for (let j = 0; j < 6; j++) {
-                        parts.current.push({
-                            x: px + (Math.random() - 0.5) * 30,
-                            y: py - Math.random() * 20,
-                            vx: (Math.random() - 0.5) * 0.5,
-                            vy: -0.4 - Math.random() * 0.4,
-                            rot: Math.random() * Math.PI,
-                            size: Math.random() * 12 + 8,
-                            color: 'rgba(224, 242, 254, 0.35)',
-                            op: 0.35,
-                            type: 'vapor',
-                            life: 0
-                        })
-                    }
-
-                    setClickedPlant(prev => {
-                        if (!prev) return null
-                        return {
-                            ...prev,
-                            plant: {
-                                ...prev.plant,
-                                targetGrowth: updatedNurture / 100
-                            }
-                        }
-                    })
-                }
-            }
-        } catch (e) {
-            console.error("Nurture error:", e)
-            toast.error("Failed to nurture communal plant")
-        }
-    }
 
     const handleHarvestShared = async (plantId: string) => {
         if (!sharedGarden) return
@@ -485,12 +273,12 @@ export function VisualGarden({ onAddPlant }: { onAddPlant?: () => void }) {
     const isDragging = useRef(false)
 
     const NURSERY_ITEMS = [
-        { id: "sakura", name: "Sakura Tree", type: "tree", costSunlight: 100, costWater: 20, icon: "🌸", desc: "A beautiful cherry blossom." },
-        { id: "maple", name: "Maple Tree", type: "tree", costSunlight: 120, costWater: 25, icon: "🍁", desc: "Vibrant autumn leaves." },
-        { id: "pine", name: "Pine Tree", type: "tree", costSunlight: 80, costWater: 15, icon: "🌲", desc: "Evergreen and sturdy." },
-        { id: "sunflower", name: "Sunflower", type: "flower", costSunlight: 50, costWater: 10, icon: "🌻", desc: "Always faces the sun." },
-        { id: "tulip", name: "Tulip", type: "flower", costSunlight: 40, costWater: 5, icon: "🌷", desc: "A colorful spring bloom." },
-        { id: "orchid", name: "Orchid", type: "flower", costSunlight: 60, costWater: 12, icon: "🌸", desc: "Elegant and exotic." },
+        { id: "sakura", name: "Sakura Tree", type: "tree", costSunlight: 100, icon: "🌸", desc: "A beautiful cherry blossom." },
+        { id: "maple", name: "Maple Tree", type: "tree", costSunlight: 120, icon: "🍁", desc: "Vibrant autumn leaves." },
+        { id: "pine", name: "Pine Tree", type: "tree", costSunlight: 80, icon: "🌲", desc: "Evergreen and sturdy." },
+        { id: "sunflower", name: "Sunflower", type: "flower", costSunlight: 50, icon: "🌻", desc: "Always faces the sun." },
+        { id: "tulip", name: "Tulip", type: "flower", costSunlight: 40, icon: "🌷", desc: "A colorful spring bloom." },
+        { id: "orchid", name: "Orchid", type: "flower", costSunlight: 60, icon: "🌸", desc: "Elegant and exotic." },
     ]
 
     const sr = (s: number) => { const x = Math.sin(s++) * 10000; return x - Math.floor(x) }
@@ -532,7 +320,13 @@ export function VisualGarden({ onAddPlant }: { onAddPlant?: () => void }) {
             : (settings?.gardenPlants || [])
             
         customPlants.forEach((cp: any, i: number) => {
-            const targetGrowth = cp.nurtureLevel !== undefined ? (cp.nurtureLevel / 100) : 1
+            let calculatedNurture = cp.nurtureLevel !== undefined ? cp.nurtureLevel : 100;
+            if (cp.status !== "mature" && cp.createdAt) {
+                const elapsed = Date.now() - new Date(cp.createdAt).getTime();
+                const minutesToMature = cp.type === 'tree' ? 15 : 8;
+                calculatedNurture = Math.min(20 + (elapsed / (minutesToMature * 60 * 1000)) * 80, 100);
+            }
+            const targetGrowth = calculatedNurture / 100;
             np.push({
                 id: cp.id || `plant-${i}`,
                 x: cp.x, y: cp.y, type: cp.type as "flower" | "tree", subtype: cp.subtype,
@@ -1343,14 +1137,14 @@ export function VisualGarden({ onAddPlant }: { onAddPlant?: () => void }) {
                 const sz = size * scale
                 
                 const tagW = 125
-                const tagH = 56
+                const tagH = 38
                 
                 // Position tag to the right or left depending on space
                 let tagX = px + sz / 2 + 8
                 if (tagX + tagW > W - 10) {
                     tagX = px - sz / 2 - tagW - 8
                 }
-                const tagY = py - sz / 2 - 25
+                const tagY = py - sz / 2 - 16
                 
                 ctx.save()
                 
@@ -1381,8 +1175,6 @@ export function VisualGarden({ onAddPlant }: { onAddPlant?: () => void }) {
                 ctx.quadraticCurveTo(tagX + tagW/2, tagY + 15, tagX + tagW - 5, tagY + 10)
                 ctx.moveTo(tagX + 5, tagY + 28)
                 ctx.quadraticCurveTo(tagX + tagW/2, tagY + 30, tagX + tagW - 5, tagY + 26)
-                ctx.moveTo(tagX + 5, tagY + 44)
-                ctx.quadraticCurveTo(tagX + tagW/2, tagY + 46, tagX + tagW - 5, tagY + 42)
                 ctx.stroke()
                 
                 // Double border line inside
@@ -1395,26 +1187,16 @@ export function VisualGarden({ onAddPlant }: { onAddPlant?: () => void }) {
                 // Text drawing
                 const pName = PLANT_NAMES[hoveredPlant.subtype] || hoveredPlant.subtype
                 const growPct = Math.round(hoveredPlant.growth * 100)
-                const nurtureVal = Math.round((hoveredPlant.targetGrowth ?? 1) * 100)
                 
                 // Title
                 ctx.fillStyle = '#2f1f17' // dark brown text
-                ctx.font = 'bold 11px sans-serif'
-                ctx.fillText(pName, tagX + 10, tagY + 16)
+                ctx.font = 'bold 10px sans-serif'
+                ctx.fillText(pName, tagX + 10, tagY + 15)
                 
                 // Growth info
                 ctx.fillStyle = '#5c4033'
                 ctx.font = '9px sans-serif'
-                ctx.fillText(`Growth: ${growPct}%`, tagX + 10, tagY + 31)
-                
-                // Hydration info
-                ctx.fillText(`Hydration: ${nurtureVal}%`, tagX + 10, tagY + 44)
-                
-                // Draw a tiny water drop indicator icon
-                ctx.fillStyle = '#0ea5e9'
-                ctx.beginPath()
-                ctx.arc(tagX + tagW - 15, tagY + 38, 3, 0, Math.PI * 2)
-                ctx.fill()
+                ctx.fillText(`Growth: ${growPct}%`, tagX + 10, tagY + 28)
                 
                 ctx.restore()
             }
@@ -1509,13 +1291,20 @@ export function VisualGarden({ onAddPlant }: { onAddPlant?: () => void }) {
             
             // 1. Placement from storage
             if (plantToPlace.isFromStorage) {
+                const storedNurture = plantToPlace.nurtureLevel !== undefined ? plantToPlace.nurtureLevel : 20
+                const minutesToMature = plantToPlace.type === 'tree' ? 15 : 8
+                const fraction = Math.max(0, Math.min((storedNurture - 20) / 80, 1))
+                const elapsedRequired = fraction * minutesToMature * 60 * 1000
+                const calculatedCreatedAt = new Date(Date.now() - elapsedRequired).toISOString()
+
                 const newPlant = {
                     id: plantToPlace.id || Date.now().toString(),
                     type: plantToPlace.type,
                     subtype: plantToPlace.subtype,
                     x, y: constrainedY,
                     scale: plantToPlace.scale || (plantToPlace.type === 'tree' ? 1.15 : 0.95),
-                    nurtureLevel: plantToPlace.nurtureLevel !== undefined ? plantToPlace.nurtureLevel : 20
+                    nurtureLevel: storedNurture,
+                    createdAt: calculatedCreatedAt
                 }
 
                 if (gardenView === "shared") {
@@ -1558,10 +1347,8 @@ export function VisualGarden({ onAddPlant }: { onAddPlant?: () => void }) {
             // 2. Standard shop purchase placement
             if (gardenView === "shared") {
                 const currentSun = sharedGarden?.sunlightPool || 0
-                const currentWater = sharedGarden?.waterPool || 0
-                if (currentSun >= plantToPlace.costSunlight && currentWater >= plantToPlace.costWater) {
+                if (currentSun >= plantToPlace.costSunlight) {
                     const newSun = currentSun - plantToPlace.costSunlight
-                    const newWater = currentWater - plantToPlace.costWater
                     
                     const newPlant = {
                         id: Date.now().toString(),
@@ -1569,7 +1356,8 @@ export function VisualGarden({ onAddPlant }: { onAddPlant?: () => void }) {
                         subtype: plantToPlace.id,
                         x, y: constrainedY,
                         scale: plantToPlace.type === 'tree' ? 1.15 : 0.95,
-                        nurtureLevel: 20
+                        nurtureLevel: 20,
+                        createdAt: new Date().toISOString()
                     }
                     const userName = settings?.userName || "Anonymous"
                     const newLog = {
@@ -1581,7 +1369,6 @@ export function VisualGarden({ onAddPlant }: { onAddPlant?: () => void }) {
                     const currentPlants = sharedGarden?.plants || []
                     updateSharedGarden({
                         sunlightPool: newSun,
-                        waterPool: newWater,
                         plants: [...currentPlants, newPlant],
                         activityLog: [newLog, ...(sharedGarden?.activityLog || [])].slice(0, 50)
                     }).catch(() => {
@@ -1591,15 +1378,13 @@ export function VisualGarden({ onAddPlant }: { onAddPlant?: () => void }) {
                     setPlantToPlace(null)
                     playPlanting()
                 } else {
-                    toast.error("Not enough Co-op resources!")
+                    toast.error("Not enough Co-op Sunlight!")
                     setPlantToPlace(null)
                 }
             } else {
                 const currentSun = settings?.sunlight || 0
-                const currentWater = settings?.waterdrops || 0
-                if (currentSun >= plantToPlace.costSunlight && currentWater >= plantToPlace.costWater) {
+                if (currentSun >= plantToPlace.costSunlight) {
                     const newSun = currentSun - plantToPlace.costSunlight
-                    const newWater = currentWater - plantToPlace.costWater
                     
                     const newPlant = {
                         id: Date.now().toString(),
@@ -1607,15 +1392,16 @@ export function VisualGarden({ onAddPlant }: { onAddPlant?: () => void }) {
                         subtype: plantToPlace.id,
                         x, y: constrainedY,
                         scale: plantToPlace.type === 'tree' ? 1.15 : 0.95,
-                        nurtureLevel: 20
+                        nurtureLevel: 20,
+                        createdAt: new Date().toISOString()
                     }
                     const currentPlants = settings?.gardenPlants || []
-                    updateSettings({ sunlight: newSun, waterdrops: newWater, gardenPlants: [...currentPlants, newPlant] })
+                    updateSettings({ sunlight: newSun, gardenPlants: [...currentPlants, newPlant] })
                     toast.success(`Planted ${plantToPlace.name}!`)
                     setPlantToPlace(null)
                     playPlanting()
                 } else {
-                    toast.error("Not enough resources!")
+                    toast.error("Not enough Sunlight!")
                     setPlantToPlace(null)
                 }
             }
@@ -1742,9 +1528,17 @@ export function VisualGarden({ onAddPlant }: { onAddPlant?: () => void }) {
             const plantToStore = currentPlants.find((p: any) => p.id === selectedPlantId)
             if (!plantToStore) return
 
+            let currentNurturing = plantToStore.nurtureLevel !== undefined ? plantToStore.nurtureLevel : 20
+            if (plantToStore.status !== "mature" && plantToStore.createdAt) {
+                const elapsed = Date.now() - new Date(plantToStore.createdAt).getTime()
+                const minutesToMature = plantToStore.type === 'tree' ? 15 : 8
+                currentNurturing = Math.round(Math.min(20 + (elapsed / (minutesToMature * 60 * 1000)) * 80, 100))
+            }
+            const storedPlant = { ...plantToStore, nurtureLevel: currentNurturing }
+
             const updatedPlants = currentPlants.filter((p: any) => p.id !== selectedPlantId)
             const currentStorage = sharedGarden?.storage || []
-            const updatedStorage = [...currentStorage, plantToStore]
+            const updatedStorage = [...currentStorage, storedPlant]
 
             const userName = settings?.userName || "Anonymous"
             const newLog = {
@@ -1768,9 +1562,17 @@ export function VisualGarden({ onAddPlant }: { onAddPlant?: () => void }) {
             const plantToStore = currentPlants.find((p: any) => p.id === selectedPlantId)
             if (!plantToStore) return
 
+            let currentNurturing = plantToStore.nurtureLevel !== undefined ? plantToStore.nurtureLevel : 20
+            if (plantToStore.status !== "mature" && plantToStore.createdAt) {
+                const elapsed = Date.now() - new Date(plantToStore.createdAt).getTime()
+                const minutesToMature = plantToStore.type === 'tree' ? 15 : 8
+                currentNurturing = Math.round(Math.min(20 + (elapsed / (minutesToMature * 60 * 1000)) * 80, 100))
+            }
+            const storedPlant = { ...plantToStore, nurtureLevel: currentNurturing }
+
             const updatedPlants = currentPlants.filter((p: any) => p.id !== selectedPlantId)
             const currentStorage = settings?.gardenStorage || []
-            const updatedStorage = [...currentStorage, plantToStore]
+            const updatedStorage = [...currentStorage, storedPlant]
 
             updateSettings({ 
                 gardenPlants: updatedPlants, 
@@ -1832,12 +1634,7 @@ export function VisualGarden({ onAddPlant }: { onAddPlant?: () => void }) {
                     <div className="flex items-center gap-2 bg-white/30 dark:bg-slate-900/50 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/20 shadow-sm">
                         <div className="flex items-center gap-1.5 text-amber-300 font-bold text-xs drop-shadow" title={gardenView === "shared" ? "Co-op Sunlight" : "Sunlight"}>
                             <Icons.sun className="w-3.5 h-3.5" />
-                            <span>{gardenView === "shared" ? (sharedGarden?.sunlightPool || 0) : (settings?.sunlight || 0)}</span>
-                        </div>
-                        <div className="w-px h-3 bg-white/30 mx-1" />
-                        <div className="flex items-center gap-1.5 text-blue-300 font-bold text-xs drop-shadow" title={gardenView === "shared" ? "Co-op Waterdrops" : "Waterdrops"}>
-                            <Icons.droplets className="w-3.5 h-3.5" />
-                            <span>{gardenView === "shared" ? (sharedGarden?.waterPool || 0) : (settings?.waterdrops || 0)}</span>
+                            <span>{gardenView === "shared" ? (sharedGarden?.sunlightPool || 0) : (settings?.sunlight || 0)} Sunlight</span>
                         </div>
                     </div>
                     
@@ -1951,8 +1748,8 @@ export function VisualGarden({ onAddPlant }: { onAddPlant?: () => void }) {
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                 {NURSERY_ITEMS.map(item => {
                                     const canAfford = gardenView === "shared"
-                                        ? (sharedGarden?.sunlightPool || 0) >= item.costSunlight && (sharedGarden?.waterPool || 0) >= item.costWater
-                                        : (settings?.sunlight || 0) >= item.costSunlight && (settings?.waterdrops || 0) >= item.costWater
+                                        ? (sharedGarden?.sunlightPool || 0) >= item.costSunlight
+                                        : (settings?.sunlight || 0) >= item.costSunlight
                                     return (
                                         <div key={item.id} className={`flex flex-col p-3 rounded-2xl border transition-all duration-200 ${canAfford ? 'bg-white dark:bg-slate-800/60 border-slate-200 dark:border-slate-700 hover:border-emerald-300 dark:hover:border-emerald-700 shadow-sm hover:shadow' : 'bg-slate-50 dark:bg-slate-900/50 border-slate-100 dark:border-slate-800/80 opacity-70'}`}>
                                             <div className="flex items-start justify-between mb-2">
@@ -1966,8 +1763,7 @@ export function VisualGarden({ onAddPlant }: { onAddPlant?: () => void }) {
                                             </div>
                                             <div className="mt-auto pt-3 flex items-center justify-between border-t border-slate-100 dark:border-slate-700/50">
                                                 <div className="flex flex-col gap-0.5">
-                                                    <span className="text-[10px] font-bold text-amber-500 flex items-center gap-1"><Icons.sun className="w-3 h-3"/>{item.costSunlight}</span>
-                                                    <span className="text-[10px] font-bold text-blue-500 flex items-center gap-1"><Icons.droplets className="w-3 h-3"/>{item.costWater}</span>
+                                                    <span className="text-[10px] font-bold text-amber-500 flex items-center gap-1"><Icons.sun className="w-3 h-3"/>{item.costSunlight} Sunlight</span>
                                                 </div>
                                                 <button 
                                                     onClick={() => {
@@ -2043,25 +1839,7 @@ export function VisualGarden({ onAddPlant }: { onAddPlant?: () => void }) {
                                 )
                             })()
                         )}
-                        
-                        {/* Quick resource boost for testing */}
-                        <button 
-                            onClick={() => {
-                                if (gardenView === "shared") {
-                                    updateSharedGarden({
-                                        sunlightPool: (sharedGarden?.sunlightPool || 0) + 500,
-                                        waterPool: (sharedGarden?.waterPool || 0) + 100
-                                    }).catch(() => {})
-                                    toast.success("Added +500 ☀️ and +100 💧 to Co-op pool!")
-                                } else {
-                                    updateSettings({ sunlight: (settings?.sunlight || 0) + 500, waterdrops: (settings?.waterdrops || 0) + 100 })
-                                    toast.success("Added +500 ☀️ and +100 💧!")
-                                }
-                            }}
-                            className="w-full mt-4 p-2.5 bg-gradient-to-r from-amber-50 to-blue-50 dark:from-amber-950/20 dark:to-blue-950/20 hover:from-amber-100 hover:to-blue-100 dark:hover:from-amber-950/40 dark:hover:to-blue-950/40 text-xs font-semibold rounded-xl border border-amber-200/50 dark:border-amber-800/30 text-slate-600 dark:text-slate-300 transition-colors"
-                        >
-                            🎁 Bonus: +500 ☀️  +100 💧 {gardenView === "shared" && "(Co-op)"}
-                        </button>
+
                     </div>
                 </DialogContent>
             </Dialog>
@@ -2080,8 +1858,13 @@ export function VisualGarden({ onAddPlant }: { onAddPlant?: () => void }) {
                     {clickedPlant && (() => {
                         const name = PLANT_NAMES[clickedPlant.plant.subtype] || clickedPlant.plant.subtype
                         const originalPlant = (gardenView === "shared" ? sharedGarden?.plants : settings?.gardenPlants)?.find((p: any) => p.id === clickedPlant.plant.id)
-                        const nurtureLevel = originalPlant?.nurtureLevel !== undefined ? originalPlant.nurtureLevel : 100
-                        const isMature = nurtureLevel >= 100
+                        let displayNurture = originalPlant?.nurtureLevel !== undefined ? originalPlant.nurtureLevel : 100
+                        if (originalPlant?.status !== "mature" && originalPlant?.createdAt) {
+                            const elapsed = Date.now() - new Date(originalPlant.createdAt).getTime()
+                            const minutesToMature = originalPlant.type === 'tree' ? 15 : 8
+                            displayNurture = Math.round(Math.min(20 + (elapsed / (minutesToMature * 60 * 1000)) * 80, 100))
+                        }
+                        const isMature = displayNurture >= 100
                         const isHarvested = originalPlant?.status === "mature"
 
                         return (
@@ -2115,36 +1898,20 @@ export function VisualGarden({ onAddPlant }: { onAddPlant?: () => void }) {
                                         </span>
                                     </div>
                                     <div className="flex justify-between items-center gap-6">
-                                        <span className="text-slate-400 font-normal">Nurture Level:</span>
+                                        <span className="text-slate-400 font-normal">Growth Progress:</span>
                                         <div className="flex items-center gap-2">
                                             <div className="w-16 h-1.5 bg-slate-200 dark:bg-slate-800 rounded-full overflow-hidden">
                                                 <div 
                                                     className="h-full bg-gradient-to-r from-emerald-400 to-teal-500 rounded-full transition-all duration-500" 
-                                                    style={{ width: `${nurtureLevel}%` }}
+                                                    style={{ width: `${displayNurture}%` }}
                                                 />
                                             </div>
-                                            <span className="font-semibold text-slate-600 dark:text-slate-300">{nurtureLevel}%</span>
+                                            <span className="font-semibold text-slate-600 dark:text-slate-300">{displayNurture}%</span>
                                         </div>
                                     </div>
                                 </div>
 
-                                {!isMature && (
-                                    <button
-                                        onClick={() => {
-                                            if (gardenView === "shared") {
-                                                handleWaterShared(clickedPlant.plant.id!)
-                                            } else {
-                                                handleWaterPersonal(clickedPlant.plant.id!)
-                                            }
-                                        }}
-                                        className="w-full mt-1.5 py-1.5 rounded-xl bg-gradient-to-r from-sky-400/20 to-blue-400/20 hover:from-sky-400/30 hover:to-blue-400/30 border border-sky-400/30 dark:border-sky-500/30 text-sky-700 dark:text-sky-300 text-xs font-bold shadow-sm transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-1.5"
-                                    >
-                                        <span>💧</span>
-                                        <span>Water {gardenView === "shared" ? '(-20 Communal)' : '(-10 Drops)'}</span>
-                                    </button>
-                                )}
-
-                                {gardenView === "shared" && isMature && !isHarvested && (
+                                {gardenView === "shared" && displayNurture >= 100 && !isHarvested && (
                                     <button
                                         onClick={() => handleHarvestShared(clickedPlant.plant.id!)}
                                         className="w-full mt-1.5 py-1.5 rounded-xl bg-gradient-to-r from-amber-400/20 to-orange-400/20 hover:from-amber-400/30 hover:to-orange-400/30 border border-amber-400/30 dark:border-orange-500/30 text-amber-700 dark:text-amber-300 text-xs font-bold shadow-sm transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-1.5"
